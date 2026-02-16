@@ -1,15 +1,16 @@
 
 import React, { useEffect, useState } from 'react';
-import { BarChart3, ListFilter } from 'lucide-react';
+import { BarChart3, ListFilter, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface HeaderProps {
   usageCount?: number;
   totalCount?: number;
   onOpenUsage?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ usageCount = 0, totalCount = 0, onOpenUsage }) => {
+export const Header: React.FC<HeaderProps> = ({ usageCount = 0, totalCount = 0, onOpenUsage, onOpenSettings }) => {
   const [pulseTotal, setPulseTotal] = useState(false);
   const [pulseMonth, setPulseMonth] = useState(false);
 
@@ -31,6 +32,17 @@ export const Header: React.FC<HeaderProps> = ({ usageCount = 0, totalCount = 0, 
 
   return (
     <header className="w-full py-8 flex flex-col items-center justify-center bg-[#26392D] text-white shadow-md relative no-print">
+
+      {/* Settings (Top Left) */}
+      {onOpenSettings && (
+        <button
+          onClick={onOpenSettings}
+          className="absolute top-4 left-6 md:left-12 text-white/30 hover:text-[#D3FF2F] transition-colors"
+          title="Instellingen"
+        >
+          <Settings size={20} />
+        </button>
+      )}
 
       {/* Billing Indicators (Top Right) */}
       {onOpenUsage && (

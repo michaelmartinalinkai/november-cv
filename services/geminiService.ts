@@ -79,11 +79,19 @@ export class GeminiService {
     }
   }
 
+  private getApiKey(): string {
+    const key = localStorage.getItem('gemini_api_key') || process.env.API_KEY || "";
+    if (!key) {
+      throw new Error("API Key ontbreekt. Voer uw Google Gemini API Key in via de instellingen.");
+    }
+    return key;
+  }
+
   /**
    * Phase 1: General Data Extraction
    */
   async extractCVData(input: CVInput): Promise<ParsedCV> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
     if (input.files && input.files.length > 0) {
@@ -130,7 +138,7 @@ export class GeminiService {
    * Phase 2: Template-Specific Styling & Refinement
    */
   async parseCV(input: CVInput): Promise<ParsedCV> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
     // Parse the original data to preserve bullets
