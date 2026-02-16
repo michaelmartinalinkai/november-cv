@@ -169,7 +169,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         {/* LOGO */}
         <div className="flex-shrink-0 mt-0">
           <img
-            src="/logo.png"
+            src={LOGO_URL}
             alt="Novêmber."
             className="w-[80px] h-auto object-contain"
           />
@@ -274,7 +274,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         </div>
         <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
         <img
-          src="/logo-footer.png"
+          src={WHITE_ARROW_URL}
           alt=""
           className="absolute z-10 w-[10mm] h-[10mm]"
           style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
