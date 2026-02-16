@@ -135,16 +135,28 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, template?: 'old' | 'new') => {
+  const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, template?: 'old' | 'new', sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
       const fileNameBase = `CV_${(data.personalInfo?.name || "Kandidaat").replace(/\s+/g, '_')}_NOVEMBER`;
+
+      const effectiveSourceId = sourceId || crypto.randomUUID();
+      const contentHash = await usageService.generateHash(JSON.stringify(data) + (template || ''));
+
       if (format === 'docx') {
         const blob = await generateDocxBlob(data, template);
         saveAs(blob, `${fileNameBase}.docx`);
+
+        // Record conversion for DOCX
+        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`);
       } else {
         window.print();
+        // Record conversion for PDF (print)
+        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`);
       }
+
+      // Refresh counters after recording
+      refreshCounters();
     } catch (err) {
       console.error("Download error:", err);
       alert("Fout bij genereren download.");
@@ -185,14 +197,17 @@ const App: React.FC = () => {
               </div>
               <button onClick={() => setQueue(prev => prev.map(q => q.id === selectedItem.id ? { ...q, status: 'READY', result: undefined, template: undefined } : q))} className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest hover:text-[#EE8D70] transition-colors">Aanpassen</button>
             </div>
-            <div className="relative">
+            <div className="relative flex flex-col items-end gap-1">
               <Button onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} variant="primary" className="shadow-lg h-10 px-8">
                 DOWNLOAD <ChevronDown size={14} className="ml-2" />
               </Button>
+              <span className="text-[10px] text-gray-500 font-mono">
+                Total CVs Converted: {totalCount}
+              </span>
               {isDownloadMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-neutral-200 shadow-xl z-50 py-2 rounded-sm overflow-hidden animate-fade-in">
-                  <button onClick={() => handleDownload('docx', selectedItem.result!, selectedItem.template)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Microsoft Word (.docx)</button>
-                  <button onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Opslaan als PDF (.pdf)</button>
+                  <button onClick={() => handleDownload('docx', selectedItem.result!, selectedItem.template, selectedItem.id)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Microsoft Word (.docx)</button>
+                  <button onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Opslaan als PDF (.pdf)</button>
                 </div>
               )}
             </div>

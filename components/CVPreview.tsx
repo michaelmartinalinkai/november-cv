@@ -1,11 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ParsedCV } from '../types';
 import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
-import { Download, Loader2 } from 'lucide-react';
-import { generateDocxBlob } from '../services/docxGenerator';
-import { usageService } from '../services/usageService';
-import { saveAs } from 'file-saver';
-import { Button } from './Button';
 
 interface CVPreviewProps {
   data: ParsedCV;
@@ -23,41 +18,6 @@ const toTitleCase = (str: string) => {
 };
 
 export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) => {
-  const [conversionCount, setConversionCount] = useState<number>(0);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  useEffect(() => {
-    setConversionCount(usageService.getTotalCount());
-  }, []);
-
-  const handleDownload = async () => {
-    if (!data) return;
-
-    try {
-      setIsGenerating(true);
-      const filename = `${(data.personalInfo?.name || 'CV').replace(/\s+/g, '_')}_CV.docx`;
-
-      const blob = await generateDocxBlob(data);
-      saveAs(blob, filename);
-
-      const success = usageService.recordConversion(
-        data.id || crypto.randomUUID(),
-        'hash_placeholder', // In a real app we'd hash the content
-        filename
-      );
-
-      if (success) {
-        setConversionCount(usageService.getTotalCount());
-      }
-
-    } catch (error) {
-      console.error('Failed to generate DOCX:', error);
-      alert('Failed to generate CV. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   if (!data) return null;
 
   // Common font settings for CVs
@@ -184,172 +144,142 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   while (displaySkills.length < 5) displaySkills.push("Professional");
 
   return (
-    <div className="h-full flex flex-col bg-gray-100 rounded-lg shadow-lg overflow-hidden">
-      <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-50 shadow-sm print:hidden">
-        <h2 className="text-lg font-semibold text-gray-700">Preview</h2>
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            onClick={handleDownload}
-            disabled={isGenerating}
-            className="flex items-center gap-2 bg-[#284d32] hover:bg-[#1a3321] text-white"
+    <div
+      className="print-container w-[210mm] min-h-[297mm] mx-auto bg-white relative flex flex-col overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
+      style={{ fontFamily: 'Garet, sans-serif', color: '#4a4e57' }}
+    >
+      {/* HEADER */}
+      <header className="bg-[#284d32] text-white p-12 py-8 flex justify-between items-start relative z-10 flex-shrink-0 min-h-[140px]">
+        <div className="flex flex-col justify-center h-full">
+          <h1
+            className="leading-tight mb-1"
+            style={{ fontSize: '32pt', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif' }}
           >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download DOCX
-              </>
+            {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
+          </h1>
+          <p className="text-[#e3fd01] font-normal" style={{ fontSize: '7pt' }}>
+            {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
+            {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
+            {data.personalInfo?.skj && (
+              <> | SKJ-Registratie: {data.personalInfo.skj}{data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}</>
             )}
-          </Button>
-          <span className="text-[10px] text-gray-500 font-mono">
-            Total CVs Converted: {conversionCount}
-          </span>
+          </p>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-auto p-4 md:p-8 flex justify-center">
-        <div
-          className="print-container w-[210mm] min-h-[297mm] bg-white relative flex flex-col overflow-hidden shadow-md print:shadow-none print:m-0 print:border-none border border-gray-200"
-          style={{ fontFamily: 'Garet, sans-serif', color: '#4a4e57' }}
-        >
-          {/* HEADER */}
-          <header className="bg-[#284d32] text-white p-12 py-8 flex justify-between items-start relative z-10 flex-shrink-0 min-h-[140px]">
-            <div className="flex flex-col justify-center h-full">
-              <h1
-                className="leading-tight mb-1"
-                style={{ fontSize: '32pt', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif' }}
+        {/* LOGO */}
+        <div className="flex-shrink-0 mt-0">
+          <img
+            src="/logo.png"
+            alt="Novêmber."
+            className="w-[80px] h-auto object-contain"
+          />
+        </div>
+      </header>
+
+      <main className="flex-grow p-12 pt-10">
+        <section className="mb-6 flex flex-col items-center w-full">
+          <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
+            WAAR DEZE PROFESSIONAL STERK IN IS
+          </h3>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
+            {displaySkills.map((skill, i) => (
+              <div
+                key={i}
+                className="bg-[#f27f61] text-white px-6 py-2 rounded-full font-bold uppercase tracking-wider text-center flex items-center justify-center min-w-[140px]"
+                style={{ fontSize: '8.5pt' }}
               >
-                {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
-              </h1>
-              <p className="text-[#e3fd01] font-normal" style={{ fontSize: '7pt' }}>
-                {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
-                {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
-                {data.personalInfo?.skj && (
-                  <> | SKJ-Registratie: {data.personalInfo.skj}{data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}</>
-                )}
-              </p>
-            </div>
-
-            {/* LOGO */}
-            <div className="flex-shrink-0 mt-0">
-              <img
-                src="/logo.png"
-                alt="Novêmber."
-                className="w-[80px] h-auto object-contain"
-              />
-            </div>
-          </header>
-
-          <main className="flex-grow p-12 pt-10">
-            <section className="mb-6 flex flex-col items-center w-full">
-              <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
-                WAAR DEZE PROFESSIONAL STERK IN IS
-              </h3>
-              <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
-                {displaySkills.map((skill, i) => (
-                  <div
-                    key={i}
-                    className="bg-[#f27f61] text-white px-6 py-2 rounded-full font-bold uppercase tracking-wider text-center flex items-center justify-center min-w-[140px]"
-                    style={{ fontSize: '8.5pt' }}
-                  >
-                    {skill}
-                  </div>
-                ))}
+                {skill}
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+            <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>OPLEIDINGEN</h3>
+          </div>
+          <div className="space-y-0.5">
+            {(data.education || []).map((edu, i) => (
+              <div key={i} className="grid grid-cols-[70px_1fr] gap-x-2" style={{ fontSize: '8pt' }}>
+                <div className="opacity-70 font-normal">{edu.period}</div>
+                <div>
+                  <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <OrangeSeparator />
+
+        <section className="mb-8">
+          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
+            <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>WERKERVARING</h3>
+          </div>
+          <div className="space-y-8">
+            {(data.experience || []).map((exp, i) => (
+              <div key={i} className="relative" style={{ fontSize: '8pt' }}>
+                <div className="mb-2">
+                  <span className="block mb-1 opacity-70 font-medium">{exp.period}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
+                    <span className="text-neutral-300">|</span>
+                    <span className="font-bold uppercase tracking-wider text-black">{
+                      // Strip employer name from role if Gemini duplicated it (e.g. "GEMEENTE DEN HAAG | ROLE" -> "ROLE")
+                      exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
+                        ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                        : exp.role
+                    }</span>
+                  </div>
+                </div>
+                <ul className="list-none space-y-0 ml-1">
+                  {(exp.bullets || []).map((bullet, bi) => (
+                    <li key={bi} className="flex items-start gap-2 leading-snug">
+                      <span className="flex-shrink-0 text-black font-bold">•</span>
+                      <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <OrangeSeparator />
+
+        <div className="space-y-6 mt-4">
+          {data.systems && data.systems.length > 0 && (
+            <section>
+              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>SYSTEEMKENNIS</h3>
+              </div>
+              <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
             </section>
+          )}
 
-            <section className="mb-8">
-              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
-                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>OPLEIDINGEN</h3>
+          {data.languages && data.languages.length > 0 && (
+            <section>
+              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>TALENKENNIS</h3>
               </div>
-              <div className="space-y-0.5">
-                {(data.education || []).map((edu, i) => (
-                  <div key={i} className="grid grid-cols-[70px_1fr] gap-x-2" style={{ fontSize: '8pt' }}>
-                    <div className="opacity-70 font-normal">{edu.period}</div>
-                    <div>
-                      <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
             </section>
-
-            <OrangeSeparator />
-
-            <section className="mb-8">
-              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
-                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>WERKERVARING</h3>
-              </div>
-              <div className="space-y-8">
-                {(data.experience || []).map((exp, i) => (
-                  <div key={i} className="relative" style={{ fontSize: '8pt' }}>
-                    <div className="mb-2">
-                      <span className="block mb-1 opacity-70 font-medium">{exp.period}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
-                        <span className="text-neutral-300">|</span>
-                        <span className="font-bold uppercase tracking-wider text-black">{
-                          // Strip employer name from role if Gemini duplicated it (e.g. "GEMEENTE DEN HAAG | ROLE" -> "ROLE")
-                          exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
-                            ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
-                            : exp.role
-                        }</span>
-                      </div>
-                    </div>
-                    <ul className="list-none space-y-0 ml-1">
-                      {(exp.bullets || []).map((bullet, bi) => (
-                        <li key={bi} className="flex items-start gap-2 leading-snug">
-                          <span className="flex-shrink-0 text-black font-bold">•</span>
-                          <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <OrangeSeparator />
-
-            <div className="space-y-6 mt-4">
-              {data.systems && data.systems.length > 0 && (
-                <section>
-                  <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-                    <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>SYSTEEMKENNIS</h3>
-                  </div>
-                  <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
-                </section>
-              )}
-
-              {data.languages && data.languages.length > 0 && (
-                <section>
-                  <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-                    <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>TALENKENNIS</h3>
-                  </div>
-                  <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
-                </section>
-              )}
-            </div>
-          </main>
-
-          <footer className="bg-[#284d32] h-[80px] w-[210mm] relative flex-shrink-0 flex items-center overflow-hidden">
-            <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '50%', transform: 'translateY(-50%)' }}>
-              {/* Address removed as per request */}
-            </div>
-            <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
-            <img
-              src="/logo-footer.png"
-              alt=""
-              className="absolute z-10 w-[10mm] h-[10mm]"
-              style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
-            />
-          </footer>
+          )}
         </div>
-      </div>
+      </main>
+
+      <footer className="bg-[#284d32] h-[80px] w-[210mm] relative flex-shrink-0 flex items-center overflow-hidden">
+        <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '50%', transform: 'translateY(-50%)' }}>
+          {/* Address removed as per request */}
+        </div>
+        <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
+        <img
+          src="/logo-footer.png"
+          alt=""
+          className="absolute z-10 w-[10mm] h-[10mm]"
+          style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
+        />
+      </footer>
     </div>
   );
 };
