@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 
 /**
  * NOVÉMBER. Official Brand Assets
@@ -5,7 +6,7 @@
  */
 
 // The official Novêmber. header logo (leaf branding element)
-export const LOGO_URL = "/logo.png";
+export const LOGO_URL = `${import.meta.env.BASE_URL}logo.png`;
 
 // The official Novêmber. footer arrow icon
-export const WHITE_ARROW_URL = "/logo-footer.png";
+export const WHITE_ARROW_URL = `${import.meta.env.BASE_URL}logo-footer.png`;
