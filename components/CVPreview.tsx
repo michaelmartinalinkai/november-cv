@@ -143,143 +143,160 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   const displaySkills = [...rawTags.slice(0, 5)];
   while (displaySkills.length < 5) displaySkills.push("Professional");
 
+  // Header content (reusable for both screen and print)
+  const headerContent = (
+    <div className="bg-[#284d32] text-white p-12 py-8 flex justify-between items-start relative z-10 min-h-[140px]">
+      <div className="flex flex-col justify-center h-full">
+        <h1
+          className="leading-tight mb-1"
+          style={{ fontSize: '32pt', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif' }}
+        >
+          {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
+        </h1>
+        <p className="text-[#e3fd01] font-normal" style={{ fontSize: '7pt' }}>
+          {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
+          {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
+          {data.personalInfo?.skj && (
+            <> | SKJ-Registratie: {data.personalInfo.skj}{data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}</>
+          )}
+        </p>
+      </div>
+      <div className="flex-shrink-0 mt-0">
+        <img
+          src={LOGO_URL}
+          alt="Novêmber."
+          className="w-[80px] h-auto object-contain"
+        />
+      </div>
+    </div>
+  );
+
+  // Footer content (reusable for both screen and print)
+  const footerContent = (
+    <div className="bg-[#284d32] h-[80px] w-full relative flex items-center overflow-hidden">
+      <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '50%', transform: 'translateY(-50%)' }}>
+      </div>
+      <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
+      <img
+        src={WHITE_ARROW_URL}
+        alt=""
+        className="absolute z-10 w-[10mm] h-[10mm]"
+        style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
+      />
+    </div>
+  );
+
+  // Main body content
+  const bodyContent = (
+    <div className="p-12 pt-10">
+      <section className="mb-6 flex flex-col items-center w-full">
+        <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
+          WAAR DEZE PROFESSIONAL STERK IN IS
+        </h3>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
+          {displaySkills.map((skill, i) => (
+            <div
+              key={i}
+              className="bg-[#f27f61] text-white px-6 py-2 rounded-full font-bold uppercase tracking-wider text-center flex items-center justify-center min-w-[140px]"
+              style={{ fontSize: '8.5pt' }}
+            >
+              {skill}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+          <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>OPLEIDINGEN</h3>
+        </div>
+        <div className="space-y-0.5">
+          {(data.education || []).map((edu, i) => (
+            <div key={i} className="grid grid-cols-[70px_1fr] gap-x-2" style={{ fontSize: '8pt' }}>
+              <div className="opacity-70 font-normal">{edu.period}</div>
+              <div>
+                <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <OrangeSeparator />
+
+      <section className="mb-8">
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
+          <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>WERKERVARING</h3>
+        </div>
+        <div className="space-y-8">
+          {(data.experience || []).map((exp, i) => (
+            <div key={i} className="relative" style={{ fontSize: '8pt' }}>
+              <div className="mb-2">
+                <span className="block mb-1 opacity-70 font-medium">{exp.period}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
+                  <span className="text-neutral-300">|</span>
+                  <span className="font-bold uppercase tracking-wider text-black">{
+                    exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
+                      ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                      : exp.role
+                  }</span>
+                </div>
+              </div>
+              <ul className="list-none space-y-0 ml-1">
+                {(exp.bullets || []).map((bullet, bi) => (
+                  <li key={bi} className="flex items-start gap-2 leading-snug">
+                    <span className="flex-shrink-0 text-black font-bold">•</span>
+                    <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <OrangeSeparator />
+
+      <div className="space-y-6 mt-4">
+        {data.systems && data.systems.length > 0 && (
+          <section>
+            <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+              <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>SYSTEEMKENNIS</h3>
+            </div>
+            <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
+          </section>
+        )}
+
+        {data.languages && data.languages.length > 0 && (
+          <section>
+            <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+              <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>TALENKENNIS</h3>
+            </div>
+            <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div
-      className="print-container w-[210mm] min-h-[297mm] mx-auto bg-white relative flex flex-col overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
+      className="print-container w-[210mm] mx-auto bg-white relative overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
       style={{ fontFamily: 'Garet, sans-serif', color: '#4a4e57' }}
     >
-      {/* HEADER */}
-      <header className="bg-[#284d32] text-white p-12 py-8 flex justify-between items-start relative z-10 flex-shrink-0 min-h-[140px]">
-        <div className="flex flex-col justify-center h-full">
-          <h1
-            className="leading-tight mb-1"
-            style={{ fontSize: '32pt', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif' }}
-          >
-            {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
-          </h1>
-          <p className="text-[#e3fd01] font-normal" style={{ fontSize: '7pt' }}>
-            {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
-            {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
-            {data.personalInfo?.skj && (
-              <> | SKJ-Registratie: {data.personalInfo.skj}{data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}</>
-            )}
-          </p>
-        </div>
-
-        {/* LOGO */}
-        <div className="flex-shrink-0 mt-0">
-          <img
-            src={LOGO_URL}
-            alt="Novêmber."
-            className="w-[80px] h-auto object-contain"
-          />
-        </div>
-      </header>
-
-      <main className="flex-grow p-12 pt-10">
-        <section className="mb-6 flex flex-col items-center w-full">
-          <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
-            WAAR DEZE PROFESSIONAL STERK IN IS
-          </h3>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
-            {displaySkills.map((skill, i) => (
-              <div
-                key={i}
-                className="bg-[#f27f61] text-white px-6 py-2 rounded-full font-bold uppercase tracking-wider text-center flex items-center justify-center min-w-[140px]"
-                style={{ fontSize: '8.5pt' }}
-              >
-                {skill}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
-            <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>OPLEIDINGEN</h3>
-          </div>
-          <div className="space-y-0.5">
-            {(data.education || []).map((edu, i) => (
-              <div key={i} className="grid grid-cols-[70px_1fr] gap-x-2" style={{ fontSize: '8pt' }}>
-                <div className="opacity-70 font-normal">{edu.period}</div>
-                <div>
-                  <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <OrangeSeparator />
-
-        <section className="mb-8">
-          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
-            <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>WERKERVARING</h3>
-          </div>
-          <div className="space-y-8">
-            {(data.experience || []).map((exp, i) => (
-              <div key={i} className="relative" style={{ fontSize: '8pt' }}>
-                <div className="mb-2">
-                  <span className="block mb-1 opacity-70 font-medium">{exp.period}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
-                    <span className="text-neutral-300">|</span>
-                    <span className="font-bold uppercase tracking-wider text-black">{
-                      // Strip employer name from role if Gemini duplicated it (e.g. "GEMEENTE DEN HAAG | ROLE" -> "ROLE")
-                      exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
-                        ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
-                        : exp.role
-                    }</span>
-                  </div>
-                </div>
-                <ul className="list-none space-y-0 ml-1">
-                  {(exp.bullets || []).map((bullet, bi) => (
-                    <li key={bi} className="flex items-start gap-2 leading-snug">
-                      <span className="flex-shrink-0 text-black font-bold">•</span>
-                      <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <OrangeSeparator />
-
-        <div className="space-y-6 mt-4">
-          {data.systems && data.systems.length > 0 && (
-            <section>
-              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>SYSTEEMKENNIS</h3>
-              </div>
-              <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
-            </section>
-          )}
-
-          {data.languages && data.languages.length > 0 && (
-            <section>
-              <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-                <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>TALENKENNIS</h3>
-              </div>
-              <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
-            </section>
-          )}
-        </div>
-      </main>
-
-      <footer className="bg-[#284d32] h-[80px] w-[210mm] relative flex-shrink-0 flex items-center overflow-hidden">
-        <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '50%', transform: 'translateY(-50%)' }}>
-          {/* Address removed as per request */}
-        </div>
-        <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
-        <img
-          src={WHITE_ARROW_URL}
-          alt=""
-          className="absolute z-10 w-[10mm] h-[10mm]"
-          style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
-        />
-      </footer>
+      {/* Table layout: thead/tfoot repeat on every printed page */}
+      <table className="cv-print-table w-full border-collapse" style={{ borderSpacing: 0 }}>
+        <thead className="cv-print-thead">
+          <tr><td className="p-0 border-0">{headerContent}</td></tr>
+        </thead>
+        <tfoot className="cv-print-tfoot">
+          <tr><td className="p-0 border-0">{footerContent}</td></tr>
+        </tfoot>
+        <tbody>
+          <tr><td className="p-0 border-0">{bodyContent}</td></tr>
+        </tbody>
+      </table>
     </div>
   );
 };
