@@ -15,6 +15,7 @@ import * as mammoth from 'mammoth';
 import saveAs from 'file-saver';
 import { loadGoogleScripts } from './services/driveService';
 import { clsx } from 'clsx';
+import { config } from './config';
 
 const MAX_WAIT_MS = 90000;
 
@@ -30,16 +31,18 @@ const App: React.FC = () => {
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
+  const [apiKey, setApiKey] = useState(config.geminiApiKey || localStorage.getItem('gemini_api_key') || '');
+  const [trackingUrl, setTrackingUrl] = useState(config.trackingUrl || usageService.getTrackingUrl());
 
   const saveApiKey = () => {
     localStorage.setItem('gemini_api_key', apiKey);
+    usageService.setTrackingUrl(trackingUrl);
     setIsSettingsOpen(false);
-    alert("API Key opgeslagen!");
+    alert("Instellingen opgeslagen!");
   };
 
   useEffect(() => {
-    if (!localStorage.getItem('gemini_api_key')) {
+    if (!config.geminiApiKey && !localStorage.getItem('gemini_api_key')) {
       setIsSettingsOpen(true);
     }
   }, []);
@@ -286,6 +289,19 @@ const App: React.FC = () => {
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   Je API Key wordt lokaal in je browser opgeslagen en nooit verstuurd naar onze servers.
+                </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Google Apps Script URL (Optioneel)</label>
+                <input
+                  type="text"
+                  value={trackingUrl}
+                  onChange={(e) => setTrackingUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/..."
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#EE8D70]"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  URL voor externe logging (Google Sheets).
                 </p>
               </div>
               <div className="flex justify-end gap-3 mt-6">

@@ -6,6 +6,7 @@ import {
   CV_SCHEMA
 } from "../constants";
 import { ParsedCV } from "../types";
+import { config } from "../config";
 
 export interface CVInput {
   text: string;
@@ -80,9 +81,9 @@ export class GeminiService {
   }
 
   private getApiKey(): string {
-    const key = localStorage.getItem('gemini_api_key') || process.env.API_KEY || "";
+    const key = config.geminiApiKey || localStorage.getItem('gemini_api_key') || process.env.API_KEY || "";
     if (!key) {
-      throw new Error("API Key ontbreekt. Voer uw Google Gemini API Key in via de instellingen.");
+      throw new Error("API Key ontbreekt. Voer uw Google Gemini API Key in via de instellingen of config.ts.");
     }
     return key;
   }

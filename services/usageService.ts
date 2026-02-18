@@ -1,7 +1,9 @@
 
 import { CvConversionEvent, UsageSummary } from "../types";
+import { config } from "../config";
 
 const STORAGE_KEY = 'november_cv_usage_events';
+const TRACKING_URL_KEY = 'november_cv_tracking_url';
 
 class UsageService {
   private getEvents(): CvConversionEvent[] {
@@ -22,6 +24,30 @@ class UsageService {
     }
   }
 
+  public getTrackingUrl(): string {
+    return config.trackingUrl || localStorage.getItem(TRACKING_URL_KEY) || '';
+  }
+
+  public setTrackingUrl(url: string) {
+    localStorage.setItem(TRACKING_URL_KEY, url);
+  }
+
+  private async sendToTrackingUrl(data: any) {
+    const url = this.getTrackingUrl();
+    if (!url) return;
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        mode: 'no-cors' // Google Apps Script Web Apps often require no-cors for simple POSTs
+      });
+    } catch (e) {
+      console.error("Failed to send tracking data to remote URL", e);
+    }
+  }
+
   public async generateHash(content: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -39,7 +65,7 @@ class UsageService {
     const matches = events
       .filter(e => e.source_hash === sourceHash)
       .sort((a, b) => new Date(b.converted_at).getTime() - new Date(a.converted_at).getTime());
-    
+
     return matches.length > 0 ? matches[0].converted_at : null;
   }
 
@@ -51,7 +77,7 @@ class UsageService {
    */
   public recordConversion(cvId: string, sourceHash: string, fileName: string, generationId?: string): boolean {
     const events = this.getEvents();
-    
+
     // Idempotency check: if this specific generationId was already recorded, skip.
     // This prevents double-billing if the UI loop retries or the user double-clicks.
     if (generationId && events.some(e => e.event_id === generationId)) {
@@ -68,6 +94,15 @@ class UsageService {
 
     events.push(newEvent);
     this.saveEvents(events);
+
+    // Fire and forget remote tracking
+    this.sendToTrackingUrl({
+      cvId,
+      sourceHash,
+      fileName,
+      timestamp: newEvent.converted_at
+    });
+
     return true;
   }
 
@@ -80,7 +115,7 @@ class UsageService {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
-    
+
     return events.filter(e => {
       const d = new Date(e.converted_at);
       return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
@@ -108,3 +143,4 @@ class UsageService {
 }
 
 export const usageService = new UsageService();
+

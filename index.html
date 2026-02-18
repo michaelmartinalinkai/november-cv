@@ -82,24 +82,32 @@
         border: none !important;
       }
 
-      /* Table-based repeating header/footer */
+      /* Native Table Layout for Print
+         This ensures the header (thead) and footer (tfoot) repeat on every page
+         and occupy space, preventing content overlap. */
       .cv-print-table {
         display: table !important;
         width: 100% !important;
-        border-collapse: collapse !important;
       }
 
-      .cv-print-table td {
-        padding: 0 !important;
-        border: none !important;
-      }
-
-      .cv-print-thead {
+      .cv-print-table thead {
         display: table-header-group !important;
       }
 
-      .cv-print-tfoot {
+      .cv-print-table tfoot {
         display: table-footer-group !important;
+      }
+
+      .cv-print-table tbody {
+        display: table-row-group !important;
+      }
+
+      .cv-print-table tr {
+        display: table-row !important;
+      }
+
+      .cv-print-table td {
+        display: table-cell !important;
       }
 
       * {
