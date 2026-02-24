@@ -163,7 +163,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       <div className="flex flex-col justify-center h-full">
         <h1
           className="leading-tight mb-1"
-          style={{ fontSize: '32pt', fontWeight: 500, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.4px currentColor' }}
+          style={{ fontSize: '32pt', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif' }}
         >
           {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
         </h1>
