@@ -200,14 +200,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   // Footer content (reusable for both screen and print)
   const footerContent = (
     <div className="bg-[#284d32] h-[80px] w-full relative flex items-center overflow-hidden">
-      <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '50%', transform: 'translateY(-50%)' }}>
+      <div className="absolute h-[12px] bg-[#e3fd01] flex items-center" style={{ left: '0mm', width: '145mm', top: '55%', transform: 'translateY(-50%)' }}>
       </div>
-      <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '50%', transform: 'translateY(-50%)' }}></div>
+      <div className="absolute h-[12px] bg-[#e3fd01]" style={{ left: '165mm', width: '70mm', top: '55%', transform: 'translateY(-50%)' }}></div>
       <img
         src={WHITE_ARROW_URL}
         alt=""
         className="absolute z-10 w-[10mm] h-[10mm]"
-        style={{ left: '150mm', top: '20%', transform: 'translateY(-18%)' }}
+        style={{ left: '150mm', top: '25%', transform: 'translateY(-18%)' }}
       />
     </div>
   );
