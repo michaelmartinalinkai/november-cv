@@ -222,7 +222,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
       <section className="mb-8">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
-          <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>OPLEIDINGEN</h3>
+          <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>OPLEIDINGEN</h3>
         </div>
         <div className="space-y-0.5">
           {(data.education || []).map((edu, i) => (
@@ -240,7 +240,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
       <section className="mb-8">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
-          <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>WERKERVARING</h3>
+          <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>WERKERVARING</h3>
         </div>
         <div className="space-y-8">
           {(data.experience || []).map((exp, i) => (
@@ -276,7 +276,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         {data.systems && data.systems.length > 0 && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-              <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>SYSTEEMKENNIS</h3>
+              <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>SYSTEEMKENNIS</h3>
             </div>
             <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
           </section>
@@ -285,7 +285,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         {data.languages && data.languages.length > 0 && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-              <h3 className="font-bold uppercase tracking-[0.1em] text-black" style={{ fontSize: '8pt' }}>TALENKENNIS</h3>
+              <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>TALENKENNIS</h3>
             </div>
             <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
           </section>
