@@ -30,22 +30,6 @@ const App: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(config.geminiApiKey || localStorage.getItem('gemini_api_key') || '');
-  const [trackingUrl, setTrackingUrl] = useState(config.trackingUrl || usageService.getTrackingUrl());
-
-  const saveApiKey = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
-    usageService.setTrackingUrl(trackingUrl);
-    setIsSettingsOpen(false);
-    alert("Instellingen opgeslagen!");
-  };
-
-  useEffect(() => {
-    if (!config.geminiApiKey && !localStorage.getItem('gemini_api_key')) {
-      setIsSettingsOpen(true);
-    }
-  }, []);
 
   const processingRef = useRef<Set<string>>(new Set());
 
@@ -117,7 +101,20 @@ const App: React.FC = () => {
         files: item.base64Data ? [{ mimeType: item.mimeType!, data: item.base64Data }] : undefined
       });
       const result = await extractionPromise;
-      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'READY', statusMessage: 'Klaar voor stijl', result: result as ParsedCV } : q));
+
+      // Auto-process with 'new' template immediately
+      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'PROCESSING', statusMessage: 'Stijlen...' } : q));
+
+      const finalResult = await geminiService.parseCV({
+        text: JSON.stringify(result),
+        template: 'new'
+      });
+
+      const sourceHash = await usageService.generateHash(JSON.stringify(result) + 'new');
+      usageService.recordConversion(targetId, sourceHash, item.file.name, `gen_${targetId}_${Date.now()}`);
+      refreshCounters();
+
+      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'SUCCESS', statusMessage: 'Afgerond', result: finalResult as ParsedCV, template: 'new' } : q));
     } catch (err: any) {
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'ERROR', statusMessage: 'Fout', error: err.message } : q));
     } finally {
@@ -125,31 +122,9 @@ const App: React.FC = () => {
     }
   };
 
+  // Deprecated manual trigger (keeping for safety but unused in new flow)
   const processTemplate = async (targetId: string, template: 'old' | 'new') => {
-    if (processingRef.current.has(targetId)) return;
-    const item = queue.find(q => q.id === targetId);
-    if (!item || !item.result) return;
-
-    processingRef.current.add(targetId);
-    setIsProcessingBatch(true);
-    setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'PROCESSING', statusMessage: 'Stijlen...', template } : q));
-
-    try {
-      const finalResult = await geminiService.parseCV({
-        text: JSON.stringify(item.result),
-        template: template
-      });
-      const sourceHash = await usageService.generateHash(JSON.stringify(item.result) + template);
-      usageService.recordConversion(targetId, sourceHash, item.file.name, `gen_${targetId}_${Date.now()}`);
-      refreshCounters();
-      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'SUCCESS', statusMessage: 'Afgerond', result: finalResult as ParsedCV, template } : q));
-      setSelectedResultId(targetId);
-    } catch (err: any) {
-      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'ERROR', statusMessage: 'Fout', error: err.message } : q));
-    } finally {
-      processingRef.current.delete(targetId);
-      setIsProcessingBatch(false);
-    }
+    // Logic merged into startExtraction
   };
 
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, template?: 'old' | 'new', sourceId?: string) => {
@@ -237,17 +212,7 @@ const App: React.FC = () => {
     }
 
     if (selectedItem.status === 'READY') {
-      return (
-        <div className="flex flex-col items-center mt-32 text-center animate-fade-in">
-          <div className="bg-[#EE8D70]/10 p-6 rounded-full mb-6 text-[#EE8D70]"><Layout size={40} /></div>
-          <h3 className="font-serif text-2xl font-bold text-[#1E3A35] mb-2">Analyse voltooid</h3>
-          <p className="text-sm text-neutral-500 mb-10 max-w-sm">Kies een stijl om het CV definitief te maken.</p>
-          <div className="flex flex-col md:flex-row gap-6">
-            <Button onClick={() => processTemplate(selectedItem.id, 'old')} variant="secondary" className="px-10 py-5 shadow-md border-neutral-200 hover:border-[#EE8D70] min-w-[220px]">OUDE STYLE CV</Button>
-            <Button onClick={() => processTemplate(selectedItem.id, 'new')} variant="primary" className="px-10 py-5 shadow-md min-w-[220px]">NIEUWE STYLE CV</Button>
-          </div>
-        </div>
-      );
+      return null;
     }
 
     if (selectedItem.status === 'PENDING' || selectedItem.status === 'ERROR') {
@@ -265,53 +230,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-[#fdfdfd]">
-      <Header usageCount={usageCount} totalCount={totalCount} onOpenUsage={() => setIsUsageModalOpen(true)} onOpenSettings={() => setIsSettingsOpen(true)} />
+      <Header usageCount={usageCount} totalCount={totalCount} onOpenUsage={() => setIsUsageModalOpen(true)} />
 
-      {/* Settings Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="font-serif text-xl font-bold text-[#1E3A35]">Instellingen</h3>
-              <button onClick={() => setIsSettingsOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Google Gemini API Key</label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="AIzaSy..."
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#EE8D70]"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Je API Key wordt lokaal in je browser opgeslagen en nooit verstuurd naar onze servers.
-                </p>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Google Apps Script URL (Optioneel)</label>
-                <input
-                  type="text"
-                  value={trackingUrl}
-                  onChange={(e) => setTrackingUrl(e.target.value)}
-                  placeholder="https://script.google.com/macros/s/..."
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#EE8D70]"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  URL voor externe logging (Google Sheets).
-                </p>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md">Annuleren</button>
-                <Button onClick={saveApiKey} variant="primary">Opslaan</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {!isAuthenticated ? <LoginScreen onLogin={handleLogin} /> : (
         <>
           <UsageModal isOpen={isUsageModalOpen} onClose={() => setIsUsageModalOpen(false)} />

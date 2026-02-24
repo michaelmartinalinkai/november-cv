@@ -81,9 +81,9 @@ export class GeminiService {
   }
 
   private getApiKey(): string {
-    const key = config.geminiApiKey || localStorage.getItem('gemini_api_key') || process.env.API_KEY || "";
+    const key = config.geminiApiKey || process.env.API_KEY || "";
     if (!key) {
-      throw new Error("API Key ontbreekt. Voer uw Google Gemini API Key in via de instellingen of config.ts.");
+      throw new Error("API Key ontbreekt. Voer uw Google Gemini API Key in via config.ts of .env file.");
     }
     return key;
   }

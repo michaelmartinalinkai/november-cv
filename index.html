@@ -85,9 +85,12 @@
       /* Native Table Layout for Print
          This ensures the header (thead) and footer (tfoot) repeat on every page
          and occupy space, preventing content overlap. */
+      /* Native Table Layout for Print */
       .cv-print-table {
         display: table !important;
         width: 100% !important;
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
       }
 
       .cv-print-table thead {
@@ -104,11 +107,55 @@
 
       .cv-print-table tr {
         display: table-row !important;
+        break-inside: avoid !important;
       }
 
       .cv-print-table td {
         display: table-cell !important;
       }
+
+      /* Spacing fix: Add height/padding to header/footer cells to reserve space */
+      .cv-print-thead td {
+        height: 140px !important;
+        /* Matches header height */
+        padding-bottom: 20px !important;
+        /* Space after header */
+        background: white !important;
+      }
+
+      .cv-print-tfoot td {
+        height: 80px !important;
+        /* Matches footer height */
+        padding-top: 20px !important;
+        /* Space before footer */
+        background: white !important;
+        visibility: hidden !important;
+      }
+
+      /* Fixed footer for Print (Visible) */
+      /* This was previously incorrectly nested or conflicting. 
+         We will define the screen-hiding rule globally below. */
+    }
+
+    /* Global rule to hide print footer on screen */
+    .print-only-footer {
+      display: none !important;
+    }
+
+    /* Print-specific overrides */
+    @media print {
+      .print-only-footer {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        /* 210mm */
+        height: 80px !important;
+        z-index: 9999 !important;
+        background: white !important;
+      }
+
 
       * {
         -webkit-print-color-adjust: exact !important;

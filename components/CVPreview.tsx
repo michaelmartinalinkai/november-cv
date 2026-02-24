@@ -188,7 +188,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
   // Main body content
   const bodyContent = (
-    <div className="p-12 pt-10">
+    <div className="p-12 pt-4">
       <section className="mb-6 flex flex-col items-center w-full">
         <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
           WAAR DEZE PROFESSIONAL STERK IN IS
@@ -212,7 +212,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         </div>
         <div className="space-y-0.5">
           {(data.education || []).map((edu, i) => (
-            <div key={i} className="grid grid-cols-[70px_1fr] gap-x-2" style={{ fontSize: '8pt' }}>
+            <div key={i} className="grid grid-cols-[95px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
               <div className="opacity-70 font-normal">{edu.period}</div>
               <div>
                 <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
@@ -285,12 +285,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       className="print-container w-[210mm] mx-auto bg-white relative overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
       style={{ fontFamily: 'Garet, sans-serif', color: '#4a4e57' }}
     >
+      {/* Fixed Footer (Visible on every page at bottom) */}
+      <div className="print-only-footer">
+        {footerContent}
+      </div>
+
       {/* Table layout: thead/tfoot repeat on every printed page */}
       <table className="cv-print-table w-full border-collapse" style={{ borderSpacing: 0 }}>
         <thead className="cv-print-thead">
           <tr><td className="p-0 border-0">{headerContent}</td></tr>
         </thead>
         <tfoot className="cv-print-tfoot">
+          {/* Content hidden by CSS, acts as spacer */}
           <tr><td className="p-0 border-0">{footerContent}</td></tr>
         </tfoot>
         <tbody>

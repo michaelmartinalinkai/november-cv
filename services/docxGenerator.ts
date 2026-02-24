@@ -132,39 +132,53 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
   });
 
   // --- FOOTER ---
+  // UI: Green background, Yellow horizontal bars, White Arrow. No text.
+  // Approx layout: Left Yellow Bar (65%), Arrow gap (10%), Right Yellow Bar (25%)
   const footer = new Footer({
     children: [
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         borders: allNoBorders,
         rows: [
+          // Top spacing (Green)
           new TableRow({
-            height: { value: 600, rule: HeightRule.EXACT },
+            height: { value: 500, rule: HeightRule.EXACT }, // ~25px
+            children: [
+              new TableCell({ shading: { fill: COLOR_GREEN }, children: [new Paragraph({})] })
+            ]
+          }),
+          // The "Stripe" row
+          new TableRow({
+            height: { value: 400, rule: HeightRule.EXACT }, // ~20px (Arrow height)
             children: [
               new TableCell({
-                shading: { fill: COLOR_LIME },
-                margins: { left: 1000 },
-                verticalAlign: VerticalAlign.CENTER,
-                children: [
-                  new Paragraph({ children: [new TextRun({ text: "NOVÉMBER. B.V. | Olympisch Stadion 24-28 | 1076 DE | Amsterdam | KVK 78054389 | NL861247656B01", color: COLOR_BLACK, size: 13, font: FONT_BRAND })] }) // 6.5pt * 2
-                ]
+                width: { size: 65, type: WidthType.PERCENTAGE },
+                shading: { fill: COLOR_LIME }, // Left yellow bar
+                children: [new Paragraph({})]
               }),
               new TableCell({
                 width: { size: 10, type: WidthType.PERCENTAGE },
-                shading: { fill: COLOR_GREEN },
+                shading: { fill: COLOR_GREEN }, // Gap for arrow
                 verticalAlign: VerticalAlign.CENTER,
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    children: arrowBuffer ? [new ImageRun({ data: arrowBuffer, transformation: { width: 30, height: 30 }, type: "png" })] : []
+                    children: arrowBuffer ? [new ImageRun({ data: arrowBuffer, transformation: { width: 35, height: 35 }, type: "png" })] : []
                   })
                 ]
               }),
               new TableCell({
-                width: { size: 10, type: WidthType.PERCENTAGE },
-                shading: { fill: COLOR_LIME },
-                children: [new Paragraph({ text: "" })]
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                shading: { fill: COLOR_LIME }, // Right yellow bar
+                children: [new Paragraph({})]
               })
+            ]
+          }),
+          // Bottom spacing (Green)
+          new TableRow({
+            height: { value: 500, rule: HeightRule.EXACT }, // ~25px
+            children: [
+              new TableCell({ shading: { fill: COLOR_GREEN }, children: [new Paragraph({})] })
             ]
           })
         ]

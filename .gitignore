@@ -26,3 +26,4 @@ config.ts
 .env
 .env.local
 
+.vercel
