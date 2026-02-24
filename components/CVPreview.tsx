@@ -204,7 +204,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   const bodyContent = (
     <div className="p-12 pt-8">
       <section className="mb-6 flex flex-col items-center w-full">
-        <h3 className="font-semibold tracking-[0.05em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
+        <h3 className="font-semibold tracking-[0.01em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
           WAAR DEZE PROFESSIONAL STERK IN IS
         </h3>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
