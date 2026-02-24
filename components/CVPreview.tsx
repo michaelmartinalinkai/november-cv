@@ -232,7 +232,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         </div>
       </section>
 
-      <section className="mb-8">
+      <section className="mb-5">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>OPLEIDINGEN</h3>
         </div>
@@ -250,7 +250,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
       <OrangeSeparator />
 
-      <section className="mb-8">
+      <section className="mb-5">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>WERKERVARING</h3>
         </div>
