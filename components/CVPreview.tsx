@@ -212,7 +212,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         </div>
         <div className="space-y-0.5">
           {(data.education || []).map((edu, i) => (
-            <div key={i} className="grid grid-cols-[95px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
+            <div key={i} className="grid grid-cols-[140px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
               <div className="opacity-70 font-normal">{edu.period}</div>
               <div>
                 <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
