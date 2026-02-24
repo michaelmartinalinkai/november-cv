@@ -229,7 +229,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             <div key={i} className="grid grid-cols-[150px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
               <div className="opacity-70 font-normal">{shortenMonths(edu.period)}</div>
               <div>
-                <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
+                <span className="text-black">{edu.degree}</span> <span className="font-normal opacity-70">- {edu.status}</span>
               </div>
             </div>
           ))}
@@ -249,7 +249,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
                 <span className="block mb-1 opacity-70 font-medium">{shortenMonths(exp.period)}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
-                  <span className="text-neutral-300">|</span>
+                  <span className="text-black/30">|</span>
                   <span className="font-bold uppercase tracking-wider text-black">{
                     exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
                       ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
@@ -297,7 +297,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   return (
     <div
       className="print-container w-[210mm] mx-auto bg-white relative overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
-      style={{ fontFamily: 'Garet, sans-serif', color: '#4a4e57' }}
+      style={{ fontFamily: 'Garet, sans-serif', color: '#000000' }}
     >
       {/* Fixed Footer (Visible on every page at bottom) */}
       <div className="print-only-footer">
