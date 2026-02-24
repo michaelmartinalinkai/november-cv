@@ -22,7 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-config.ts
 .env
 .env.local
 
