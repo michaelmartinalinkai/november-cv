@@ -251,10 +251,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       <OrangeSeparator />
 
       <section className="mb-8">
-        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-6">
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>WERKERVARING</h3>
         </div>
-        <div className="space-y-8">
+        <div className="space-y-5">
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontSize: '8pt' }}>
               <div className="mb-2">
