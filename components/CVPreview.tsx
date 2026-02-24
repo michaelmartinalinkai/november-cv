@@ -17,6 +17,20 @@ const toTitleCase = (str: string) => {
   }).join(' ');
 };
 
+const shortenMonths = (text: string) => {
+  if (!text) return text;
+  const monthMap: Record<string, string> = {
+    'januari': 'Jan', 'februari': 'Feb', 'maart': 'Mrt', 'april': 'Apr', 'mei': 'Mei', 'juni': 'Jun',
+    'juli': 'Jul', 'augustus': 'Aug', 'september': 'Sep', 'oktober': 'Okt', 'november': 'Nov', 'december': 'Dec',
+    'january': 'Jan', 'february': 'Feb', 'march': 'Mar', 'may': 'May', 'june': 'Jun',
+    'july': 'Jul', 'august': 'Aug', 'october': 'Oct'
+  };
+  return text.replace(/\b([a-zA-Z]{3,})\b/g, (match) => {
+    const lower = match.toLowerCase();
+    return monthMap[lower] ? monthMap[lower] : match;
+  });
+};
+
 export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) => {
   if (!data) return null;
 
@@ -63,7 +77,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           <div className="space-y-0.5">
             {(data.education || []).map((edu, i) => (
               <div key={i} className="flex gap-x-12">
-                <span className="w-[100px] shrink-0">{edu.period}</span>
+                <span className="w-[100px] shrink-0">{shortenMonths(edu.period)}</span>
                 <span>{edu.degree} ({edu.status})</span>
               </div>
             ))}
@@ -77,7 +91,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             <div className="space-y-0.5">
               {data.courses.map((c, i) => (
                 <div key={i} className="flex gap-x-12">
-                  <span className="w-[100px] shrink-0">{c.period}</span>
+                  <span className="w-[100px] shrink-0">{shortenMonths(c.period)}</span>
                   <span>{c.title}{c.institute ? ` - ${c.institute}` : ''}</span>
                 </div>
               ))}
@@ -106,7 +120,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             {(data.experience || []).map((exp, i) => (
               <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5">
                 <span className="text-neutral-500">Datum</span>
-                <span>{exp.period}</span>
+                <span>{shortenMonths(exp.period)}</span>
 
                 <span className="text-neutral-500">Werkgever</span>
                 <span>{exp.employer}</span>
@@ -190,7 +204,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   const bodyContent = (
     <div className="p-12 pt-4">
       <section className="mb-6 flex flex-col items-center w-full">
-        <h3 className="font-medium tracking-[0.1em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
+        <h3 className="font-bold tracking-[0.05em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt' }}>
           WAAR DEZE PROFESSIONAL STERK IN IS
         </h3>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
@@ -212,8 +226,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         </div>
         <div className="space-y-0.5">
           {(data.education || []).map((edu, i) => (
-            <div key={i} className="grid grid-cols-[140px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
-              <div className="opacity-70 font-normal">{edu.period}</div>
+            <div key={i} className="grid grid-cols-[100px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
+              <div className="opacity-70 font-normal">{shortenMonths(edu.period)}</div>
               <div>
                 <span className="text-black">{edu.degree}</span> <span className="text-gray-500 font-normal opacity-70">- {edu.status}</span>
               </div>
@@ -232,7 +246,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontSize: '8pt' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70 font-medium">{exp.period}</span>
+                <span className="block mb-1 opacity-70 font-medium">{shortenMonths(exp.period)}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
                   <span className="text-neutral-300">|</span>
