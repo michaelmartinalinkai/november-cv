@@ -17,17 +17,29 @@ const toTitleCase = (str: string) => {
   }).join(' ');
 };
 
-const shortenMonths = (text: string) => {
+const formatDateToNumbers = (text: string) => {
   if (!text) return text;
+
   const monthMap: Record<string, string> = {
-    'januari': 'Jan', 'februari': 'Feb', 'maart': 'Mrt', 'april': 'Apr', 'mei': 'Mei', 'juni': 'Jun',
-    'juli': 'Jul', 'augustus': 'Aug', 'september': 'Sep', 'oktober': 'Okt', 'november': 'Nov', 'december': 'Dec',
-    'january': 'Jan', 'february': 'Feb', 'march': 'Mar', 'may': 'May', 'june': 'Jun',
-    'july': 'Jul', 'august': 'Aug', 'october': 'Oct'
+    'januari': '01', 'februari': '02', 'maart': '03', 'april': '04', 'mei': '05', 'juni': '06',
+    'juli': '07', 'augustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'december': '12',
+    'january': '01', 'february': '02', 'march': '03', 'may': '05', 'june': '06',
+    'july': '07', 'august': '08', 'october': '10',
+    'jan': '01', 'feb': '02', 'mrt': '03', 'apr': '04', 'jun': '06', 'jul': '07',
+    'aug': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'dec': '12',
+    'mar': '03', 'oct': '10'
   };
-  return text.replace(/\b([a-zA-Z]{3,})\b/g, (match) => {
-    const lower = match.toLowerCase();
-    return monthMap[lower] ? monthMap[lower] : match;
+
+  // Replace "Month YYYY" or "Month" with "MM/YYYY" or just "MM"
+  // Note: we look for month name followed optionally by a space and 4 digits
+  return text.replace(/\b([a-zA-Z]+)\s*(\d{4})?\b/g, (match, monthStr, yearStr) => {
+    const lower = monthStr.toLowerCase();
+    const monthNum = monthMap[lower];
+
+    if (monthNum) {
+      return yearStr ? `${monthNum}/${yearStr}` : monthNum;
+    }
+    return match; // return original if not a recognized month
   });
 };
 
@@ -77,7 +89,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           <div className="space-y-0.5">
             {(data.education || []).map((edu, i) => (
               <div key={i} className="flex gap-x-12">
-                <span className="w-[100px] shrink-0">{shortenMonths(edu.period)}</span>
+                <span className="w-[100px] shrink-0">{formatDateToNumbers(edu.period)}</span>
                 <span>{edu.degree} ({edu.status})</span>
               </div>
             ))}
@@ -91,7 +103,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             <div className="space-y-0.5">
               {data.courses.map((c, i) => (
                 <div key={i} className="flex gap-x-12">
-                  <span className="w-[100px] shrink-0">{shortenMonths(c.period)}</span>
+                  <span className="w-[100px] shrink-0">{formatDateToNumbers(c.period)}</span>
                   <span>{c.title}{c.institute ? ` - ${c.institute}` : ''}</span>
                 </div>
               ))}
@@ -120,7 +132,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             {(data.experience || []).map((exp, i) => (
               <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5">
                 <span className="text-neutral-500">Datum</span>
-                <span>{shortenMonths(exp.period)}</span>
+                <span>{formatDateToNumbers(exp.period)}</span>
 
                 <span className="text-neutral-500">Werkgever</span>
                 <span>{exp.employer}</span>
@@ -227,7 +239,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         <div className="space-y-0.5">
           {(data.education || []).map((edu, i) => (
             <div key={i} className="grid grid-cols-[150px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
-              <div className="opacity-70 font-normal">{shortenMonths(edu.period)}</div>
+              <div className="opacity-70 font-normal">{formatDateToNumbers(edu.period)}</div>
               <div>
                 <span className="text-black">{edu.degree}</span> <span className="font-normal opacity-70">- {edu.status}</span>
               </div>
@@ -246,7 +258,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontSize: '8pt' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70 font-medium">{shortenMonths(exp.period)}</span>
+                <span className="block mb-1 opacity-70 font-medium">{formatDateToNumbers(exp.period)}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
                   <span className="text-black/30">|</span>
