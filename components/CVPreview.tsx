@@ -236,14 +236,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="font-bold uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt' }}>OPLEIDINGEN</h3>
         </div>
-        <div className="space-y-0.5">
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8pt' }}>
           {(data.education || []).map((edu, i) => (
-            <div key={i} className="grid grid-cols-[150px_1fr] gap-x-4" style={{ fontSize: '8pt' }}>
-              <div className="opacity-70 font-normal">{formatDateToNumbers(edu.period)}</div>
-              <div>
+            <React.Fragment key={i}>
+              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5">{formatDateToNumbers(edu.period)}</div>
+              <div className="pb-0.5">
                 <span className="text-black">{edu.degree}</span> <span className="font-normal opacity-70">- {edu.status}</span>
               </div>
-            </div>
+            </React.Fragment>
           ))}
         </div>
       </section>
