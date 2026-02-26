@@ -175,7 +175,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       <div className="flex flex-col justify-center h-full">
         <h1
           className="leading-tight mb-1"
-          style={{ fontSize: '41.1px', fontWeight: 700, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif' }}
+          style={{ fontSize: '41.1px', fontWeight: 500, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.5px #ffffff' }}
         >
           {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
         </h1>
@@ -328,14 +328,20 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
     >
       {/* Table layout: thead repeats header, tfoot repeats footer on every printed page */}
       <table className="cv-print-table w-full border-collapse" style={{ borderSpacing: 0 }}>
-        <thead className="cv-print-thead">
+        {/* thead hidden on screen, shown as table-header-group in print */}
+        <thead className="cv-print-thead" style={{ display: 'none' }}>
           <tr><td className="p-0 border-0">{headerContent}</td></tr>
         </thead>
-        <tfoot className="cv-print-tfoot">
+        {/* tfoot hidden on screen, shown as table-footer-group in print */}
+        <tfoot className="cv-print-tfoot" style={{ display: 'none' }}>
           <tr><td className="p-0 border-0">{footerContent}</td></tr>
         </tfoot>
         <tbody>
-          <tr><td className="p-0 border-0">{bodyContent}</td></tr>
+          <tr><td className="p-0 border-0">
+            {/* Screen: show header above body */}
+            <div className="print:hidden">{headerContent}</div>
+            {bodyContent}
+          </td></tr>
         </tbody>
       </table>
       {/* Screen-only footer — shown below content on screen, hidden in print (tfoot handles print) */}
