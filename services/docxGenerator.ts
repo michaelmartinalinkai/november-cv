@@ -111,10 +111,25 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                     spacing: { before: 80 },
                     children: [
                       new TextRun({
-                        text: `${data.personalInfo.availability || "Beschikbaarheid onbekend"}${data.personalInfo.hours ? ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}` : ''}${data.personalInfo.skj ? ` | SKJ-Registratie: ${data.personalInfo.skj}${data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}` : ''}`,
+                        text: (() => {
+                          const isValid = (v?: string | null) =>
+                            v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+                          const parts: string[] = [];
+                          if (isValid(data.personalInfo.availability)) parts.push(data.personalInfo.availability!);
+                          if (isValid(data.personalInfo.hours)) {
+                            const h = data.personalInfo.hours!;
+                            parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
+                          }
+                          if (isValid(data.personalInfo.skj)) {
+                            const skj = data.personalInfo.skj!;
+                            const skjDate = isValid(data.personalInfo.skjDate) ? ` (afgegeven op ${data.personalInfo.skjDate})` : '';
+                            parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
+                          }
+                          return parts.join(' | ');
+                        })(),
                         color: COLOR_LIME,
-                        size: 16, // 8px * 2
-                        font: "Agrandir"
+                        size: 18, // 9px * 2
+                        font: 'Agrandir'
                       })
                     ]
                   }),

@@ -179,12 +179,22 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         >
           {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
         </h1>
-        <p className="text-[#e3fd01]" style={{ fontSize: '8px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
-          {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
-          {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
-          {data.personalInfo?.skj && (
-            <> | SKJ-Registratie: {data.personalInfo.skj}{data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}</>
-          )}
+        <p className="text-[#e3fd01]" style={{ fontSize: '9px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
+          {(() => {
+            const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+            const parts: string[] = [];
+            if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
+            if (isValid(data.personalInfo?.hours)) {
+              const h = data.personalInfo!.hours!;
+              parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
+            }
+            if (isValid(data.personalInfo?.skj)) {
+              const skj = data.personalInfo!.skj!;
+              const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
+              parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
+            }
+            return parts.join(' | ') || null;
+          })()}
         </p>
       </div>
       <div className="flex-shrink-0 mt-0">
