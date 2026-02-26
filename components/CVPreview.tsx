@@ -219,16 +219,31 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         <h3 className="tracking-[0.01em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt', fontWeight: 500 }}>
           WAAR DEZE PROFESSIONAL STERK IN IS
         </h3>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4 w-full">
-          {displaySkills.map((skill, i) => (
-            <div
-              key={i}
-              className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
-              style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
-            >
-              {skill}
-            </div>
-          ))}
+        <div className="flex flex-col items-center gap-y-3 w-full">
+          {/* Row 1: always 3 pills */}
+          <div className="flex justify-center gap-x-4">
+            {displaySkills.slice(0, 3).map((skill, i) => (
+              <div
+                key={i}
+                className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
+                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
+              >
+                {skill}
+              </div>
+            ))}
+          </div>
+          {/* Row 2: always 2 pills */}
+          <div className="flex justify-center gap-x-4">
+            {displaySkills.slice(3, 5).map((skill, i) => (
+              <div
+                key={i}
+                className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
+                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
+              >
+                {skill}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -206,23 +206,49 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       children: [new TextRun({ text: "WAAR DEZE PROFESSIONAL STERK IN IS", bold: false, size: 22, font: FONT_BRAND, color: COLOR_BLACK, characterSpacing: 20 })] // 11pt * 2
     }),
 
-    // Skills Pills via Table
+    // Skills Pills via Table: row 1 = 3 pills, row 2 = 2 pills centered
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       borders: allNoBorders,
-      rows: [new TableRow({
-        children: displayTags.map(tag => new TableCell({
-          shading: { fill: COLOR_SALMON, color: "auto" },
-          verticalAlign: VerticalAlign.CENTER,
-          margins: { top: 100, bottom: 100, left: 200, right: 200 },
+      rows: [
+        // Row 1: first 3 tags
+        new TableRow({
+          children: displayTags.slice(0, 3).map(tag => new TableCell({
+            shading: { fill: COLOR_SALMON, color: "auto" },
+            verticalAlign: VerticalAlign.CENTER,
+            margins: { top: 100, bottom: 100, left: 200, right: 200 },
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [new TextRun({ text: tag.toUpperCase(), color: COLOR_WHITE, bold: true, size: 24, font: FONT_BRAND })]
+              })
+            ]
+          }))
+        }),
+        // Spacer row
+        new TableRow({
+          height: { value: 100, rule: HeightRule.EXACT },
+          children: [new TableCell({ children: [new Paragraph({})], columnSpan: 3 })]
+        }),
+        // Row 2: last 2 tags, centered with empty flanking cells
+        new TableRow({
           children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: tag.toUpperCase(), color: COLOR_WHITE, bold: true, size: 24, font: FONT_BRAND })] // 12px * 2
-            })
+            new TableCell({ children: [new Paragraph({})], borders: allNoBorders }),
+            ...displayTags.slice(3, 5).map(tag => new TableCell({
+              shading: { fill: COLOR_SALMON, color: "auto" },
+              verticalAlign: VerticalAlign.CENTER,
+              margins: { top: 100, bottom: 100, left: 200, right: 200 },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: tag.toUpperCase(), color: COLOR_WHITE, bold: true, size: 24, font: FONT_BRAND })]
+                })
+              ]
+            })),
+            new TableCell({ children: [new Paragraph({})], borders: allNoBorders }),
           ]
-        }))
-      })]
+        }),
+      ]
     }),
 
     new Paragraph({ spacing: { before: 600 } }),
