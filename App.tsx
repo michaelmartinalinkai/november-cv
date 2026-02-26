@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const processingRef = useRef<Set<string>>(new Set());
 
@@ -155,6 +156,15 @@ const App: React.FC = () => {
     }
   };
 
+  const handlePreviewEdit = (newData: ParsedCV) => {
+    if (!selectedResultId) return;
+    setQueue(prev => prev.map(item =>
+      item.id === selectedResultId
+        ? { ...item, result: newData }
+        : item
+    ));
+  };
+
   const renderDashboardContent = () => {
     const selectedItem = queue.find(i => i.id === selectedResultId);
     if (!selectedItem) return (
@@ -190,10 +200,20 @@ const App: React.FC = () => {
               <button onClick={() => setQueue(prev => prev.map(q => q.id === selectedItem.id ? { ...q, status: 'READY', result: undefined, template: undefined } : q))} className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest hover:text-[#EE8D70] transition-colors">Aanpassen</button>
             </div>
             <div className="relative flex flex-col items-end gap-1">
-              <Button onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} variant="primary" className="shadow-lg h-10 px-8">
-                DOWNLOAD <ChevronDown size={14} className="ml-2" />
-              </Button>
-              <span className="text-[10px] text-gray-500 font-mono">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant={isEditing ? "primary" : "secondary"}
+                  className={clsx("h-10 px-6 transition-all", isEditing ? "bg-[#e3fd01] text-black border-[#e3fd01]" : "")}
+                >
+                  <Settings size={14} className="mr-2" />
+                  {isEditing ? "Klaar met bewerken" : "Bewerken"}
+                </Button>
+                <Button onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} variant="primary" className="shadow-lg h-10 px-8">
+                  DOWNLOAD <ChevronDown size={14} className="ml-2" />
+                </Button>
+              </div>
+              <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
               </span>
               {isDownloadMenuOpen && (
@@ -204,8 +224,18 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="scale-[0.85] lg:scale-100 origin-top transform print-container bg-white shadow-2xl mb-20 border border-neutral-200">
-            <CVPreview data={selectedItem.result} template={selectedItem.template} />
+          <div className={clsx("scale-[0.85] lg:scale-100 origin-top transform print-container bg-white shadow-2xl mb-20 border transition-colors", isEditing ? "border-[#e3fd01] ring-4 ring-[#e3fd01]/20" : "border-neutral-200")}>
+            {isEditing && (
+              <div className="absolute top-0 left-0 w-full bg-[#1E3A35] text-white text-xs text-center py-1.5 font-bold tracking-widest z-50 animate-fade-in no-print">
+                BEWERK MODUS ACTIEF — KLIK OP TEKST OM TE WIJZIGEN
+              </div>
+            )}
+            <CVPreview
+              data={selectedItem.result}
+              template={selectedItem.template}
+              isEditing={isEditing}
+              onChange={handlePreviewEdit}
+            />
           </div>
         </div>
       );

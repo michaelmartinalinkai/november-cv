@@ -1,10 +1,13 @@
 import React from 'react';
 import { ParsedCV } from '../types';
 import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
+import { EditableText } from './EditableText';
 
 interface CVPreviewProps {
   data: ParsedCV;
   template?: 'old' | 'new';
+  isEditing?: boolean;
+  onChange?: (newData: ParsedCV) => void;
 }
 
 const OrangeSeparator = () => (
@@ -43,7 +46,7 @@ const formatDateToNumbers = (text: string) => {
   });
 };
 
-export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) => {
+export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', isEditing, onChange }) => {
   if (!data) return null;
 
   // Common font settings for CVs
@@ -169,6 +172,20 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
   const displaySkills = [...rawTags.slice(0, 5)];
   while (displaySkills.length < 5) displaySkills.push("Professional");
 
+  const handleEdit = (path: (string | number)[], value: string) => {
+    if (!onChange) return;
+    const newData = JSON.parse(JSON.stringify(data)); // Deep clone
+    let current = newData;
+    for (let i = 0; i < path.length - 1; i++) {
+      if (current[path[i]] === undefined) {
+        current[path[i]] = typeof path[i + 1] === 'number' ? [] : {};
+      }
+      current = current[path[i]];
+    }
+    current[path[path.length - 1]] = value;
+    onChange(newData);
+  };
+
   // Header content (reusable for both screen and print)
   const headerContent = (
     <div className="bg-[#284d32] text-white p-12 py-8 flex justify-between items-start relative z-10 min-h-[140px]">
@@ -177,24 +194,37 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           className="leading-tight mb-1"
           style={{ fontSize: '41.1px', fontWeight: 500, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.5px #ffffff' }}
         >
-          {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
+          <EditableText
+            value={toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
+            onChange={(v) => handleEdit(['personalInfo', 'name'], v)}
+            isEditing={!!isEditing}
+          />
         </h1>
         <p className="text-[#e3fd01]" style={{ fontSize: '9px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
-          {(() => {
-            const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
-            const parts: string[] = [];
-            if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
-            if (isValid(data.personalInfo?.hours)) {
-              const h = data.personalInfo!.hours!;
-              parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
-            }
-            if (isValid(data.personalInfo?.skj)) {
-              const skj = data.personalInfo!.skj!;
-              const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
-              parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
-            }
-            return parts.join(' | ') || null;
-          })()}
+          {isEditing ? (
+            <div className="flex flex-col gap-1 items-start mt-2">
+              <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Uren:</span> <EditableText value={data.personalInfo?.hours || ''} onChange={(v) => handleEdit(['personalInfo', 'hours'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">SKJ Nummer:</span> <EditableText value={data.personalInfo?.skj || ''} onChange={(v) => handleEdit(['personalInfo', 'skj'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">SKJ Afgegeven:</span> <EditableText value={data.personalInfo?.skjDate || ''} onChange={(v) => handleEdit(['personalInfo', 'skjDate'], v)} isEditing={true} /></div>
+            </div>
+          ) : (
+            (() => {
+              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+              const parts: string[] = [];
+              if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
+              if (isValid(data.personalInfo?.hours)) {
+                const h = data.personalInfo!.hours!;
+                parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
+              }
+              if (isValid(data.personalInfo?.skj)) {
+                const skj = data.personalInfo!.skj!;
+                const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
+                parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
+              }
+              return parts.join(' | ') || null;
+            })()
+          )}
         </p>
       </div>
       <div className="flex-shrink-0 mt-0">
@@ -264,9 +294,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => (
             <React.Fragment key={i}>
-              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5">{formatDateToNumbers(edu.period)}</div>
+              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5">
+                <EditableText value={formatDateToNumbers(edu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
+              </div>
               <div className="pb-0.5">
-                <span className="text-black">{edu.degree}</span> <span className="font-normal opacity-70">- {edu.status}</span>
+                <span className="text-black">
+                  <EditableText value={edu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
+                </span> <span className="font-normal opacity-70">- <EditableText value={edu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} /></span>
               </div>
             </React.Fragment>
           ))}
@@ -283,22 +317,39 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontFamily: 'Garet, sans-serif' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70" style={{ fontSize: '8px' }}>{formatDateToNumbers(exp.period)}</span>
+                <span className="block mb-1 opacity-70" style={{ fontSize: '8px' }}>
+                  <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
+                </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[#1E3A35]" style={{ fontSize: '8px' }}>{exp.employer}</span>
+                  <span className="text-[#1E3A35]" style={{ fontSize: '8px' }}>
+                    <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', i, 'employer'], v)} isEditing={!!isEditing} multiline />
+                  </span>
                   <span className="text-black/30" style={{ fontSize: '8px' }}>|</span>
-                  <span className="text-black" style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'Garet, sans-serif' }}>{
-                    exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
-                      ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
-                      : exp.role
-                  }</span>
+                  <span className="text-black" style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'Garet, sans-serif' }}>
+                    <EditableText
+                      value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                        ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                        : exp.role}
+                      onChange={(v) => handleEdit(['experience', i, 'role'], v)}
+                      isEditing={!!isEditing}
+                      multiline
+                    />
+                  </span>
                 </div>
               </div>
               <ul className="list-none space-y-0 ml-1">
                 {(exp.bullets || []).map((bullet, bi) => (
                   <li key={bi} className="flex items-start gap-2 leading-snug">
                     <span className="flex-shrink-0 text-black" style={{ fontSize: '8px' }}>•</span>
-                    <span style={{ fontSize: '8px' }}>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
+                    <span style={{ fontSize: '8px' }}>
+                      <EditableText
+                        value={bullet.trim().replace(/[.;]+$/, '')}
+                        onChange={(v) => handleEdit(['experience', i, 'bullets', bi], v)}
+                        isEditing={!!isEditing}
+                        multiline
+                      />
+                      {bi === exp.bullets.length - 1 ? '.' : ';'}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -315,7 +366,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
               <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>SYSTEEMKENNIS</h3>
             </div>
-            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>{data.systems.join(' | ')}</p>
+            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
+              <EditableText
+                value={(data.systems || []).join(' | ')}
+                onChange={(v) => handleEdit(['systems'], v.split('|').map(s => s.trim()).filter(Boolean))}
+                isEditing={!!isEditing}
+                multiline
+              />
+            </p>
           </section>
         )}
 
@@ -324,7 +382,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
               <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>TALENKENNIS</h3>
             </div>
-            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>{data.languages.join(' | ')}</p>
+            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
+              <EditableText
+                value={(data.languages || []).join(' | ')}
+                onChange={(v) => handleEdit(['languages'], v.split('|').map(s => s.trim()).filter(Boolean))}
+                isEditing={!!isEditing}
+                multiline
+              />
+            </p>
           </section>
         )}
       </div>
