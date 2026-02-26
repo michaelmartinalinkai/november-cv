@@ -301,8 +301,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 <span className="text-black inline">
                   <EditableText value={edu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
                 </span>
-                <span className="font-normal opacity-70 whitespace-nowrap ml-1">
-                  - <EditableText value={edu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                <span className="font-normal opacity-70 whitespace-nowrap">
+                  {' '}- <EditableText value={edu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
                 </span>
               </div>
             </React.Fragment>
