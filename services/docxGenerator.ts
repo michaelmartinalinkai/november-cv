@@ -112,8 +112,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                     children: [
                       new TextRun({
                         text: (() => {
-                          const isValid = (v?: string | null) =>
-                            v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+                          const isValid = (v?: string | null) => v && v.trim() !== '';
                           const parts: string[] = [];
                           if (isValid(data.personalInfo.availability)) parts.push(data.personalInfo.availability!);
                           if (isValid(data.personalInfo.hours)) {
@@ -125,7 +124,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                             const skjDate = isValid(data.personalInfo.skjDate) ? ` (afgegeven op ${data.personalInfo.skjDate})` : '';
                             parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
                           }
-                          return parts.join(' | ');
+                          return parts.join(' | ') || 'Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd';
                         })(),
                         color: COLOR_LIME,
                         size: 18, // 9px * 2
@@ -274,14 +273,37 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
         new TextRun({ text: "  OPLEIDINGEN  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } }) // 12px * 2
       ]
     }),
-    ...(data.education || []).map(edu => new Paragraph({
-      spacing: { before: 60 },
-      children: [
-        new TextRun({ text: `${edu.period}    `, font: FONT_BRAND, size: 16, color: COLOR_GREY }), // 8px * 2
-        new TextRun({ text: edu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
-        new TextRun({ text: ` - ${edu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
-      ]
-    })),
+    new Paragraph({ spacing: { before: 80 } }),
+    // Education as 2-column table to match UI grid layout
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: allNoBorders,
+      rows: (data.education || []).map(edu => new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 20, type: WidthType.PERCENTAGE },
+            borders: allNoBorders,
+            margins: { top: 20, bottom: 20 },
+            children: [
+              new Paragraph({ children: [new TextRun({ text: edu.period, font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
+            ]
+          }),
+          new TableCell({
+            width: { size: 80, type: WidthType.PERCENTAGE },
+            borders: allNoBorders,
+            margins: { top: 20, bottom: 20 },
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: edu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
+                  new TextRun({ text: ` - ${edu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
+                ]
+              })
+            ]
+          })
+        ]
+      }))
+    }),
 
     new Paragraph({ spacing: { before: 400, after: 200 }, border: { bottom: { color: COLOR_SALMON, size: 4, style: BorderStyle.SINGLE } } }),
 
@@ -322,34 +344,31 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
 
     new Paragraph({ spacing: { before: 400, after: 200 }, border: { bottom: { color: COLOR_SALMON, size: 4, style: BorderStyle.SINGLE } } }),
 
-    // LOWER SECTION TABLE
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: allNoBorders,
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              children: [
-                new Paragraph({ children: [new TextRun({ text: "  SYSTEEMKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })] }),
-                new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.systems || []).join(" | "), size: 16, font: FONT_BRAND })] })
-              ]
-            }),
-            new TableCell({
-              children: [
-                new Paragraph({ children: [new TextRun({ text: "  TALENKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })] }),
-                new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.languages || []).join(" | "), size: 16, font: FONT_BRAND })] })
-              ]
-            })
-          ]
-        })
-      ]
-    })
+    // SYSTEEMKENNIS (stacked, matching UI)
+    ...((data.systems && data.systems.length > 0) ? [
+      new Paragraph({
+        children: [
+          new TextRun({ text: "  SYSTEEMKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })
+        ]
+      }),
+      new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.systems || []).join(" | "), size: 16, font: FONT_BRAND })] }),
+      new Paragraph({ spacing: { before: 200 } }),
+    ] : []),
+
+    // TALENKENNIS (stacked, matching UI)
+    ...((data.languages && data.languages.length > 0) ? [
+      new Paragraph({
+        children: [
+          new TextRun({ text: "  TALENKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })
+        ]
+      }),
+      new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.languages || []).join(" | "), size: 16, font: FONT_BRAND })] }),
+    ] : [])
   ];
 
   return new Document({
     sections: [{
-      properties: { page: { margin: { top: 720, bottom: 720, left: 1440, right: 1440 } } }, // 0.5 inch top/bottom, 1 inch left/right
+      properties: { page: { margin: { top: 720, bottom: 720, left: 960, right: 960 } } }, // 0.5 inch top/bottom, ~0.67 inch left/right (matching UI padding)
       headers: { default: header },
       footers: { default: footer },
       children
