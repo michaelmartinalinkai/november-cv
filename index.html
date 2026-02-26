@@ -44,25 +44,21 @@
         margin: 0 !important;
         padding: 0 !important;
         width: 210mm !important;
+        height: auto !important;
         background: white !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      .no-print {
-        display: none !important;
-      }
-
-      #root {
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-
-      /* Strip all layout wrappers */
+      /* RESET: Remove transforms and overflow from layout wrappers only */
+      #root,
       #root>div,
       #root>div>main,
       #root>div>main>div,
       #root>div>main>div>div {
+        position: static !important;
+        transform: none !important;
+        overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
         max-width: none !important;
@@ -71,14 +67,19 @@
       }
 
       .print-container {
+        position: static !important;
         transform: none !important;
-        scale: 1 !important;
+        overflow: visible !important;
+        width: 210mm !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 210mm !important;
         min-height: 0 !important;
         box-shadow: none !important;
         border: none !important;
+      }
+
+      .no-print {
+        display: none !important;
       }
 
       /* Native Table Layout for Print */
@@ -106,14 +107,9 @@
         break-inside: avoid !important;
       }
 
-      .cv-print-table td {
-        display: table-cell !important;
-      }
-
       /* Spacing fix: Add height/padding to header/footer cells to reserve space */
       .cv-print-thead td {
         height: 140px !important;
-        /* Matches header height */
         padding-bottom: 20px !important;
         background: white !important;
       }
@@ -123,13 +119,25 @@
         background: white !important;
       }
 
+      .cv-print-footer-fixed {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 210mm !important;
+        height: 80px !important;
+        z-index: 9999 !important;
+      }
+
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
     }
 
-
+    .cv-print-footer-fixed {
+      display: none;
+    }
 
     /* Custom animations */
     @keyframes fadeIn {
