@@ -326,24 +326,22 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       className="print-container w-[210mm] mx-auto bg-white relative overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
       style={{ fontFamily: 'Garet, sans-serif', color: '#000000' }}
     >
-      {/* Fixed Footer (Visible on every page at bottom) */}
-      <div className="print-only-footer">
-        {footerContent}
-      </div>
-
-      {/* Table layout: thead/tfoot repeat on every printed page */}
+      {/* Table layout: thead repeats header, tfoot repeats footer on every printed page */}
       <table className="cv-print-table w-full border-collapse" style={{ borderSpacing: 0 }}>
         <thead className="cv-print-thead">
           <tr><td className="p-0 border-0">{headerContent}</td></tr>
         </thead>
         <tfoot className="cv-print-tfoot">
-          {/* Content hidden by CSS, acts as spacer */}
           <tr><td className="p-0 border-0">{footerContent}</td></tr>
         </tfoot>
         <tbody>
           <tr><td className="p-0 border-0">{bodyContent}</td></tr>
         </tbody>
       </table>
+      {/* Screen-only footer — shown below content on screen, hidden in print (tfoot handles print) */}
+      <div className="print:hidden">
+        {footerContent}
+      </div>
     </div>
   );
 };
