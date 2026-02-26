@@ -192,7 +192,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       <div className="flex flex-col justify-center h-full">
         <h1
           className="leading-tight mb-1"
-          style={{ fontSize: '41.1px', fontWeight: 500, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.5px #ffffff' }}
+          style={{ fontSize: '41.1px', fontWeight: 500, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.15px currentColor' }}
         >
           <EditableText
             value={toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
