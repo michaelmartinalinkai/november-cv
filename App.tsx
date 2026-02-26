@@ -197,7 +197,7 @@ const App: React.FC = () => {
               <div className="bg-[#4caf50]/10 text-[#4caf50] px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                 <CheckCircle size={12} /> Conversie geslaagd
               </div>
-              <button onClick={() => setQueue(prev => prev.map(q => q.id === selectedItem.id ? { ...q, status: 'READY', result: undefined, template: undefined } : q))} className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest hover:text-[#EE8D70] transition-colors">Aanpassen</button>
+
             </div>
             <div className="relative flex flex-col items-end gap-1">
               <div className="flex items-center gap-3">
