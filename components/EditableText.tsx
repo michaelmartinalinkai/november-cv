@@ -44,7 +44,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
         }
     };
 
-    const Tag = multiline ? 'div' : 'span';
+    const Tag = 'span';
 
     return (
         <Tag
@@ -63,8 +63,9 @@ export const EditableText: React.FC<EditableTextProps> = ({
             style={{
                 ...style,
                 minWidth: isEditing ? '20px' : 'auto',
-                display: isEditing && !multiline ? 'inline-block' : undefined,
-                whiteSpace: multiline ? 'pre-wrap' : 'pre-wrap' // pre-wrap is needed to preserve spaces in contentEditable
+                display: isEditing ? 'inline-block' : 'inline',
+                whiteSpace: 'pre-wrap', // pre-wrap is needed to preserve spaces in contentEditable
+                wordBreak: 'break-word'
             }}
         >
             {/* We only inject children on first render; after that contentEditable manages it, unless re-synced in useEffect */}

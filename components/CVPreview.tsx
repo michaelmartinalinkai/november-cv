@@ -294,13 +294,16 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => (
             <React.Fragment key={i}>
-              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5">
+              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5 mt-[2px]">
                 <EditableText value={formatDateToNumbers(edu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
               </div>
-              <div className="pb-0.5">
-                <span className="text-black">
+              <div className="pb-0.5 leading-snug">
+                <span className="text-black inline">
                   <EditableText value={edu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
-                </span> <span className="font-normal opacity-70">- <EditableText value={edu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} /></span>
+                </span>
+                <span className="font-normal opacity-70 whitespace-nowrap ml-1">
+                  - <EditableText value={edu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                </span>
               </div>
             </React.Fragment>
           ))}
