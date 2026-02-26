@@ -44,10 +44,11 @@ CRUCIAAL: VERTAAL ALLE TEXT (FUNCTIES, OMSCHRIJVINGEN, SKILLS) NAAR CORRECT, PRO
 ALS DE INPUT ENGELS IS, VERTAAL HET NAAR NEDERLANDS.
 
 NAAMFORMATTERING:
-- NOOIT titels zoals "Mr", "Mrs", "De heer", "Mevrouw", "Dhr", "Mevr" opnemen in het name veld
-- Alleen de echte voornaam en achternaam extraheren
-- Roepnaam ZONDER aanhalingstekens extraheren (bijv. "Jordana" NIET '"Jordana"')
-- Als er uren/week staat vermeld (bijv. "36 uur per week"), zet het getal ("36") in het hours veld
+- Als een naam de structuur "Voorletter. Achternaam (Roepnaam)" of "Titel Voorletter. Achternaam (Roepnaam)" heeft (bijv. "Mevrouw S. Aktas (Sertan)"), zet dan ALTIJD de roepnaam uit de haakjes VOORAAN en de achternaam daarachter. De output moet dan "Sertan Aktas" zijn. Extraheer NOOIT de voorletter.
+- NOOIT titels zoals "Mr", "Mrs", "De heer", "Mevrouw", "Dhr", "Mevr" opnemen in het name veld.
+- Alleen de echte voornaam (roepnaam) en achternaam in de output ("Voornaam Achternaam").
+- Roepnaam ALTIJD ZONDER aanhalingstekens of haakjes extraheren (bijv. Sertan, niet (Sertan)).
+- Als er uren/week staat vermeld (bijv. "36 uur per week"), zet het getal ("36") in het hours veld.
 
 WERKERVARING EXTRACTIE (BELANGRIJK):
 Formaat in Word documenten is vaak:
