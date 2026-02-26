@@ -234,9 +234,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
       <section className="mb-6">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
-          <h3 className="uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt', fontWeight: 800 }}>OPLEIDINGEN</h3>
+          <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
-        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8pt' }}>
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => (
             <React.Fragment key={i}>
               <div className="opacity-70 font-normal whitespace-nowrap pb-0.5">{formatDateToNumbers(edu.period)}</div>
@@ -252,17 +252,17 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
 
       <section className="mb-6">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
-          <h3 className="uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt', fontWeight: 800 }}>WERKERVARING</h3>
+          <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>WERKERVARING</h3>
         </div>
         <div className="space-y-5">
           {(data.experience || []).map((exp, i) => (
-            <div key={i} className="relative" style={{ fontSize: '8pt' }}>
+            <div key={i} className="relative" style={{ fontFamily: 'Garet, sans-serif' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70 font-medium">{formatDateToNumbers(exp.period)}</span>
+                <span className="block mb-1 opacity-70" style={{ fontSize: '8px' }}>{formatDateToNumbers(exp.period)}</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-normal text-[#1E3A35]">{exp.employer}</span>
-                  <span className="text-black/30">|</span>
-                  <span className="uppercase tracking-wider text-black" style={{ fontWeight: 800 }}>{
+                  <span className="text-[#1E3A35]" style={{ fontSize: '8px' }}>{exp.employer}</span>
+                  <span className="text-black/30" style={{ fontSize: '8px' }}>|</span>
+                  <span className="text-black" style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'Garet, sans-serif' }}>{
                     exp.role.toUpperCase().startsWith(exp.employer.toUpperCase())
                       ? exp.role.replace(new RegExp(`^${exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
                       : exp.role
@@ -272,8 +272,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
               <ul className="list-none space-y-0 ml-1">
                 {(exp.bullets || []).map((bullet, bi) => (
                   <li key={bi} className="flex items-start gap-2 leading-snug">
-                    <span className="flex-shrink-0 text-black font-bold">•</span>
-                    <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
+                    <span className="flex-shrink-0 text-black" style={{ fontSize: '8px' }}>•</span>
+                    <span style={{ fontSize: '8px' }}>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
                   </li>
                 ))}
               </ul>
@@ -288,18 +288,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
         {data.systems && data.systems.length > 0 && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-              <h3 className="uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt', fontWeight: 800 }}>SYSTEEMKENNIS</h3>
+              <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>SYSTEEMKENNIS</h3>
             </div>
-            <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.systems.join(' | ')}</p>
+            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>{data.systems.join(' | ')}</p>
           </section>
         )}
 
         {data.languages && data.languages.length > 0 && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
-              <h3 className="uppercase tracking-[0.05em] text-black" style={{ fontSize: '8.5pt', fontWeight: 800 }}>TALENKENNIS</h3>
+              <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>TALENKENNIS</h3>
             </div>
-            <p className="tracking-wide pl-1" style={{ fontSize: '8pt' }}>{data.languages.join(' | ')}</p>
+            <p className="pl-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>{data.languages.join(' | ')}</p>
           </section>
         )}
       </div>

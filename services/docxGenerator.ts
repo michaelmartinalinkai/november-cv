@@ -230,14 +230,13 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
     // OPLEIDINGEN SECTION
     new Paragraph({
       children: [
-        new TextRun({ text: "  OPLEIDINGEN  ", bold: true, size: 16, font: FONT_BRAND, shading: { fill: COLOR_LIME, color: "auto" }, characterSpacing: 20 }) // 8pt * 2
+        new TextRun({ text: "  OPLEIDINGEN  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } }) // 12px * 2
       ]
     }),
     ...(data.education || []).map(edu => new Paragraph({
       spacing: { before: 60 },
       children: [
-        // Grid simulation with tabs or non-breaking spaces not ideal, using just text flow
-        new TextRun({ text: `${edu.period}    `, font: FONT_BRAND, size: 16, color: COLOR_GREY }), // 8pt * 2. 70px approx width
+        new TextRun({ text: `${edu.period}    `, font: FONT_BRAND, size: 16, color: COLOR_GREY }), // 8px * 2
         new TextRun({ text: edu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
         new TextRun({ text: ` - ${edu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
       ]
@@ -248,32 +247,34 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
     // WERKERVARING SECTION
     new Paragraph({
       children: [
-        new TextRun({ text: "  WERKERVARING  ", bold: true, size: 16, font: FONT_BRAND, shading: { fill: COLOR_LIME, color: "auto" }, characterSpacing: 20 })
+        new TextRun({ text: "  WERKERVARING  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } }) // 12px * 2
       ]
     }),
 
     ...(data.experience || []).flatMap(exp => [
-      // Container div simulation
+      // Period
       new Paragraph({
-        spacing: { before: 240 }, // space-y-8 approx
+        spacing: { before: 240 },
         children: [
-          new TextRun({ text: exp.period, color: COLOR_GREY, size: 16, font: FONT_BRAND }),
+          new TextRun({ text: exp.period, color: COLOR_GREY, size: 16, font: FONT_BRAND }), // 8px * 2
         ]
       }),
+      // Employer | ROLE
       new Paragraph({
         spacing: { before: 40 },
         children: [
-          new TextRun({ text: `${exp.employer}`, color: COLOR_GREEN, size: 16, font: FONT_BRAND }),
+          new TextRun({ text: `${exp.employer}`, color: COLOR_GREEN, size: 16, font: FONT_BRAND }), // 8px
           new TextRun({ text: ` | `, color: "cccccc", size: 16, font: FONT_BRAND }),
-          new TextRun({ text: cleanRole(exp.employer, exp.role).toUpperCase(), bold: true, size: 16, font: FONT_BRAND, color: COLOR_BLACK, characterSpacing: 10 })
+          new TextRun({ text: cleanRole(exp.employer, exp.role).toUpperCase(), bold: true, size: 20, font: FONT_BRAND, color: COLOR_BLACK }) // 10px * 2, CAPS
         ]
       }),
+      // Bullets
       ...(exp.bullets || []).map((bullet, bi) => new Paragraph({
         indent: { left: 200 },
-        spacing: { before: 20 }, // tight spacing
+        spacing: { before: 20 },
         children: [
-          new TextRun({ text: "•  ", bold: true, size: 16, font: FONT_BRAND }),
-          new TextRun({ text: `${bullet.trim().replace(/[.;]+$/, '')}${bi === exp.bullets.length - 1 ? '.' : ';'}`, size: 16, font: FONT_BRAND })
+          new TextRun({ text: "\u2022  ", size: 16, font: FONT_BRAND }),
+          new TextRun({ text: `${bullet.trim().replace(/[.;]+$/, '')}${bi === exp.bullets.length - 1 ? '.' : ';'}`, size: 16, font: FONT_BRAND }) // 8px * 2
         ]
       }))
     ]),
@@ -289,13 +290,13 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
           children: [
             new TableCell({
               children: [
-                new Paragraph({ children: [new TextRun({ text: "  SYSTEEMKENNIS  ", bold: true, size: 16, font: FONT_BRAND, shading: { fill: COLOR_LIME, color: "auto" }, characterSpacing: 20 })] }),
+                new Paragraph({ children: [new TextRun({ text: "  SYSTEEMKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })] }),
                 new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.systems || []).join(" | "), size: 16, font: FONT_BRAND })] })
               ]
             }),
             new TableCell({
               children: [
-                new Paragraph({ children: [new TextRun({ text: "  TALENKENNIS  ", bold: true, size: 16, font: FONT_BRAND, shading: { fill: COLOR_LIME, color: "auto" }, characterSpacing: 20 })] }),
+                new Paragraph({ children: [new TextRun({ text: "  TALENKENNIS  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })] }),
                 new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.languages || []).join(" | "), size: 16, font: FONT_BRAND })] })
               ]
             })
