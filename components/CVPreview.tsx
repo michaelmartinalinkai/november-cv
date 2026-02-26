@@ -175,11 +175,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
       <div className="flex flex-col justify-center h-full">
         <h1
           className="leading-tight mb-1"
-          style={{ fontSize: '32pt', fontWeight: 500, letterSpacing: '-0.02em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.3px #000' }}
+          style={{ fontSize: '41.1px', fontWeight: 700, letterSpacing: '-0.082em', fontFamily: 'Garet, sans-serif' }}
         >
           {toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
         </h1>
-        <p className="text-[#e3fd01] font-normal" style={{ fontSize: '7pt' }}>
+        <p className="text-[#e3fd01]" style={{ fontSize: '8px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
           {data.personalInfo?.availability || "Beschikbaarheid onbekend"}
           {data.personalInfo?.hours && ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}`}
           {data.personalInfo?.skj && (
@@ -223,8 +223,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new' }) 
           {displaySkills.map((skill, i) => (
             <div
               key={i}
-              className="bg-[#f27f61] text-white px-6 py-2 rounded-full font-bold uppercase tracking-wider text-center flex items-center justify-center min-w-[140px]"
-              style={{ fontSize: '8.5pt' }}
+              className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
+              style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
             >
               {skill}
             </div>

@@ -33,6 +33,12 @@ const FONT_BRAND = "Garet";
 const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
 const allNoBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
 
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().split(' ').map(word => {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
+};
+
 const fetchImageAsBuffer = async (url: string): Promise<ArrayBuffer | null> => {
   try {
     if (url.startsWith('data:')) {
@@ -92,22 +98,23 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                   new Paragraph({
                     children: [
                       new TextRun({
-                        text: (data.personalInfo.name || "Kandidaat Naam").toUpperCase(),
+                        text: toTitleCase(data.personalInfo.name || "Kandidaat Naam"),
                         color: COLOR_WHITE,
-                        bold: true, // weight 600 map to bold
-                        size: 64, // 32pt * 2
-                        font: FONT_BRAND
+                        bold: true,
+                        size: 82, // 41px * 2
+                        font: FONT_BRAND,
+                        characterSpacing: -16 // Approx -0.8pt. Twentieths of a point: -16/20 = -0.8pt.
                       })
                     ]
                   }),
                   new Paragraph({
-                    spacing: { before: 80 }, // slight gap
+                    spacing: { before: 80 },
                     children: [
                       new TextRun({
                         text: `${data.personalInfo.availability || "Beschikbaarheid onbekend"}${data.personalInfo.hours ? ` | ${data.personalInfo.hours}${data.personalInfo.hours.includes('uur per week') ? '' : ' uur per week'}` : ''}${data.personalInfo.skj ? ` | SKJ-Registratie: ${data.personalInfo.skj}${data.personalInfo.skjDate ? ` (afgegeven op ${data.personalInfo.skjDate})` : ''}` : ''}`,
                         color: COLOR_LIME,
-                        size: 14, // 7pt * 2
-                        font: FONT_BRAND
+                        size: 16, // 8px * 2
+                        font: "Agrandir"
                       })
                     ]
                   }),
@@ -211,7 +218,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
           children: [
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: tag.toUpperCase(), color: COLOR_WHITE, bold: true, size: 17, font: FONT_BRAND })] // 8.5pt * 2
+              children: [new TextRun({ text: tag.toUpperCase(), color: COLOR_WHITE, bold: true, size: 24, font: FONT_BRAND })] // 12px * 2
             })
           ]
         }))
