@@ -210,7 +210,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             </div>
           ) : (
             (() => {
-              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+              const isValid = (v?: string | null) => v && v.trim() !== '';
               const parts: string[] = [];
               if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
               if (isValid(data.personalInfo?.hours)) {
@@ -222,7 +222,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
                 parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
               }
-              return parts.join(' | ') || null;
+              return parts.join(' | ') || "Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd";
             })()
           )}
         </p>
