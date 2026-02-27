@@ -323,13 +323,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
-        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0.5" style={{ fontSize: '8px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => (
             <React.Fragment key={i}>
-              <div className="opacity-70 font-normal whitespace-nowrap pb-0.5 mt-[2px]">
+              <div className="opacity-70 font-normal whitespace-nowrap">
                 <EditableText value={formatDateToNumbers(edu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
               </div>
-              <div className="pb-0.5 leading-snug">
+              <div className="leading-snug">
                 <span className="text-black inline">
                   <EditableText value={edu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
                 </span>
