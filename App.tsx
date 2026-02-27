@@ -16,6 +16,7 @@ import saveAs from 'file-saver';
 import { loadGoogleScripts } from './services/driveService';
 import { clsx } from 'clsx';
 import { config } from './config';
+import { WHITE_ARROW_URL } from './assets';
 
 const MAX_WAIT_MS = 90000;
 
@@ -296,6 +297,37 @@ const App: React.FC = () => {
           </main>
         </>
       )}
+
+      {/* Print-only fixed footer — placed OUTSIDE all print-container/wrapper divs */}
+      <div className="cv-print-footer-fixed">
+        <div style={{
+          backgroundColor: '#284d32',
+          height: '80px',
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute', height: '12px', backgroundColor: '#e3fd01',
+            left: '0mm', width: '145mm', top: '55%', transform: 'translateY(-50%)',
+          }} />
+          <div style={{
+            position: 'absolute', height: '12px', backgroundColor: '#e3fd01',
+            left: '165mm', width: '70mm', top: '55%', transform: 'translateY(-50%)',
+          }} />
+          <img
+            src={WHITE_ARROW_URL}
+            alt=""
+            style={{
+              position: 'absolute', zIndex: 10,
+              width: '10mm', height: '10mm',
+              left: '150mm', top: '25%', transform: 'translateY(-18%)',
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import { ParsedCV } from '../types';
 import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
 import { EditableText } from './EditableText';
@@ -48,6 +48,38 @@ const formatDateToNumbers = (text: string) => {
 
 export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', isEditing, onChange }) => {
   if (!data) return null;
+
+  // ==================== NEW: DYNAMIC SPACER LOGIC ====================
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);           // wraps header + body
+  const footerRef = useRef<HTMLDivElement>(null);
+  const pageHeightRef = useRef<HTMLDivElement>(null);        // hidden 297mm reference
+  const [spacerHeight, setSpacerHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const calculateSpacer = () => {
+      if (!contentRef.current || !footerRef.current || !pageHeightRef.current) return;
+
+      const pagePx = pageHeightRef.current.offsetHeight; // exact 297mm in current browser
+      if (pagePx === 0) return;
+
+      const contentHeight = contentRef.current.offsetHeight;
+      const footerHeight = footerRef.current.offsetHeight;
+
+      const totalBeforeSpacer = contentHeight + footerHeight;
+      const remainder = totalBeforeSpacer % pagePx;
+      const needed = remainder === 0 ? 0 : pagePx - remainder;
+
+      setSpacerHeight(needed);
+    };
+
+    // Run after every render + when data changes
+    calculateSpacer();
+
+    // Optional safety net
+    const timer = setTimeout(calculateSpacer, 50);
+    return () => clearTimeout(timer);
+  }, [data]); // ← important: re-calculate every time the CV data changes
 
   // Common font settings for CVs
   const baseFontSize = '10.66px'; // 8pt in pixels
@@ -401,35 +433,56 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
 
   return (
     <div
-      className="print-container w-[210mm] mx-auto bg-white relative print:static overflow-hidden print:overflow-visible no-shadow print:shadow-none print:m-0 print:border-none border border-black"
+      ref={containerRef}
+      className="print-container w-[210mm] mx-auto bg-white relative overflow-hidden no-shadow print:shadow-none print:m-0 print:border-none border border-black"
       style={{ fontFamily: 'Garet, sans-serif', color: '#000000' }}
     >
-      {/* Table layout: thead repeats header, tfoot repeats footer on every printed page */}
+      {/* Hidden A4 height reference – must be inside the container */}
+      <div
+        ref={pageHeightRef}
+        style={{
+          height: '297mm',
+          width: '210mm',
+          position: 'absolute',
+          left: '-99999px',
+          visibility: 'hidden',
+        }}
+      />
+
+      {/* Table – thead repeats header, tfoot repeats footer on every printed page */}
       <table className="cv-print-table w-full border-collapse" style={{ borderSpacing: 0 }}>
-        {/* thead hidden on screen, shown as table-header-group in print */}
         <thead className="cv-print-thead" style={{ display: 'none' }}>
           <tr><td className="p-0 border-0">{headerContent}</td></tr>
         </thead>
-        {/* tfoot spacer reserves space at the bottom of every page for the fixed footer */}
+
         <tfoot className="cv-print-tfoot" style={{ display: 'none' }}>
-          <tr><td className="p-0 border-0"><div style={{ height: '80px' }}></div></td></tr>
+          <tr><td className="p-0 border-0">{footerContent}</td></tr>
         </tfoot>
+
         <tbody>
-          <tr><td className="p-0 border-0">
-            {/* Screen: show header above body */}
-            <div className="print:hidden">{headerContent}</div>
-            {bodyContent}
-          </td></tr>
+          <tr>
+            <td className="p-0 border-0" ref={contentRef}>
+              {/* Screen only header */}
+              <div className="print:hidden">{headerContent}</div>
+
+              {bodyContent}
+
+              {/* Screen-only spacer – pushes footer to page bottom */}
+              <div
+                className="print:hidden"
+                style={{
+                  height: `${spacerHeight}px`,
+                  backgroundColor: '#ffffff',
+                  flexShrink: 0,
+                }}
+              />
+            </td>
+          </tr>
         </tbody>
       </table>
 
-      {/* Screen-only footer — shown below content on screen */}
-      <div className="print:hidden">
-        {footerContent}
-      </div>
-
-      {/* Print-only fixed footer — pinned to absolute bottom of every paper page */}
-      <div className="cv-print-footer-fixed">
+      {/* Screen-only footer – ref for spacer calculation, hidden during print (tfoot handles it) */}
+      <div ref={footerRef} className="print:hidden">
         {footerContent}
       </div>
     </div>
