@@ -12,6 +12,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/agrandir" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <style>
@@ -24,20 +25,18 @@
     }
 
     .font-garet {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
+      font-family: 'Garet', sans-serif;
     }
 
     .font-agrandir {
-      font-family: 'Inter', sans-serif;
-      font-weight: 400;
+      font-family: 'Agrandir', sans-serif;
     }
 
     @media print {
       @page {
         margin: 0 !important;
         padding: 0 !important;
-        size: A4;
+        size: A4 portrait !important;
       }
 
       html,
@@ -45,25 +44,21 @@
         margin: 0 !important;
         padding: 0 !important;
         width: 210mm !important;
+        height: auto !important;
         background: white !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      .no-print {
-        display: none !important;
-      }
-
-      #root {
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-
-      /* Strip all layout wrappers */
+      /* RESET: Remove transforms and overflow from layout wrappers only */
+      #root,
       #root>div,
       #root>div>main,
       #root>div>main>div,
       #root>div>main>div>div {
+        position: static !important;
+        transform: none !important;
+        overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
         max-width: none !important;
@@ -72,22 +67,27 @@
       }
 
       .print-container {
+        position: static !important;
         transform: none !important;
-        scale: 1 !important;
+        overflow: visible !important;
+        width: 210mm !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 210mm !important;
         min-height: 0 !important;
         box-shadow: none !important;
         border: none !important;
       }
 
-      /* Native Table Layout for Print
-         This ensures the header (thead) and footer (tfoot) repeat on every page
-         and occupy space, preventing content overlap. */
+      .no-print {
+        display: none !important;
+      }
+
+      /* Native Table Layout for Print */
       .cv-print-table {
         display: table !important;
         width: 100% !important;
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
       }
 
       .cv-print-table thead {
@@ -104,16 +104,39 @@
 
       .cv-print-table tr {
         display: table-row !important;
+        break-inside: avoid !important;
       }
 
-      .cv-print-table td {
-        display: table-cell !important;
+      /* Spacing fix: Add height/padding to header/footer cells to reserve space */
+      .cv-print-thead td {
+        height: 140px !important;
+        padding-bottom: 20px !important;
+        background: white !important;
+      }
+
+      .cv-print-tfoot td {
+        height: 80px !important;
+        background: white !important;
+      }
+
+      .cv-print-footer-fixed {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 210mm !important;
+        height: 80px !important;
+        z-index: 9999 !important;
       }
 
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
+    }
+
+    .cv-print-footer-fixed {
+      display: none;
     }
 
     /* Custom animations */
@@ -154,7 +177,7 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/november-cv/assets/index-B2nrkN1P.js"></script>
+  <script type="module" crossorigin src="/assets/index-Dsvvg-8P.js"></script>
 </head>
 
 <body>
