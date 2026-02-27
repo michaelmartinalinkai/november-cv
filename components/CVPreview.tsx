@@ -374,7 +374,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
               </div>
               <ul className="list-none space-y-0 ml-1">
                 {(exp.bullets || []).map((bullet, bi) => (
-                  <li key={bi} className="flex items-start gap-2 leading-snug">
+                  <li key={bi} className="flex items-start gap-2 leading-[1.15]">
                     <span className="flex-shrink-0 text-black" style={{ fontSize: '8px' }}>•</span>
                     <span style={{ fontSize: '8px' }}>
                       <EditableText
