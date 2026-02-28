@@ -456,7 +456,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </thead>
 
         <tfoot className="cv-print-tfoot" style={{ display: 'none' }}>
-          <tr><td className="p-0 border-0">{footerContent}</td></tr>
+          <tr><td className="p-0 border-0"><div className="h-[80px]" /></td></tr>
         </tfoot>
 
         <tbody>
