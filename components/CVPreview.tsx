@@ -232,7 +232,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             isEditing={!!isEditing}
           />
         </h1>
-        <p className="text-[#e3fd01]" style={{ fontSize: '9px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
+        <div className="text-[#e3fd01]" style={{ fontSize: '9px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
           {isEditing ? (
             <div className="flex flex-col gap-1 items-start mt-2">
               <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>
@@ -254,10 +254,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
                 parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
               }
-              return parts.join(' | ') || null;
+              return parts.join(' | ') || "Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd";
             })()
           )}
-        </p>
+        </div>
       </div>
       <div className="flex-shrink-0 mt-0">
         <img
