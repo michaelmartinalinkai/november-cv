@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NOVÉMBER. CV Conversion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.cdnfonts.com/css/garet" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/agrandir" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fdfdfd;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+
+    .font-garet {
+      font-family: 'Garet', sans-serif;
+    }
+
+    .font-agrandir {
+      font-family: 'Agrandir', sans-serif;
+    }
+
+    /* Variable font setup for future use (when Garet-Variable files are added to /public/fonts/) */
+    @font-face {
+      font-family: 'Garet';
+      src: url('/fonts/Garet-Variable.woff2') format('woff2'),
+        url('/fonts/Garet-Variable.ttf') format('truetype');
+      font-weight: 100 1000;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Garet';
+      src: url('/fonts/Garet-Variable-Italic.woff2') format('woff2'),
+        url('/fonts/Garet-Variable-Italic.ttf') format('truetype');
+      font-weight: 100 1000;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    @media print {
+      @page {
+        margin: 0 !important;
+        padding: 0 !important;
+        size: A4 portrait !important;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 210mm !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* RESET: Remove transforms and overflow from layout wrappers only */
+      #root,
+      #root>div,
+      #root>div>main,
+      #root>div>main>div,
+      #root>div>main>div>div {
+        position: static !important;
+        transform: none !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        height: auto !important;
+      }
+
+      .print-container {
+        position: static !important;
+        transform: none !important;
+        overflow: visible !important;
+        width: 210mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      /* Native Table Layout for Print */
+      .cv-print-table {
+        display: table !important;
+        width: 100% !important;
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+      }
+
+      .cv-print-table thead {
+        display: table-header-group !important;
+      }
+
+      .cv-print-table tfoot {
+        display: table-footer-group !important;
+      }
+
+      .cv-print-table tbody {
+        display: table-row-group !important;
+      }
+
+      .cv-print-table tr {
+        display: table-row !important;
+        break-inside: avoid !important;
+      }
+
+      /* Spacing fix: Add height/padding to header/footer cells to reserve space */
+      .cv-print-thead td {
+        height: 140px !important;
+        padding-bottom: 20px !important;
+        background: white !important;
+      }
+
+      .cv-print-tfoot td {
+        height: 110px !important;
+        background: white !important;
+      }
+
+      .cv-print-footer-fixed {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 210mm !important;
+        height: 80px !important;
+        z-index: 9999 !important;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+
+    .cv-print-footer-fixed {
+      display: none;
+    }
+
+    /* Custom animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@1.32.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.474.0",
+    "clsx": "https://esm.sh/clsx@2.1.1",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@2.6.0",
+    "docx": "https://esm.sh/docx@9.5.1",
+    "file-saver": "https://esm.sh/file-saver@2.0.5",
+    "mammoth": "https://esm.sh/mammoth@1.8.0",
+    "jszip": "https://esm.sh/jszip@3.10.1",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
