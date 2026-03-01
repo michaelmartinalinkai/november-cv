@@ -322,7 +322,7 @@ const App: React.FC = () => {
             alt=""
             style={{
               position: 'absolute', zIndex: 10,
-              width: '10mm', height: '10mm',
+              width: '11mm', height: '10mm',
               left: '150mm', top: '25%', transform: 'translateY(-18%)',
             }}
           />
