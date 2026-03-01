@@ -325,7 +325,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
 
   // Main body content
   const bodyContent = (
-    <div className="p-12 pt-8">
+    <div className="p-12 pt-4">
       <section className="mb-6 flex flex-col items-center w-full">
         <h3 className="tracking-[0.01em] text-center mb-3 uppercase text-black" style={{ fontSize: '11pt', fontWeight: 550, textShadow: '0.2px 0 0 currentColor, -0.2px 0 0 currentColor' }}>
           WAAR DEZE PROFESSIONAL STERK IN IS
