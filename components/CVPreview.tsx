@@ -103,7 +103,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       const remainder = totalBeforeSpacer % pagePx;
       const needed = remainder === 0 ? 0 : pagePx - remainder;
 
-      setSpacerHeight(needed);
+      // Only push footer to page bottom if last page is at least 75% full.
+      // If the last page is mostly empty, footer sits naturally below content — no giant gap.
+      const lastPageUsed = pagePx - needed;
+      setSpacerHeight(lastPageUsed >= pagePx * 0.75 ? needed : 0);
     };
 
     // Run after every render + when data changes
