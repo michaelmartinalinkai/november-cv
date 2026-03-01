@@ -1,4 +1,3 @@
-
 import { Schema, Type } from "@google/genai";
 
 export const VACANCY_SYSTEM_INSTRUCTION = `
@@ -163,18 +162,23 @@ Elke bullet moet aan ALLE onderstaande eisen voldoen:
 
 ⸻
 
-ZIN OPBOUWEN — STAPPENPLAN
+ZIN OPBOUWEN — STAPPENPLAN (VERPLICHT VOOR ELKE BULLET)
 
-Gebruik dit stappenplan om elke bullet correct op te bouwen:
+Gebruik dit stappenplan om elke bullet correct op te bouwen.
+Als de input te kort, te vaag of onvolledig is: BOUW DE ZIN ACTIEF UIT.
 
 Stap 1 — Identificeer de KERN van de taak (wat wordt er gedaan?)
 Stap 2 — Voeg het OBJECT toe (waarop of voor wie?)
-Stap 3 — Voeg CONTEXT toe indien aanwezig (binnen, conform, gericht op, in afstemming met, ten behoeve van)
-Stap 4 — Begin de zin met een INFINITIEF WERKWOORD
+Stap 3 — Voeg CONTEXT toe (binnen, conform, gericht op, in afstemming met, ten behoeve van)
+Stap 4 — Begin de zin ALTIJD met een INFINITIEF WERKWOORD
+Stap 5 — CONTROLEER: Is dit een volledige zin? Zo niet → uitbreiden
+
+🔴 ACTIEF UITBREIDEN — De bot voegt zelf context toe als de bron te summier is.
+Een bullet van 2-3 woorden is ALTIJD onvolledig en MOET worden uitgebouwd.
 
 Voorbeeld transformaties:
   Input: "Casuïstiekbespreking"
-  Output: "Voeren van gestructureerde casuïstiekbesprekingen in afstemming met betrokken partijen;"
+  Output: "Voeren van gestructureerde casuïstiekbesprekingen in afstemming met betrokken ketenpartners;"
 
   Input: "Veiligheid bewaken"
   Output: "In kaart brengen en bewaken van de veiligheid binnen het gezin en het bredere systeem;"
@@ -184,6 +188,21 @@ Voorbeeld transformaties:
 
   Input: "Crisisinterventie"
   Output: "Uitvoeren van crisisinterventies wanneer de situatie hierom vraagt en coördineren van de benodigde opschaling;"
+
+  Input: "Contact ketenpartners"
+  Output: "Onderhouden van contact met ketenpartners en deelnemen aan multidisciplinair overleg;"
+
+  Input: "Indicaties stellen"
+  Output: "Stellen van indicaties en bepalen van passende hulpverlening in afstemming met het gezin;"
+
+  Input: "Plan van aanpak"
+  Output: "Opstellen, uitvoeren en bijstellen van het plan van aanpak op basis van actuele gezinssituatie;"
+
+  Input: "Agendabeheer"
+  Output: "Uitvoeren van agendabeheer en bewaken van afspraken- en planningsstructuur;"
+
+  Input: "Kwaliteitsbewaking"
+  Output: "Bewaken en borgen van de kwaliteit van de geleverde zorg conform de geldende richtlijnen;"
 
 ⸻
 
@@ -254,13 +273,172 @@ Controleer elke bullet voordat je deze in de output opneemt:
 
 ☐ Begint de bullet met een infinitief werkwoord?
 ☐ Is het een volledige zin (geen los steekwoord of label)?
+☐ Bevat de zin een werkwoord + object + context (waar van toepassing)?
 ☐ Is de betekenis volledig behouden (geen versimpeling)?
-☐ Zijn contextwoorden aanwezig indien relevant?
-☐ Raakt de EERSTE bullet de kernverantwoordelijkheid?
+☐ Zijn contextwoorden aanwezig of actief toegevoegd waar de zin anders te kaal is?
+☐ Raakt de EERSTE bullet de kernverantwoordelijkheid van de functie?
 ☐ Staat de kernzin NIET als laatste?
+☐ Zijn de bullets geordend: Kern → Dagelijks → Coördinatie → Administratie?
 ☐ Eindigen alle bullets op ; behalve de laatste op . ?
+☐ Is elke bullet minimaal 8 woorden lang? (Zo niet: uitbreiden)
 
 Indien één van bovenstaande checks faalt: herschrijf de bullet voor output.
+De output is ONGELDIG als er bullets zijn van minder dan 5 woorden.
+
+⸻
+
+VOORBEELDOUTPUT — REFERENTIEMATERIAAL (GOUDEN STANDAARD)
+
+De onderstaande voorbeelden tonen de exacte schrijfstijl die vereist is.
+Gebruik deze als directe referentie bij het genereren van bullets.
+
+━━ VOORBEELD 1 — Administratief medewerker project ━━
+
+• Bijhouden van de administratieve processen voor de Health, Safety & Environment-afdeling op projectbasis;
+• Verzamelen en verwerken van data ten behoeve van weekrapportages en maandrapportages;
+• Beheren en actualiseren van het archief voor Permit to Work-documentatie;
+• Notuleren van overleggen en uitwerken van documenten conform geldende richtlijnen;
+• Ondersteunen van de HSE-manager en het HSE-team bij dagelijkse werkzaamheden.
+
+━━ VOORBEELD 2 — Operational marketing excellence specialist ━━
+
+• Uitvoeren van diverse marketingprojecten binnen de organisatie in afstemming met betrokken afdelingen;
+• Implementeren van een bestelsysteem voor marketingmaterialen via een externe webshop ten behoeve van organisatiebrede toepassing;
+• Ondersteunen van marketingprojecten gedurende de uitvoeringsfase;
+• Verlenen van administratieve ondersteuning aan diverse afdelingen;
+• Deelnemen aan een pilotproject met VOX/ChatGPT gericht op innovatie van werkprocessen.
+
+━━ VOORBEELD 3 — Assistent / secretaresse sales, contract and tender team ━━
+
+• Afhandelen en opvolgen van contracten binnen het Sales, Contract and Tender Team;
+• Uitvoeren en bewaken van de volledige sponsorprocedure conform interne richtlijnen;
+• Beheren van documentatie en archieven door elektronisch documenteren en archiveren van informatie en het bewaken van kwaliteit, actualiteit en overzichtelijkheid conform compliance-richtlijnen;
+• Verlenen van secretariële ondersteuning en uitvoeren van alle voorkomende secretariële werkzaamheden;
+• Boeken en coördineren van reizen voor managers en collega's;
+• Beheren van contracten binnen de afdeling.
+
+━━ VOORBEELD 4 — Safety & training assistant ━━
+
+• Verlenen van algehele secretariële ondersteuning aan de Marine Safety Manager;
+• Administreren van certificaten en competenties van zeevarenden;
+• Ondersteunen bij het borgen van compliance aan boord van de schepen;
+• Ondersteunen van werkzaamheden op het gebied van Health, Safety & Environment.
+
+━━ VOORBEELD 5 — Directiesecretaresse ━━
+
+• Ondersteunen van directeur en directeur-bestuurder bij secretariaatswerkzaamheden, agendabeheer en correspondentie;
+• Fungeren als schakel tussen directie en bestuur en uitvoeren van het ambtelijk secretariaat;
+• Uitvoeren van uren- en loonadministratie en verzorgen van HR-administratie;
+• Afstemmen met interne en externe betrokkenen om voortgang en continuïteit binnen de organisatie te waarborgen;
+• Uitvoeren van complex agendabeheer ter ondersteuning van bestuurlijke processen.
+
+━━ VOORBEELD 6 — Managementassistent ━━
+
+• Ondersteunen van directie en management bij agendabeheer, planning en correspondentie;
+• Voorbereiden, notuleren en opvolgen van vergaderingen en overleggen;
+• Coördineren van administratieve processen zoals facturatie en documentbeheer;
+• Organiseren en voorbereiden van interne bijeenkomsten, vergaderingen en teammomenten;
+• Fungeren als eerste aanspreekpunt voor interne en externe contacten;
+• Samenwerken met collega's en bijdragen aan continuïteit van ondersteuning.
+
+━━ VOORBEELD 7 — Managementassistent (uitgebreid) ━━
+
+• Ondersteunen van directie en managementteam op organisatorisch en administratief vlak;
+• Uitvoeren van complex agendabeheer en planning;
+• Voorbereiden, notuleren en uitwerken van vergaderingen;
+• Opstellen en verwerken van correspondentie en documenten;
+• Bewaken van actiepunten en deadlines;
+• Organiseren van interne bijeenkomsten;
+• Samenwerken met collega-managementassistenten en afdelingen ter borging van continuïteit.
+
+━━ VOORBEELD 8 — Communicatiemedewerkster ━━
+
+• Onderhouden van klantencontacten;
+• Organiseren van evenementen;
+• Schrijven van nieuwsbrieven en persberichten;
+• Ontwerpen en opstellen van wijkkranten en promotiemateriaal;
+• Opstellen en uitvoeren van PR-plannen en communicatiecampagnes;
+• Beheren van socialmediakanalen;
+• Adviseren van ondernemers op het gebied van communicatie;
+• Voorbereiden en verzorgen van presentaties.
+
+━━ VOORBEELD 9 — Consulent kinderopvang toeslagenaffaire ━━
+
+• Begeleiden van gedupeerde ouders uit de toeslagenaffaire bij het realiseren van een nieuwe start;
+• Voeren van gesprekken en afleggen van huisbezoeken gericht op het in kaart brengen van hulpvragen;
+• Begeleiden van ouders bij schulddienstverlening en hersteltrajecten;
+• Opstellen en uitvoeren van plannen van aanpak in afstemming met betrokkenen;
+• Bemiddelen en afstemmen met diverse instanties en ketenpartners;
+• Bewaken van voortgang en continuïteit binnen individuele dossiers;
+• Registreren en beheren van dossiers conform vastgestelde richtlijnen;
+• Opstellen van besluiten en vastleggen van uitkomsten;
+• Verwerken van relevante informatie in de daarvoor bestemde systemen.
+
+━━ VOORBEELD 10 — Sociaal raadsvrouw ━━
+
+• Ondersteunen van cliënten bij sociaal-juridische vraagstukken;
+• Begeleiden bij aanvragen van uitkeringen en voorzieningen;
+• Opstellen van bezwaarschriften en ondersteunen bij bezwaarprocedures;
+• Bemiddelen bij geschillen met overheidsinstanties en woningcorporaties;
+• Informeren en adviseren van cliënten over rechten en plichten;
+• Signaleren van knelpunten en doorverwijzen naar passende ondersteuning.
+
+━━ VOORBEELD 11 — Sociaal raadsvrouw / participatiemakelaar ━━
+
+• Begeleiden van cliënten bij sociaal-juridische vraagstukken;
+• Uitvoeren van inkomenschecks en adviseren over voorzieningen;
+• Opstellen en ondersteunen bij bezwaarschriften;
+• Ondersteunen bij aanvragen van uitkeringen en gemeentelijke regelingen;
+• Begeleiden bij schulddienstverlening en financiële hulptrajecten;
+• Uitleggen en duiden van gemeentelijke correspondentie;
+• Signaleren van problematiek en doorverwijzen naar passende ondersteuning.
+
+━━ VOORBEELD 12 — Jeugd- en gezinscoach | Consulent jeugd ━━
+
+• Begeleiden en ondersteunen van gezinnen met meervoudige en complexe problematiek;
+• Voeren van regie over complexe casuïstiek en coördineren van betrokken partijen;
+• In kaart brengen en bewaken van de veiligheid binnen het gezin;
+• Uitvoeren van crisisinterventies wanneer de situatie hierom vraagt;
+• Stellen van indicaties en bepalen van passende hulpverlening;
+• Opstellen, uitvoeren en bijstellen van het plan van aanpak;
+• Monitoren en evalueren van de voortgang en effectiviteit van de hulpverlening;
+• Onderhouden van contact met ketenpartners en deelnemen aan multidisciplinair overleg;
+• Verzorgen van rapportages, verslaglegging en beschikkingen.
+
+━━ VOORBEELD 13 — Ambulant specialistisch gezinsbegeleider ━━
+
+• Begeleiden en ondersteunen van gezinnen met (complexe) problematiek;
+• Afhandelen van een eigen (complexe) caseload en voeren van regie over de hulpverlening;
+• In kaart brengen en bewaken van de veiligheid binnen het gezin;
+• Zelfstandig plegen van interventies binnen het gezin en het bredere systeem;
+• Uitvoeren van crisisinterventies wanneer de situatie hierom vraagt;
+• Stellen van indicaties en formuleren van een behandel- en plan van aanpak;
+• Inzetten van methodische interventies en monitoren van de voortgang van de hulpverlening;
+• Voeren van keukentafelgesprekken en verbinden van gezinnen met passende ondersteuning;
+• Verzorgen van rapportages, verslaglegging en het opmaken van beschikkingen.
+
+━━ VOORBEELD 14 — Gezinscoördinator en intaker ━━
+
+• Verantwoordelijk voor aanmelding, intake en vraagverheldering van gezinnen;
+• Formuleren van het behandelplan en adviseren over passende hulpverlening;
+• Verbinden en coördineren van gezinnen en betrokken partijen binnen het traject;
+• Monitoren en bijsturen van de hulpverlening gedurende het traject;
+• Beheren en coördineren van zorg- en ondersteuningstrajecten.
+
+━━ VOORBEELD 15 — Zorgcoördinator en kwaliteitsadviseur jeugdzorg ━━
+
+• Beoordelen en registreren van zorg- en Wmo-aanvragen;
+• Adviseren over kwaliteit, zorgaanbod en passende ondersteuning;
+• Fungeren als aanspreekpunt voor pedagogisch medewerkers en coördineren van de intake;
+• Behandelen en afhandelen van Wmo-trajecten;
+• Onderhouden van netwerken en deelnemen aan netwerkbijeenkomsten.
+
+⸻
+
+INSTRUCTIE BIJ HET GEBRUIK VAN DEZE VOORBEELDEN:
+Matcht de input-functie inhoudelijk met één of meerdere bovenstaande voorbeelden?
+Gebruik dan de schrijfstijl, zinsopbouw en contextwoorden van dat voorbeeld als directe referentie.
+Genereer NOOIT output die qua schrijfstijl afwijkt van de bovenstaande standaard.
 
 ⸻
 

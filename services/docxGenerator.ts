@@ -140,7 +140,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                         text: (() => {
                           const isValid = (v?: string | null) => v && v.trim() !== '';
                           const parts: string[] = [];
-                          if (isValid(data.personalInfo.availability)) parts.push(data.personalInfo.availability!);
+                          parts.push(isValid(data.personalInfo.availability) ? `Beschikbaar per ${data.personalInfo.availability!}` : 'Beschikbaar in overleg');
                           if (isValid(data.personalInfo.hours)) {
                             const h = data.personalInfo.hours!;
                             parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);

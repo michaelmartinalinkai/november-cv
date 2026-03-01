@@ -1,53 +1,32 @@
-
-import { CvConversionEvent, UsageSummary } from "../types";
+import { UsageSummary } from "../types";
 import { config } from "../config";
 
-const STORAGE_KEY = 'november_cv_usage_events';
 const TRACKING_URL_KEY = 'november_cv_tracking_url';
+const ADMIN_USER_KEY = 'november_cv_admin_user';
+const CACHE_SUMMARY_KEY = 'november_cv_cache_summary';
+const CACHE_TOTAL_KEY = 'november_cv_cache_total';
+const CACHE_TS_KEY = 'november_cv_cache_ts';
+const CACHE_TTL_MS = 60_000; // 60 seconds
 
 class UsageService {
-  private getEvents(): CvConversionEvent[] {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error("Failed to load usage events", e);
-      return [];
-    }
+
+  // ─── Admin user ─────────────────────────────────────────────────────────────
+  public getAdminUser(): string {
+    return localStorage.getItem(ADMIN_USER_KEY) || '';
+  }
+  public setAdminUser(name: string) {
+    localStorage.setItem(ADMIN_USER_KEY, name.trim());
   }
 
-  private saveEvents(events: CvConversionEvent[]) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
-    } catch (e) {
-      console.error("Failed to save usage events", e);
-    }
-  }
-
+  // ─── Tracking URL ───────────────────────────────────────────────────────────
   public getTrackingUrl(): string {
     return config.trackingUrl || localStorage.getItem(TRACKING_URL_KEY) || '';
   }
-
   public setTrackingUrl(url: string) {
-    localStorage.setItem(TRACKING_URL_KEY, url);
+    localStorage.setItem(TRACKING_URL_KEY, url.trim());
   }
 
-  private async sendToTrackingUrl(data: any) {
-    const url = this.getTrackingUrl();
-    if (!url) return;
-
-    try {
-      await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        mode: 'no-cors' // Google Apps Script Web Apps often require no-cors for simple POSTs
-      });
-    } catch (e) {
-      console.error("Failed to send tracking data to remote URL", e);
-    }
-  }
-
+  // ─── Hash util ──────────────────────────────────────────────────────────────
   public async generateHash(content: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -55,92 +34,124 @@ class UsageService {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  /**
-   * Checks if this specific file content has already been processed.
-   * Useful for informing the user, though we may still bill for re-processing.
-   */
-  public isDuplicate(sourceHash: string): string | null {
-    const events = this.getEvents();
-    // Sort by date to get the most recent one
-    const matches = events
-      .filter(e => e.source_hash === sourceHash)
-      .sort((a, b) => new Date(b.converted_at).getTime() - new Date(a.converted_at).getTime());
+  // ─── POST: record a conversion ──────────────────────────────────────────────
+  public async recordConversion(
+    cvId: string,
+    sourceHash: string,
+    fileName: string,
+    candidateName: string,
+    generationId?: string
+  ): Promise<boolean> {
+    const url = this.getTrackingUrl();
+    if (!url) return false;
 
-    return matches.length > 0 ? matches[0].converted_at : null;
-  }
+    const eventId = generationId || crypto.randomUUID();
+    const adminUser = this.getAdminUser() || 'Onbekend';
 
-  /**
-   * Records a billable event.
-   * Logic: +1 for every UNIQUE successful generation call.
-   * To prevent double-counting on UI retries/refreshes, we use a unique generationId
-   * provided by the caller that persists during the retry cycle.
-   */
-  public recordConversion(cvId: string, sourceHash: string, fileName: string, generationId?: string): boolean {
-    const events = this.getEvents();
-
-    // Idempotency check: if this specific generationId was already recorded, skip.
-    // This prevents double-billing if the UI loop retries or the user double-clicks.
-    if (generationId && events.some(e => e.event_id === generationId)) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record',
+          event_id: eventId,
+          cv_id: cvId,
+          source_hash: sourceHash,
+          file_name: fileName,
+          candidate_name: candidateName,
+          admin_user: adminUser,
+        }),
+        mode: 'no-cors',
+      });
+      this.invalidateCache();
+      return true;
+    } catch (e) {
+      console.error("Failed to record conversion:", e);
       return false;
     }
-
-    const newEvent: CvConversionEvent = {
-      event_id: generationId || crypto.randomUUID(),
-      cv_id: cvId,
-      source_hash: sourceHash,
-      file_name: fileName,
-      converted_at: new Date().toISOString()
-    };
-
-    events.push(newEvent);
-    this.saveEvents(events);
-
-    // Fire and forget remote tracking
-    this.sendToTrackingUrl({
-      cvId,
-      sourceHash,
-      fileName,
-      timestamp: newEvent.converted_at
-    });
-
-    return true;
   }
 
-  public getTotalCount(): number {
-    return this.getEvents().length;
+  // ─── GET: live from Google Sheets ────────────────────────────────────────────
+  public async fetchLiveSummary(): Promise<{ summary: UsageSummary[]; total: number }> {
+    const url = this.getTrackingUrl();
+    if (this.isCacheFresh()) return this.readCache();
+    if (!url) return { summary: [], total: 0 };
+
+    try {
+      const res = await fetch(`${url}?action=summary`);
+      const json = await res.json();
+      if (json.ok) {
+        const result = { summary: json.summary as UsageSummary[], total: Number(json.total) };
+        this.writeCache(result);
+        return result;
+      }
+    } catch (e) {
+      console.warn("Tracking backend unreachable, using cache:", e);
+    }
+    return this.readCache();
   }
 
-  public getCurrentMonthCount(): number {
-    const events = this.getEvents();
+  public async fetchLog(month?: string, limit = 200): Promise<AuditEntry[]> {
+    const url = this.getTrackingUrl();
+    if (!url) return [];
+    try {
+      const params = new URLSearchParams({ action: 'log', limit: String(limit) });
+      if (month) params.set('month', month);
+      const res = await fetch(`${url}?${params}`);
+      const json = await res.json();
+      return json.ok ? (json.log as AuditEntry[]) : [];
+    } catch (e) {
+      console.error("Failed to fetch audit log:", e);
+      return [];
+    }
+  }
+
+  // ─── Synchronous cache reads (for instant UI) ────────────────────────────────
+  public getCachedTotal(): number { return this.readCache().total; }
+  public getCachedMonthCount(): number {
+    const { summary } = this.readCache();
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    return events.filter(e => {
-      const d = new Date(e.converted_at);
-      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
-    }).length;
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return summary.find(s => s.year_month === month)?.count ?? 0;
   }
 
-  public getUsageSummary(): UsageSummary[] {
-    const events = this.getEvents();
-    const summaryMap = new Map<string, number>();
+  // Legacy sync aliases (so App.tsx still compiles during migration)
+  public getTotalCount(): number { return this.getCachedTotal(); }
+  public getCurrentMonthCount(): number { return this.getCachedMonthCount(); }
+  public getUsageSummary(): UsageSummary[] { return this.readCache().summary; }
 
-    events.forEach(e => {
-      const d = new Date(e.converted_at);
-      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      summaryMap.set(ym, (summaryMap.get(ym) || 0) + 1);
-    });
-
-    const sortedKeys = Array.from(summaryMap.keys()).sort().reverse();
-
-    return sortedKeys.map(ym => ({
-      year_month: ym,
-      count: summaryMap.get(ym) || 0,
-      status: 'OPEN'
-    }));
+  // ─── Cache helpers ───────────────────────────────────────────────────────────
+  private isCacheFresh(): boolean {
+    const ts = localStorage.getItem(CACHE_TS_KEY);
+    return ts ? Date.now() - Number(ts) < CACHE_TTL_MS : false;
   }
+  private writeCache(data: { summary: UsageSummary[]; total: number }) {
+    try {
+      localStorage.setItem(CACHE_SUMMARY_KEY, JSON.stringify(data.summary));
+      localStorage.setItem(CACHE_TOTAL_KEY, String(data.total));
+      localStorage.setItem(CACHE_TS_KEY, String(Date.now()));
+    } catch (_) { }
+  }
+  private readCache(): { summary: UsageSummary[]; total: number } {
+    try {
+      return {
+        summary: JSON.parse(localStorage.getItem(CACHE_SUMMARY_KEY) || '[]') as UsageSummary[],
+        total: Number(localStorage.getItem(CACHE_TOTAL_KEY) || '0'),
+      };
+    } catch (_) { return { summary: [], total: 0 }; }
+  }
+  private invalidateCache() { localStorage.removeItem(CACHE_TS_KEY); }
+}
+
+export interface AuditEntry {
+  timestamp: string;
+  event_id: string;
+  admin_user: string;
+  candidate_name: string;
+  file_name: string;
+  source_hash: string;
+  cv_id: string;
+  month: string;
 }
 
 export const usageService = new UsageService();
-

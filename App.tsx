@@ -35,9 +35,16 @@ const App: React.FC = () => {
 
   const processingRef = useRef<Set<string>>(new Set());
 
-  const refreshCounters = useCallback(() => {
-    setUsageCount(usageService.getCurrentMonthCount());
-    setTotalCount(usageService.getTotalCount());
+  const refreshCounters = useCallback(async () => {
+    // Show cached values instantly, then update with live data from Sheets
+    setUsageCount(usageService.getCachedMonthCount());
+    setTotalCount(usageService.getCachedTotal());
+    const live = await usageService.fetchLiveSummary();
+    setUsageCount(live.summary.find(s => {
+      const now = new Date();
+      return s.year_month === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    })?.count ?? 0);
+    setTotalCount(live.total);
   }, []);
 
   useEffect(() => {
@@ -113,7 +120,8 @@ const App: React.FC = () => {
       });
 
       const sourceHash = await usageService.generateHash(JSON.stringify(result) + 'new');
-      usageService.recordConversion(targetId, sourceHash, item.file.name, `gen_${targetId}_${Date.now()}`);
+      const candidateName = (finalResult as any)?.personalInfo?.name || 'Onbekend';
+      usageService.recordConversion(targetId, sourceHash, item.file.name, candidateName, `gen_${targetId}_${Date.now()}`);
       refreshCounters();
 
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'SUCCESS', statusMessage: 'Afgerond', result: finalResult as ParsedCV, template: 'new' } : q));
@@ -142,11 +150,11 @@ const App: React.FC = () => {
         saveAs(blob, `${fileNameBase}.docx`);
 
         // Record conversion for DOCX
-        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`);
+        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`, data.personalInfo?.name || 'Onbekend');
       } else {
         window.print();
         // Record conversion for PDF (print)
-        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`);
+        usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`, data.personalInfo?.name || 'Onbekend');
       }
 
       // Refresh counters after recording
@@ -322,7 +330,7 @@ const App: React.FC = () => {
             alt=""
             style={{
               position: 'absolute', zIndex: 10,
-              width: '11mm', height: '10mm',
+              width: '10mm', height: '10mm',
               left: '150mm', top: '25%', transform: 'translateY(-18%)',
             }}
           />

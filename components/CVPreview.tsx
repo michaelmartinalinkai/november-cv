@@ -39,17 +39,17 @@ const normalizeEducationLevel = (text: string): string => {
 const fixEducationEntry = (edu: { period: string; degree: string; status: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
-  
+
   // If status is just an education level, prepend it to degree
   if (levelPattern.test(status.trim())) {
     const level = normalizeEducationLevel(status.trim());
     degree = degree.startsWith(level) ? degree : `${level} ${degree}`;
     status = 'diploma behaald';
   }
-  
+
   // Normalize any education levels within degree
   degree = normalizeEducationLevel(degree);
-  
+
   return { ...edu, degree, status };
 };
 
@@ -158,10 +158,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             {(data.education || []).map((edu, i) => {
               const fixedEdu = fixEducationEntry(edu);
               return (
-              <div key={i} className="flex gap-x-12">
-                <span className="w-[100px] shrink-0">{formatDateToNumbers(fixedEdu.period)}</span>
-                <span>{fixedEdu.degree} ({fixedEdu.status})</span>
-              </div>
+                <div key={i} className="flex gap-x-12">
+                  <span className="w-[100px] shrink-0">{formatDateToNumbers(fixedEdu.period)}</span>
+                  <span>{fixedEdu.degree} ({fixedEdu.status})</span>
+                </div>
               );
             })}
           </div>
@@ -280,7 +280,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             (() => {
               const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
               const parts: string[] = [];
-              if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
+              parts.push(isValid(data.personalInfo?.availability) ? `Beschikbaar per ${data.personalInfo!.availability!}` : 'Beschikbaar in overleg');
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
@@ -363,19 +363,19 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           {(data.education || []).map((edu, i) => {
             const fixedEdu = fixEducationEntry(edu);
             return (
-            <React.Fragment key={i}>
-              <div className="opacity-70 font-normal whitespace-nowrap">
-                <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
-              </div>
-              <div className="leading-snug">
-                <span className="text-black inline">
-                  <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
-                </span>
-                <span className="font-normal opacity-70 whitespace-nowrap">
-                  {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
-                </span>
-              </div>
-            </React.Fragment>
+              <React.Fragment key={i}>
+                <div className="opacity-70 font-normal whitespace-nowrap">
+                  <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
+                </div>
+                <div className="leading-snug">
+                  <span className="text-black inline">
+                    <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
+                  </span>
+                  <span className="font-normal opacity-70 whitespace-nowrap">
+                    {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                  </span>
+                </div>
+              </React.Fragment>
             );
           })}
         </div>
