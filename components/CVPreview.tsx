@@ -418,7 +418,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontFamily: 'Garet, sans-serif' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70" style={{ fontSize: '10.66px' }}>
+                <span className="block opacity-70" style={{ fontSize: '10.66px' }}>
                   <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
                 </span>
                 <div className="flex items-center gap-2">
