@@ -307,29 +307,29 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       rows: (data.education || []).map(edu => {
         const fixedEdu = fixEducationEntry(edu);
         return new TableRow({
-        children: [
-          new TableCell({
-            width: { size: 20, type: WidthType.PERCENTAGE },
-            borders: allNoBorders,
-            margins: { top: 20, bottom: 20 },
-            children: [
-              new Paragraph({ children: [new TextRun({ text: fixedEdu.period, font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
-            ]
-          }),
-          new TableCell({
-            width: { size: 80, type: WidthType.PERCENTAGE },
-            borders: allNoBorders,
-            margins: { top: 20, bottom: 20 },
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: fixedEdu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
-                  new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
-                ]
-              })
-            ]
-          })
-        ]
+          children: [
+            new TableCell({
+              width: { size: 20, type: WidthType.PERCENTAGE },
+              borders: allNoBorders,
+              margins: { top: 20, bottom: 20 },
+              children: [
+                new Paragraph({ children: [new TextRun({ text: fixedEdu.period, font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
+              ]
+            }),
+            new TableCell({
+              width: { size: 80, type: WidthType.PERCENTAGE },
+              borders: allNoBorders,
+              margins: { top: 20, bottom: 20 },
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: fixedEdu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
+                    new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
+                  ]
+                })
+              ]
+            })
+          ]
         });
       })
     }),

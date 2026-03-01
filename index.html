@@ -131,12 +131,10 @@
       .cv-print-thead td {
         height: 140px !important;
         padding-bottom: 20px !important;
-        background: white !important;
       }
 
       .cv-print-tfoot td {
         height: 110px !important;
-        background: white !important;
       }
 
       .cv-print-footer-fixed {
@@ -156,6 +154,15 @@
     }
 
     .cv-print-footer-fixed {
+      display: none;
+    }
+
+    /* Hide print-only table header/footer on screen */
+    .cv-print-table thead.cv-print-thead {
+      display: none;
+    }
+
+    .cv-print-table tfoot.cv-print-tfoot {
       display: none;
     }
 
