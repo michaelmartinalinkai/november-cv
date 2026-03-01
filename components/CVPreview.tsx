@@ -278,9 +278,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             </div>
           ) : (
             (() => {
-              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
               const parts: string[] = [];
-              parts.push(isValid(data.personalInfo?.availability) ? `Beschikbaar per ${data.personalInfo!.availability!}` : 'Beschikbaar in overleg');
+              parts.push(isValid(data.personalInfo?.availability) ? `Beschikbaar per ${data.personalInfo!.availability!}` : 'Beschikbaarheid op aanvraag');
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);

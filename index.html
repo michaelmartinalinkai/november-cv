@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NOVÉMBER. CV Conversion</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.cdnfonts.com/css/garet" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -32,22 +31,20 @@
       font-family: 'Agrandir', sans-serif;
     }
 
-    /* Variable font setup for future use (when Garet-Variable files are added to /public/fonts/) */
+    /* Garet fonts — served locally for reliable weight rendering */
     @font-face {
       font-family: 'Garet';
-      src: url('/fonts/Garet-Variable.woff2') format('woff2'),
-        url('/fonts/Garet-Variable.ttf') format('truetype');
-      font-weight: 100 1000;
+      src: url('/fonts/Garet-Book.woff') format('woff');
+      font-weight: 300;
       font-style: normal;
       font-display: swap;
     }
 
     @font-face {
       font-family: 'Garet';
-      src: url('/fonts/Garet-Variable-Italic.woff2') format('woff2'),
-        url('/fonts/Garet-Variable-Italic.ttf') format('truetype');
-      font-weight: 100 1000;
-      font-style: italic;
+      src: url('/fonts/Garet-Heavy.woff') format('woff');
+      font-weight: 850;
+      font-style: normal;
       font-display: swap;
     }
 
