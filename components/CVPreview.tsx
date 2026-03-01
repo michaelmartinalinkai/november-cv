@@ -359,7 +359,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       </section>
 
       <section className="mb-6">
-        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-3">
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
         <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
@@ -386,7 +386,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
 
       {data.courses && data.courses.length > 0 && (
         <section className="mb-6">
-          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
           <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
