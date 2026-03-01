@@ -39,17 +39,17 @@ const normalizeEducationLevel = (text: string): string => {
 const fixEducationEntry = (edu: { period: string; degree: string; status: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
-  
+
   // If status is just an education level, prepend it to degree
   if (levelPattern.test(status.trim())) {
     const level = normalizeEducationLevel(status.trim());
     degree = degree.startsWith(level) ? degree : `${level} ${degree}`;
     status = 'diploma behaald';
   }
-  
+
   // Normalize any education levels within degree
   degree = normalizeEducationLevel(degree);
-  
+
   return { ...edu, degree, status };
 };
 
@@ -103,10 +103,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       const remainder = totalBeforeSpacer % pagePx;
       const needed = remainder === 0 ? 0 : pagePx - remainder;
 
-      // Only push footer down if the last page is at least 40% full
-      // Otherwise the footer appears naturally just below the content
-      const lastPageUsed = pagePx - needed;
-      setSpacerHeight(lastPageUsed >= pagePx * 0.4 ? needed : 0);
+      setSpacerHeight(needed);
     };
 
     // Run after every render + when data changes
@@ -161,10 +158,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             {(data.education || []).map((edu, i) => {
               const fixedEdu = fixEducationEntry(edu);
               return (
-              <div key={i} className="flex gap-x-12">
-                <span className="w-[100px] shrink-0">{formatDateToNumbers(fixedEdu.period)}</span>
-                <span>{fixedEdu.degree} ({fixedEdu.status})</span>
-              </div>
+                <div key={i} className="flex gap-x-12">
+                  <span className="w-[100px] shrink-0">{formatDateToNumbers(fixedEdu.period)}</span>
+                  <span>{fixedEdu.degree} ({fixedEdu.status})</span>
+                </div>
               );
             })}
           </div>
@@ -263,7 +260,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       <div className="flex flex-col justify-center h-full">
         <h1
           className="leading-tight mb-1"
-          style={{ fontSize: '41.1px', fontWeight: 850, letterSpacing: '-0.03em', fontFamily: 'Garet, sans-serif' }}
+          style={{ fontSize: '41.1px', fontWeight: 900, letterSpacing: '-0.03em', fontFamily: 'Garet, sans-serif', WebkitTextStroke: '0.6px currentColor', paintOrder: 'stroke fill' }}
         >
           <EditableText
             value={toTitleCase(data.personalInfo?.name || "Kandidaat Naam")}
@@ -281,9 +278,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             </div>
           ) : (
             (() => {
-              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd');
+              const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
               const parts: string[] = [];
-              if (isValid(data.personalInfo?.availability)) parts.push(data.personalInfo!.availability!);
+              parts.push(isValid(data.personalInfo?.availability) ? `Beschikbaar per ${data.personalInfo!.availability!}` : 'Beschikbaar op aanvraag');
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
@@ -359,26 +356,26 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
       </section>
 
       <section className="mb-6">
-        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
-        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif', lineHeight: '1.7' }}>
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => {
             const fixedEdu = fixEducationEntry(edu);
             return (
-            <React.Fragment key={i}>
-              <div className="opacity-70 font-normal whitespace-nowrap">
-                <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
-              </div>
-              <div className="leading-snug">
-                <span className="text-black inline">
-                  <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
-                </span>
-                <span className="font-normal opacity-70 whitespace-nowrap">
-                  {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
-                </span>
-              </div>
-            </React.Fragment>
+              <React.Fragment key={i}>
+                <div className="opacity-70 font-normal whitespace-nowrap">
+                  <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
+                </div>
+                <div className="leading-snug">
+                  <span className="text-black inline">
+                    <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
+                  </span>
+                  <span className="font-normal opacity-70 whitespace-nowrap">
+                    {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                  </span>
+                </div>
+              </React.Fragment>
             );
           })}
         </div>
@@ -386,10 +383,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
 
       {data.courses && data.courses.length > 0 && (
         <section className="mb-6">
-          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
+          <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
-          <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif', lineHeight: '1.7' }}>
+          <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
             {(data.courses || []).map((c, i) => (
               <React.Fragment key={i}>
                 <div className="opacity-70 font-normal whitespace-nowrap">
@@ -421,7 +418,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           {(data.experience || []).map((exp, i) => (
             <div key={i} className="relative" style={{ fontFamily: 'Garet, sans-serif' }}>
               <div className="mb-2">
-                <span className="block mb-1 opacity-70" style={{ fontSize: '10.66px' }}>
+                <span className="block opacity-70" style={{ fontSize: '10.66px' }}>
                   <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
                 </span>
                 <div className="flex items-center gap-2">
