@@ -20,6 +20,32 @@ import { WHITE_ARROW_URL } from './assets';
 
 const MAX_WAIT_MS = 90000;
 
+// Scales its children to fit the available width on mobile, 1:1 on desktop
+const ScaleToCVFit: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties }> = ({ children, className, style }) => {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const [scale, setScale] = React.useState(1);
+  React.useLayoutEffect(() => {
+    const update = () => {
+      if (!wrapRef.current) return;
+      const available = wrapRef.current.offsetWidth;
+      const cvPx = 794; // 210mm @ 96 dpi
+      setScale(Math.min(1, available / cvPx));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  // When scaled down, the div still occupies 210mm height in the flow → collapse it
+  const scaledHeight = scale < 1 ? `calc(297mm * ${scale})` : undefined;
+  return (
+    <div ref={wrapRef} className="w-full" style={{ height: scaledHeight, overflow: 'hidden' }}>
+      <div className={className} style={{ ...style, transform: `scale(${scale})`, transformOrigin: 'top left', width: '210mm' }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userEmail, setUserEmail] = useState('');
@@ -233,7 +259,9 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
-          <div className={clsx("scale-[0.85] lg:scale-100 origin-top transform print-container bg-white shadow-2xl mb-20 border transition-colors", isEditing ? "border-[#e3fd01] ring-4 ring-[#e3fd01]/20" : "border-neutral-200")}>
+          <ScaleToCVFit
+            className={clsx("print-container bg-white shadow-2xl border transition-colors", isEditing ? "border-[#e3fd01] ring-4 ring-[#e3fd01]/20" : "border-neutral-200")}
+          >
             {isEditing && (
               <div className="absolute top-0 left-0 w-full bg-[#1E3A35] text-white text-xs text-center py-1.5 font-bold tracking-widest z-50 animate-fade-in no-print">
                 BEWERK MODUS ACTIEF — KLIK OP TEKST OM TE WIJZIGEN
@@ -245,7 +273,7 @@ const App: React.FC = () => {
               isEditing={isEditing}
               onChange={handlePreviewEdit}
             />
-          </div>
+          </ScaleToCVFit>
         </div>
       );
     }
