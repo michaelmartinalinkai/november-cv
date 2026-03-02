@@ -66,18 +66,26 @@ const formatDateToNumbers = (text: string) => {
     'mar': '03', 'oct': '10'
   };
 
-  // Replace "Month YYYY" or "Month" with "MM/YYYY" or just "MM"
-  // Note: we look for month name followed optionally by a space and 4 digits
-  return text.replace(/\b([a-zA-Z]+)\s*(\d{4})?\b/g, (match, monthStr, yearStr) => {
+  const converted = text.replace(/\b([a-zA-Z]+)\s*(\d{4})?\b/g, (match, monthStr, yearStr) => {
     const lower = monthStr.toLowerCase();
     const monthNum = monthMap[lower];
-
     if (monthNum) {
       return yearStr ? `${monthNum}/${yearStr}` : monthNum;
     }
-    return match; // return original if not a recognized month
+    return match;
+  });
+
+  // Normalize range separator: " / " → " - " (avoids "06/2024 / 04/2025" confusion)
+  return converted.replace(/\s*\/\s*/g, (m, offset, str) => {
+    // Only replace if it looks like a range separator (surrounded by date-like content)
+    // i.e. not inside a MM/YYYY date (no digit immediately before or after the slash at that position)
+    const before = str[offset - 1];
+    const after = str[offset + m.length];
+    if (/\d/.test(before) && /\d/.test(after)) return m; // keep as date separator
+    return ' - ';
   });
 };
+
 
 export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', isEditing, onChange }) => {
   if (!data) return null;
