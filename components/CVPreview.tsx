@@ -341,7 +341,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
                 style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
               >
-                {skill}
+                <EditableText
+                  value={skill}
+                  onChange={(v) => handleEdit(['analysis', 'tags', i], v)}
+                  isEditing={!!isEditing}
+                />
               </div>
             ))}
           </div>
@@ -353,11 +357,16 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
                 style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
               >
-                {skill}
+                <EditableText
+                  value={skill}
+                  onChange={(v) => handleEdit(['analysis', 'tags', i + 3], v)}
+                  isEditing={!!isEditing}
+                />
               </div>
             ))}
           </div>
         </div>
+
       </section>
 
       <section className="mb-6">
