@@ -389,25 +389,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
-          <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
-            {(data.courses || []).map((c, i) => (
-              <React.Fragment key={i}>
-                <div className="opacity-70 font-normal whitespace-nowrap">
-                  <EditableText value={formatDateToNumbers(c.period) || ''} onChange={(v) => handleEdit(['courses', i, 'period'], v)} isEditing={!!isEditing} />
-                </div>
-                <div className="leading-snug">
-                  <span className="text-black inline">
-                    <EditableText value={c.title || ''} onChange={(v) => handleEdit(['courses', i, 'title'], v)} isEditing={!!isEditing} multiline />
-                  </span>
-                  {c.institute && (
-                    <span className="font-normal opacity-70 whitespace-nowrap">
-                      {' '}- <EditableText value={c.institute} onChange={(v) => handleEdit(['courses', i, 'institute'], v)} isEditing={!!isEditing} />
-                    </span>
-                  )}
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
+          <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+            <EditableText
+              value={(data.courses || []).map(c => c.title).join(' | ')}
+              onChange={(v) => {
+                const titles = v.split('|').map(s => s.trim()).filter(Boolean);
+                const updated = titles.map((title, i) => ({ ...((data.courses || [])[i] || {}), title }));
+                handleEdit(['courses'], updated as any);
+              }}
+              isEditing={!!isEditing}
+              multiline
+            />
+          </p>
         </section>
       )}
 

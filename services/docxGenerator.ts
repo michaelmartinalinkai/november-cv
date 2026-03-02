@@ -336,45 +336,20 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
 
     new Paragraph({ spacing: { before: 400, after: 200 }, border: { bottom: { color: COLOR_SALMON, size: 4, style: BorderStyle.SINGLE } } }),
 
-    // CURSUSSEN SECTION (only if present)
+    // CURSUSSEN SECTION (only if present) — rendered as single pipe-separated line
     ...((data.courses && data.courses.length > 0) ? [
       new Paragraph({
         children: [
           new TextRun({ text: "  CURSUSSEN  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })
         ]
       }),
-      new Paragraph({ spacing: { before: 80 } }),
-      new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: allNoBorders,
-        rows: (data.courses || []).map(c => new TableRow({
-          children: [
-            new TableCell({
-              width: { size: 20, type: WidthType.PERCENTAGE },
-              borders: allNoBorders,
-              margins: { top: 20, bottom: 20 },
-              children: [
-                new Paragraph({ children: [new TextRun({ text: c.period, font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
-              ]
-            }),
-            new TableCell({
-              width: { size: 80, type: WidthType.PERCENTAGE },
-              borders: allNoBorders,
-              margins: { top: 20, bottom: 20 },
-              children: [
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: c.title, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
-                    ...(c.institute ? [new TextRun({ text: ` - ${c.institute}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })] : [])
-                  ]
-                })
-              ]
-            })
-          ]
-        }))
+      new Paragraph({
+        spacing: { before: 80 },
+        children: [new TextRun({ text: (data.courses || []).map(c => c.title).join(" | "), size: 16, font: FONT_BRAND })]
       }),
       new Paragraph({ spacing: { before: 200 } }),
     ] : []),
+
 
     // WERKERVARING SECTION
     new Paragraph({
