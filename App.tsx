@@ -244,19 +244,14 @@ const App: React.FC = () => {
                   <Settings size={14} className="mr-2" />
                   {isEditing ? "Klaar met bewerken" : "Bewerken"}
                 </Button>
-                <Button onClick={() => setIsDownloadMenuOpen(!isDownloadMenuOpen)} variant="primary" className="shadow-lg h-10 px-8">
-                  DOWNLOAD <ChevronDown size={14} className="ml-2" />
+                <Button onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)} variant="primary" className="shadow-lg h-10 px-8">
+                  PDF
                 </Button>
               </div>
               <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
               </span>
-              {isDownloadMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-neutral-200 shadow-xl z-50 py-2 rounded-sm overflow-hidden animate-fade-in">
-                  <button onClick={() => handleDownload('docx', selectedItem.result!, selectedItem.template, selectedItem.id)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Microsoft Word (.docx)</button>
-                  <button onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)} className="w-full text-left px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-[#1E3A35] hover:bg-neutral-50 transition-colors">Opslaan als PDF (.pdf)</button>
-                </div>
-              )}
+
             </div>
           </div>
           <ScaleToCVFit
