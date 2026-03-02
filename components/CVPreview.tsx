@@ -75,15 +75,9 @@ const formatDateToNumbers = (text: string) => {
     return match;
   });
 
-  // Normalize range separator: " / " → " - " (avoids "06/2024 / 04/2025" confusion)
-  return converted.replace(/\s*\/\s*/g, (m, offset, str) => {
-    // Only replace if it looks like a range separator (surrounded by date-like content)
-    // i.e. not inside a MM/YYYY date (no digit immediately before or after the slash at that position)
-    const before = str[offset - 1];
-    const after = str[offset + m.length];
-    if (/\d/.test(before) && /\d/.test(after)) return m; // keep as date separator
-    return ' - ';
-  });
+  // Normalize range separator: " / " (with spaces) → " - "
+  // MM/YYYY dates never have spaces around the slash, so this is unambiguous
+  return converted.replace(/ \/ /g, ' - ');
 };
 
 
