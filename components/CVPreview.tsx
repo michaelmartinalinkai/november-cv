@@ -466,7 +466,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </div>
       </section>
 
-      <OrangeSeparator />
+      {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && <OrangeSeparator />}
 
       <div className="space-y-6 mt-4">
         {data.systems && data.systems.length > 0 && (
