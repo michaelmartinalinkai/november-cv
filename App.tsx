@@ -244,9 +244,12 @@ const App: React.FC = () => {
                   <Settings size={14} className="mr-2" />
                   {isEditing ? "Klaar met bewerken" : "Bewerken"}
                 </Button>
-                <Button onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)} variant="primary" className="shadow-lg h-10 px-8">
-                  PDF
-                </Button>
+                <button
+                  onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)}
+                  className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#EE8D70] text-white hover:bg-[#E07C60] border border-transparent shadow-lg h-10 px-8"
+                >
+                  Download PDF
+                </button>
               </div>
               <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
