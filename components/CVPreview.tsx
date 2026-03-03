@@ -432,7 +432,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                   <span className="text-[#1E3A35]" style={{ fontSize: '10.66px' }}>
                     <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', i, 'employer'], v)} isEditing={!!isEditing} multiline />
                   </span>
-                  <span className="text-black/30" style={{ fontSize: '10.66px' }}>|</span>
+                  <span className="text-black/80" style={{ fontSize: '10.66px' }}>|</span>
                   <span className="text-black" style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'Garet, sans-serif' }}>
                     <EditableText
                       value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
