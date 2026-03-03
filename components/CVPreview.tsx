@@ -429,7 +429,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                   <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[#)000000]" style={{ fontSize: '10.66px' }}>
+                  <span className="text-[#)000]" style={{ fontSize: '10.66px' }}>
                     <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', i, 'employer'], v)} isEditing={!!isEditing} multiline />
                   </span>
                   <span className="text-black/80" style={{ fontSize: '10.66px' }}>|</span>
