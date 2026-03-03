@@ -71,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({ usageCount = 0, totalCount = 0, 
 
       {/* Wrapper */}
       <div className="inline-flex flex-col items-center mb-6">
-        <h1 className="font-serif text-4xl md:text-5xl tracking-tighter font-semibold">NOVÉMBER.</h1>
+        <img src="/november-logo.png" alt="NOVÉMBER." style={{ mixBlendMode: "screen" }} className="h-12 w-auto" />
         <div className="w-full h-[1px] bg-[#D3FF2F] mt-4"></div>
       </div>
 
