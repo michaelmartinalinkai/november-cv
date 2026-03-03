@@ -37,9 +37,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           {/* Container wraps tightly around the widest element (The Logo) */}
           <div className="inline-flex flex-col items-center">
             
-            {/* Logo Row: Text Only */}
+            {/* Logo Row: Image */}
             <div className="flex items-center gap-4 mb-4">
-              <h1 className="font-serif text-6xl tracking-tighter leading-none font-semibold">NOVÉMBER.</h1>
+              <img src="/november-logo.png" alt="NOVÉMBER." style={{ mixBlendMode: "screen" }} className="h-16 w-auto" />
             </div>
             
             {/* The Line: 1px height, Neon Green color, width matches the container */}
