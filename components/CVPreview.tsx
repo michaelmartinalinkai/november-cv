@@ -258,7 +258,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           <h2 className="font-bold mb-4">Werkervaring:</h2>
           <div className="space-y-8">
             {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
-              <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5">
+              <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <span className="text-neutral-500">Datum</span>
                 <span>{formatDateToNumbers(exp.period)}</span>
 
@@ -337,7 +337,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
             (() => {
               const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
               const parts: string[] = [];
-              parts.push(isValid(data.personalInfo?.availability) ? `Beschikbaar per ${data.personalInfo!.availability!}` : 'Beschikbaar op aanvraag');
+              const avail = (data.personalInfo!.availability! || '').trim();
+              const availStr = /^per/i.test(avail) ? `Beschikbaar ${avail}` : `Beschikbaar per ${avail}`;
+              parts.push(isValid(data.personalInfo?.availability) ? availStr : 'Beschikbaar op aanvraag');
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
@@ -485,7 +487,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </div>
         <div className="space-y-5">
           {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
-            <div key={i} className="relative group/exp" style={{ fontFamily: 'Garet, sans-serif' }}>
+            <div key={i} className="relative group/exp" style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               {/* Page break ruler (edit mode only) */}
               {exp.pageBreakBefore && isEditing && (
                 <PageBreakRuler onRemove={() => {

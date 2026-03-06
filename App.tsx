@@ -89,6 +89,17 @@ const App: React.FC = () => {
     }
   };
 
+  // Extract candidate name from filename like "CV_van_Alice_Mahfouz_NOVEMBER_2026.pdf"
+  const extractNameFromFilename = (filename: string): string | null => {
+    // Remove extension
+    const base = filename.replace(/\.[^.]+$/, '');
+    // Pattern: CV_van_Firstname_Lastname or CV_Firstname_Lastname
+    const match = base.match(/CV[_\s-]*(?:van[_\s]+)?([A-Z][a-zÀ-ÿ]+(?:[_\s]+[A-Z][a-zÀ-ÿ]+)+)/i);
+    if (!match) return null;
+    // Replace underscores with spaces, title case
+    return match[1].replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase()).trim();
+  };
+
   const addToQueue = async (files: File[]) => {
     const newItems: BatchItem[] = [];
     for (const file of files) {
@@ -133,9 +144,14 @@ const App: React.FC = () => {
     try {
       const extractionPromise = geminiService.extractCVData({
         text: item.textContext || '',
-        files: item.base64Data ? [{ mimeType: item.mimeType!, data: item.base64Data }] : undefined
+        files: item.base64Data ? [{ mimeType: item.mimeType!, data: item.base64Data }] : undefined,
+        fileName: item.file.name
       });
       const result = await extractionPromise;
+
+      // Save the name as extracted (before parseCV can hallucinate it)
+      const extractedNameRaw: string = (result as any)?.personalInfo?.name || '';
+      const extractedIsInitialOnly = /^[A-Za-z]\./.test(extractedNameRaw.trim());
 
       // Auto-process with 'new' template immediately
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'PROCESSING', statusMessage: 'Stijlen...' } : q));
@@ -144,6 +160,13 @@ const App: React.FC = () => {
         text: JSON.stringify(result),
         template: 'new'
       });
+
+      // If extraction only had an initial, parseCV may have hallucinated a first name.
+      // Override with the name from the filename (e.g. "CV_van_Alice_Mahfouz...") if available.
+      const nameFromFile = extractNameFromFilename(item.file.name);
+      if (extractedIsInitialOnly && nameFromFile) {
+        (finalResult as any).personalInfo.name = nameFromFile;
+      }
 
       const sourceHash = await usageService.generateHash(JSON.stringify(result) + 'new');
       const candidateName = (finalResult as any)?.personalInfo?.name || 'Onbekend';
