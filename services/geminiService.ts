@@ -17,6 +17,7 @@ export interface CVInput {
   vacancyText?: string;
   extraContext?: string;
   template?: 'old' | 'new';
+  fileName?: string;
 }
 
 export class GeminiService {
@@ -101,11 +102,24 @@ export class GeminiService {
       })));
     }
 
+    // Try to extract full name from filename (e.g. "CV_van_Alice_Mahfouz_NOVEMBER.pdf" -> "Alice Mahfouz")
+    const fileNameHint = (() => {
+      if (!input.fileName) return null;
+      const base = input.fileName.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+      const m = base.match(/CV\s*(?:van\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+      return m ? m[1] : null;
+    })();
+
+    const nameInstruction = fileNameHint
+      ? `- 'name': Het CV bevat mogelijk alleen een voorletter. De bestandsnaam geeft de volledige naam: "${fileNameHint}". Gebruik deze naam tenzij het CV zelf een duidelijk andere volledige naam vermeldt.`
+      : `- 'name': Als het CV alleen een voorletter bevat (bijv. "A. Mahfouz") en geen volledige voornaam staat vermeld, gebruik dan ALLEEN de voorletter + achternaam. VERZIN NOOIT een voornaam.`;
+
     parts.push({
       text: `INSTRUCTIE: Haal alle relevante data uit dit CV. Output moet EXACT voldoen aan het JSON schema.
     
     SPECIFIEKE REACTIES:
-    - 'availability': Zoek naar startdatum (bijv. "Per direct", "1 maart").
+    ${nameInstruction}
+    - 'availability': Zoek naar beschikbaarheidsdatum. Sla ALLEEN de datum/term op ZONDER "Beschikbaar" of "per" vooraan. Voorbeelden: "direct" (niet "per direct"), "1 maart" (niet "per 1 maart"), "16 maart". Als het CV zegt "per direct" sla dan op: "direct".
     - 'hours': Zoek naar uren/beschikbaarheid (bijv. "32-36 uur", "Fulltime").
     - 'skj': Zoek naar SKJ registratie nummer.
     
@@ -142,25 +156,18 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
-    // Parse the original data to preserve bullets
-    let originalData: ParsedCV | null = null;
-    try {
-      if (input.text) {
-        originalData = JSON.parse(input.text) as ParsedCV;
-      }
-    } catch (e) {
-      console.warn("Could not parse original data for bullet preservation");
-    }
+    let promptText = `TAAK: Verfijn de onderstaande CV-data voor de ${input.template === 'old' ? 'OUDE' : 'NIEUWE'} NOVÉMBER STIJL.
 
-    let promptText = `TAAK: Refineer de onderstaande CV-data voor de ${input.template === 'old' ? 'OUDE' : 'NIEUWE'} NOVÉMBER STIJL. 
+Pas de volgende velden aan conform de stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.
 
-🚨🚨🚨 KRITIEKE INSTRUCTIE 🚨🚨🚨:
-- De "bullets" arrays in "experience" moeten EXACT ONGEWIJZIGD blijven
-- KOPIEER alle bullets 1-op-1 uit de input naar de output
-- VERANDER NIETS aan de bullets: geen verkorten, geen samenvatten, geen herschrijven
-- Als een functie 9 bullets heeft in de input, moet de output ook EXACT 9 bullets hebben
-- Werkwoordvormen NIET wijzigen (infinitief "Begeleiden" blijft "Begeleiden")
-- Je mag WEL de andere velden aanpassen (naam formaat, tags, titels, etc.)`;
+WERKERVARING BULLETS — HERSCHRIJVEN (VERPLICHT):
+Herschrijf ALLE bullets naar de Novémber schrijfstijl. Kopieer NOOIT letterlijk.
+- Elke bullet begint met een werkwoord in de infinitief
+- Elke bullet is een volledige zin met context (binnen, conform, gericht op, in afstemming met)
+- Volgorde: Kern → Dagelijkse taken → Coördinatie → Administratie/rapportage
+- Grammatica- en spelfouten corrigeren
+- Alle bullets verwerken, GEEN bullets weggooien of samenvoegen tenzij 100% identiek
+- Elke bullet eindigt op ; — de laatste bullet van een functie eindigt op .`;
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;
@@ -193,21 +200,6 @@ export class GeminiService {
       try {
         const cleanedJson = this.extractJson(text);
         const parsed = JSON.parse(cleanedJson) as ParsedCV;
-
-        // 🚨 CRITICAL: Restore original bullets from Phase 1 extraction
-        // The AI tends to reduce/rewrite bullets during styling, so we force-restore them
-        if (originalData?.experience && parsed.experience) {
-          parsed.experience.forEach((exp, index) => {
-            if (originalData!.experience[index]?.bullets) {
-              const originalBullets = originalData!.experience[index].bullets;
-              // Always use original bullets if AI reduced them
-              if (originalBullets.length > exp.bullets.length) {
-                console.warn(`Bullet reduction detected for experience[${index}]: ${originalBullets.length} -> ${exp.bullets.length}. Restoring originals.`);
-                exp.bullets = [...originalBullets];
-              }
-            }
-          });
-        }
 
         // New Style Specific: Ensure 5 tags
         if (input.template === 'new') {
