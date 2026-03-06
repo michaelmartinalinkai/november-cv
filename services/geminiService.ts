@@ -156,18 +156,25 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
-    let promptText = `TAAK: Verfijn de onderstaande CV-data voor de ${input.template === 'old' ? 'OUDE' : 'NIEUWE'} NOVÉMBER STIJL.
+    let promptText = `JE PRIMAIRE TAAK IS HERSCHRIJVEN — NIET KOPIËREN.
 
-Pas de volgende velden aan conform de stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.
+🚨 WERKERVARING BULLETS — VERPLICHT HERSCHRIJVEN:
+Elke bullet in de input MOET worden herschreven naar de Novémber schrijfstijl.
+Een bullet die letterlijk overeenkomt met de input is FOUT en ONGELDIG.
 
-WERKERVARING BULLETS — HERSCHRIJVEN (VERPLICHT):
-Herschrijf ALLE bullets naar de Novémber schrijfstijl. Kopieer NOOIT letterlijk.
-- Elke bullet begint met een werkwoord in de infinitief
-- Elke bullet is een volledige zin met context (binnen, conform, gericht op, in afstemming met)
-- Volgorde: Kern → Dagelijkse taken → Coördinatie → Administratie/rapportage
-- Grammatica- en spelfouten corrigeren
-- Alle bullets verwerken, GEEN bullets weggooien of samenvoegen tenzij 100% identiek
-- Elke bullet eindigt op ; — de laatste bullet van een functie eindigt op .`;
+HERSCHRIJFREGELS (hiervan mag nooit worden afgeweken):
+1. Elke bullet begint met een werkwoord in de INFINITIEF
+   ❌ "Agendabeheer"  →  ✅ "Uitvoeren van agendabeheer binnen de geldende planningsstructuur"
+   ❌ "Verantwoordelijk voor klantcontact"  →  ✅ "Onderhouden van klantcontact en bewaken van servicenormen"
+2. Elke bullet is een VOLLEDIGE zin — altijd: werkwoord + object + context
+   Contextwoorden toevoegen waar nodig: binnen, conform, gericht op, in afstemming met, ten behoeve van
+3. Volgorde per functie: Kern → Dagelijkse taken → Coördinatie → Administratie/rapportage
+4. Alle bullets verwerken — GEEN bullets weggooien
+5. Elke bullet eindigt op ; — de LAATSTE bullet eindigt op .
+6. Grammatica- en spelfouten ALTIJD corrigeren
+7. Geen ik-vorm, geen marketingtaal, geen resultaatclaims
+
+OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;
@@ -188,7 +195,7 @@ Herschrijf ALLE bullets naar de Novémber schrijfstijl. Kopieer NOOIT letterlijk
           systemInstruction: instruction,
           responseMimeType: "application/json",
           responseSchema: CV_SCHEMA,
-          temperature: 0.1
+          temperature: 0.4
         },
       });
       console.log("ai.models.generateContent returned.");
