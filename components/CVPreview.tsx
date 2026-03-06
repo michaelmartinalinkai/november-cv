@@ -81,7 +81,7 @@ const parsePeriodStart = (period: string): number => {
   return 0;
 };
 
-const fixEducationEntry = (edu: { period: string; degree: string; status: string }) => {
+const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
 
@@ -439,6 +439,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                   <span className="text-black inline">
                     <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
                   </span>
+                  {edu.school && (
+                    <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', i, 'school'], v)} isEditing={!!isEditing} /></span>
+                  )}
                   <span className="font-normal opacity-70 whitespace-nowrap">
                     {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
                   </span>
@@ -456,7 +459,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           </div>
           <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
             <EditableText
-              value={(data.courses || []).map(c => c.title).join(' | ')}
+              value={(data.courses || []).map(c => c.title).filter(t => t && t.trim()).join(' | ')}
               onChange={(v) => {
                 const titles = v.split('|').map(s => s.trim()).filter(Boolean);
                 const updated = titles.map((title, i) => ({ ...((data.courses || [])[i] || {}), title }));
