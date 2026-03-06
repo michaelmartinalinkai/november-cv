@@ -10,8 +10,40 @@ interface CVPreviewProps {
   onChange?: (newData: ParsedCV) => void;
 }
 
-const OrangeSeparator = () => (
-  <div className="w-full h-[1px] bg-[#f27f61] my-6 shrink-0" />
+const OrangeSeparator = ({ hidden, onToggle, isEditing }: { hidden?: boolean; onToggle?: () => void; isEditing?: boolean }) => (
+  <div className="relative group/sep">
+    {!hidden && <div className="w-full h-[1px] bg-[#f27f61] my-6 shrink-0" />}
+    {hidden && isEditing && <div className="w-full h-[1px] bg-transparent my-6 shrink-0" />}
+    {isEditing && (
+      <button
+        onClick={onToggle}
+        className="print:hidden absolute right-0 top-1/2 -translate-y-1/2 text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover/sep:opacity-100 transition-opacity"
+        style={{ background: hidden ? '#f27f61' : '#fee2e2', color: hidden ? 'white' : '#dc2626' }}
+      >
+        {hidden ? '+ lijn' : '– lijn'}
+      </button>
+    )}
+  </div>
+);
+
+
+// Visual page-break ruler shown only in edit mode
+const PageBreakRuler = ({ onRemove }: { onRemove: () => void }) => (
+  <div className="print:hidden relative flex items-center my-2 group/pbr">
+    <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-60" />
+    <span className="mx-2 text-[9px] text-blue-500 font-bold whitespace-nowrap select-none">✂ PAGINA BREUK</span>
+    <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-60" />
+    <button
+      onClick={onRemove}
+      className="ml-2 text-[9px] text-red-400 hover:text-red-600 opacity-0 group-hover/pbr:opacity-100 transition-opacity"
+      title="Verwijder pagina breuk"
+    >✕</button>
+  </div>
+);
+
+// Invisible print page break
+const PrintPageBreak = () => (
+  <div className="hidden print:block" style={{ pageBreakBefore: 'always', height: 0 }} />
 );
 
 const toTitleCase = (str: string) => {
@@ -36,6 +68,19 @@ const normalizeEducationLevel = (text: string): string => {
 };
 
 // If education level (hbo/mbo etc.) is in status field, move it to start of degree
+// Parse period start for chronological sorting — returns YYYYMM number (higher = more recent)
+const parsePeriodStart = (period: string): number => {
+  if (!period) return 0;
+  const p = formatDateToNumbers(period);
+  // MM/YYYY
+  const mmyyyy = p.match(/(\d{2})\/(\d{4})/);
+  if (mmyyyy) return parseInt(mmyyyy[2]) * 100 + parseInt(mmyyyy[1]);
+  // YYYY alone
+  const yyyy = p.match(/(\d{4})/);
+  if (yyyy) return parseInt(yyyy[1]) * 100;
+  return 0;
+};
+
 const fixEducationEntry = (edu: { period: string; degree: string; status: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
@@ -53,7 +98,7 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
   return { ...edu, degree, status };
 };
 
-const formatDateToNumbers = (text: string) => {
+const formatDateToNumbers = (text: string): string => {
   if (!text) return text;
 
   const monthMap: Record<string, string> = {
@@ -61,23 +106,30 @@ const formatDateToNumbers = (text: string) => {
     'juli': '07', 'augustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'december': '12',
     'january': '01', 'february': '02', 'march': '03', 'may': '05', 'june': '06',
     'july': '07', 'august': '08', 'october': '10',
-    'jan': '01', 'feb': '02', 'mrt': '03', 'apr': '04', 'jun': '06', 'jul': '07',
-    'aug': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'dec': '12',
-    'mar': '03', 'oct': '10'
+    'jan': '01', 'feb': '02', 'mrt': '03', 'mar': '03', 'apr': '04', 'jun': '06', 'jul': '07',
+    'aug': '08', 'sep': '09', 'sept': '09', 'okt': '10', 'oct': '10', 'nov': '11', 'dec': '12',
   };
 
-  const converted = text.replace(/\b([a-zA-Z]+)\s*(\d{4})?\b/g, (match, monthStr, yearStr) => {
-    const lower = monthStr.toLowerCase();
-    const monthNum = monthMap[lower];
-    if (monthNum) {
-      return yearStr ? `${monthNum}/${yearStr}` : monthNum;
-    }
-    return match;
+  // Step 1: normalize em/en dash → ' - '
+  let result = text.replace(/\s*[–—]\s*/g, ' - ');
+
+  // Step 2: "sept 2023" / "september 2023" → "09/2023"
+  result = result.replace(/([a-zA-Z]+)'?\s+(\d{4})/g, (match, monthStr, yearStr) => {
+    const key = monthStr.toLowerCase().replace(/['.]/g, '');
+    const num = monthMap[key];
+    return num ? num + '/' + yearStr : match;
   });
 
-  // Normalize range separator: " / " (with spaces) → " - "
-  // MM/YYYY dates never have spaces around the slash, so this is unambiguous
-  return converted.replace(/ \/ /g, ' - ');
+  // Step 3: zero-pad single-digit months "7/2023" → "07/2023"
+  result = result.replace(/(\s|^|-)(\d)\/(\d{4})/g, (m, pre, d, y) => pre + '0' + d + '/' + y);
+
+  // Step 4: normalize heden/nu/now/present → 'heden'
+  result = result.replace(/\b(nu|now|present|today)\b/gi, 'heden');
+
+  // Step 5: normalize " / " separator (not part of MM/YYYY) → ' - '
+  result = result.replace(/ \/ /g, ' - ');
+
+  return result;
 };
 
 
@@ -205,7 +257,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         <section className="mb-6">
           <h2 className="font-bold mb-4">Werkervaring:</h2>
           <div className="space-y-8">
-            {(data.experience || []).map((exp, i) => (
+            {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
               <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5">
                 <span className="text-neutral-500">Datum</span>
                 <span>{formatDateToNumbers(exp.period)}</span>
@@ -415,25 +467,48 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </section>
       )}
 
-      <OrangeSeparator />
+      <OrangeSeparator
+        hidden={(data.hideSeparators || [])[0]}
+        isEditing={isEditing}
+        onToggle={() => {
+          if (!onChange) return;
+          const newData = JSON.parse(JSON.stringify(data));
+          if (!newData.hideSeparators) newData.hideSeparators = [];
+          newData.hideSeparators[0] = !newData.hideSeparators[0];
+          onChange(newData);
+        }}
+      />
 
       <section className="mb-6">
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>WERKERVARING</h3>
         </div>
         <div className="space-y-5">
-          {(data.experience || []).map((exp, i) => (
-            <div key={i} className="relative" style={{ fontFamily: 'Garet, sans-serif' }}>
+          {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
+            <div key={i} className="relative group/exp" style={{ fontFamily: 'Garet, sans-serif' }}>
+              {/* Page break ruler (edit mode only) */}
+              {exp.pageBreakBefore && isEditing && (
+                <PageBreakRuler onRemove={() => {
+                  if (!onChange) return;
+                  const newData = JSON.parse(JSON.stringify(data));
+                  const idx = newData.experience.findIndex((e: typeof exp) => e.period === exp.period && e.employer === exp.employer);
+                  if (idx !== -1) newData.experience[idx].pageBreakBefore = false;
+                  onChange(newData);
+                }} />
+              )}
+              {/* Actual print page break */}
+              {exp.pageBreakBefore && <PrintPageBreak />}
               <div className="mb-2">
                 <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                   <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#)000]" style={{ fontSize: '10.66px' }}>
+                {/* Employer + pipe + role flow as one inline line — no flex so long names wrap naturally */}
+                <div style={{ fontSize: '10.66px' }}>
+                  <span className="text-black">
                     <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', i, 'employer'], v)} isEditing={!!isEditing} multiline />
                   </span>
-                  <span className="text-black/80" style={{ fontSize: '10.66px' }}>|</span>
-                  <span className="text-black" style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'Garet, sans-serif' }}>
+                  <span className="text-black/80 mx-1">|</span>
+                  <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
                     <EditableText
                       value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
                         ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
@@ -461,12 +536,49 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                   </li>
                 ))}
               </ul>
+              {/* Edit-mode action buttons */}
+              {isEditing && (
+                <div className="print:hidden mt-2 flex gap-2 opacity-0 group-hover/exp:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      if (!onChange) return;
+                      const newData = JSON.parse(JSON.stringify(data));
+                      const idx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
+                      if (idx !== -1) newData.experience[idx].pageBreakBefore = !newData.experience[idx].pageBreakBefore;
+                      onChange(newData);
+                    }}
+                    className={`text-[10px] px-2 py-0.5 rounded font-medium ${exp.pageBreakBefore ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                  >{exp.pageBreakBefore ? '✂ breuk actief' : '↵ pagina breuk'}</button>
+                  <button
+                    onClick={() => {
+                      if (!onChange) return;
+                      const newData = JSON.parse(JSON.stringify(data));
+                      const idx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
+                      if (idx !== -1) newData.experience.splice(idx, 1);
+                      onChange(newData);
+                    }}
+                    className="text-[10px] text-red-400 hover:text-red-600"
+                  >✕ verwijder functie</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && <OrangeSeparator />}
+      {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && (
+        <OrangeSeparator
+          hidden={(data.hideSeparators || [])[1]}
+          isEditing={isEditing}
+          onToggle={() => {
+            if (!onChange) return;
+            const newData = JSON.parse(JSON.stringify(data));
+            if (!newData.hideSeparators) newData.hideSeparators = [];
+            newData.hideSeparators[1] = !newData.hideSeparators[1];
+            onChange(newData);
+          }}
+        />
+      )}
 
       <div className="space-y-6 mt-4">
         {data.systems && data.systems.length > 0 && (

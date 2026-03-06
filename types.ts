@@ -52,7 +52,9 @@ export interface ParsedCV {
     employer: string;
     role: string;
     bullets: string[];
+    pageBreakBefore?: boolean;
   }>;
+  hideSeparators?: boolean[];
   analysis?: CVAnalysis;
 }
 
