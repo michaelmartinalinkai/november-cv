@@ -39,6 +39,7 @@ export interface ParsedCV {
     period: string;
     degree: string;
     status: string;
+    school?: string;
   }>;
   courses: Array<{
     period: string;
