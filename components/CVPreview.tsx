@@ -46,8 +46,11 @@ const PrintPageBreak = () => (
   <div className="hidden print:block" style={{ pageBreakBefore: 'always', height: 0 }} />
 );
 
+const TUSSENVOEGSELS = new Set(['van', 'de', 'den', 'der', 'het', 'ten', 'ter', 'te', 'op', 'aan', 'in', 'bij', '\u2019t']);
 const toTitleCase = (str: string) => {
-  return str.toLowerCase().split(' ').map(word => {
+  const words = str.toLowerCase().split(' ');
+  return words.map((word, i) => {
+    if (i > 0 && TUSSENVOEGSELS.has(word)) return word; // keep tussenvoegsel lowercase
     return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
 };
