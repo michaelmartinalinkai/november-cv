@@ -93,6 +93,12 @@ BULLETS — AANVULLENDE REGELS:
 - Alle bullets uit de bron verwerken; samenvoegen mag alleen als de betekenis 100% identiek is.
 - Elke bullet herschrijven naar Novémber-stijl (zie bovenstaande herschrijfregels).
 - GEEN limiet op het aantal bullets — verwerk ze allemaal.
+- MINIMUM 4 BULLETS PER FUNCTIE: Als de bron minder dan 4 bullets heeft, leid dan aanvullende
+  bullets af uit de functienaam en context. Gebruik wat de rol logischerwijs inhoudt.
+- VERBODEN OPENERS: bullets mogen NOOIT beginnen met "Zowel", "Naast", "Tevens", "Daarnaast",
+  "Ook", "Hierbij", "Waarbij". Dit zijn geen infinitieven. Altijd herschrijven.
+  ❌ "Zowel face-to-face als telefonisch contact hebben met klanten;"
+  ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
 
 OPLEIDINGEN EXTRACTIE (CRUCIAAL):
 
@@ -235,6 +241,19 @@ Elke bullet moet aan ALLE onderstaande eisen voldoen:
    ✅ Uitvoeren van agendabeheer binnen de geldende planningsstructuur;
    ✅ Onderhouden van klantcontact en bewaken van de afgesproken servicenormen;
 
+   🚨 VERBODEN OPENERS — deze woorden mogen NOOIT een bullet beginnen:
+   "Zowel", "Naast", "Tevens", "Daarnaast", "Ook", "Hierbij", "Waarbij", "Als ook"
+   Dit zijn GEEN infinitief werkwoorden. Herschrijf ALTIJD naar een infinitief.
+
+   ❌ "Zowel face-to-face als telefonisch en per mail contact hebben met klanten;"
+   ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+
+   ❌ "Naast bovenstaande ook verantwoordelijk voor rapportages;"
+   ✅ "Verzorgen van rapportages en verslaglegging conform de geldende richtlijnen;"
+
+   ❌ "Tevens werkzaam als aanspreekpunt voor collega's;"
+   ✅ "Fungeren als eerste aanspreekpunt voor interne en externe contacten;"
+
 2. IS EEN VOLLEDIGE BETEKENISDRAGENDE ZIN
    ❌ Rapportages;
    ❌ MDO bijwonen;
@@ -260,6 +279,29 @@ Stap 5 — CONTROLEER: Is dit een volledige zin? Zo niet → uitbreiden
 
 🔴 ACTIEF UITBREIDEN — De bot voegt zelf context toe als de bron te summier is.
 Een bullet van 2-3 woorden is ALTIJD onvolledig en MOET worden uitgebouwd.
+
+🔴 MINIMUM BULLETS PER FUNCTIE — HARDE REGEL:
+Elke functie krijgt MINIMAAL 4 bullets in de output, ongeacht hoeveel bullets de bron heeft.
+Als de bron minder dan 4 bullets heeft: leid aanvullende bullets AF uit de functienaam en context.
+Dit is GEEN verzinnen — dit is standaard CV-schrijven op basis van wat de functie logischerwijs inhoudt.
+
+AANVULREGEL — Hoe aanvullende bullets genereren:
+1. Gebruik de functienaam als basis: wat doet iemand in deze rol logischerwijs?
+2. Gebruik de branche en werkgever als context
+3. Voeg bullets toe die de functie compleet maken: kern, dagelijkse taken, afstemming, administratie
+4. Voeg NOOIT feiten toe die nergens in het CV staan (werkgever, periode, sector)
+5. Aanvullende bullets moeten even professioneel klinken als de bestaande bullets
+
+VOORBEELD — Bron heeft 2 bullets, output moet minimaal 4 hebben:
+Functie: "Verkoper van Reizen" bij Reisbureau
+Bron bullet 1: "Zowel face-to-face als telefonisch en per mail contact hebben met klanten;"
+Bron bullet 2: "Voeren van baliegesprekken waarbij samen met klanten gezocht wordt naar de juiste vakanties;"
+
+Output (minimaal 4):
+• Voeren van baliegesprekken met klanten over vakanties, reisopties en bestemmingen;
+• Adviseren van klanten over passende reisbestemmingen op basis van wensen en budget;
+• Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;
+• Verkopen en administratief verwerken van boekingen conform de geldende procedures.
 
 Voorbeeld transformaties:
   Input: "Casuïstiekbespreking"
