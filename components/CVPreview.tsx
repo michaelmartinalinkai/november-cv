@@ -141,9 +141,8 @@ const formatDateToNumbers = (text: string): string => {
 
 
 export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', isEditing, onChange }) => {
-  if (!data) return null;
-
   // ==================== NEW: DYNAMIC SPACER LOGIC ====================
+  // ALL hooks must be declared before any conditional return
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);           // wraps header + body
   const footerRef = useRef<HTMLDivElement>(null);
@@ -151,6 +150,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
   const [spacerHeight, setSpacerHeight] = useState(0);
 
   useLayoutEffect(() => {
+    if (!data) return; // guard inside effect — hooks must always be called
     const calculateSpacer = () => {
       if (!contentRef.current || !footerRef.current || !pageHeightRef.current) return;
 
@@ -177,6 +177,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
     const timer = setTimeout(calculateSpacer, 50);
     return () => clearTimeout(timer);
   }, [data]); // ← important: re-calculate every time the CV data changes
+
+  // Early return AFTER all hooks (React rules)
+  if (!data) return null;
 
   // Common font settings for CVs
   const baseFontSize = '10.66px'; // 8pt in pixels
@@ -549,10 +552,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </div>
         <div className="space-y-5">
           {(() => {
-            // Tag each item with its original index BEFORE sorting to avoid findIndex collisions
-            const sorted = (data.experience || [])
-              .map((exp, idx) => ({ ...exp, __origIdx: idx }))
-              .sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+            // Tag each item with its original index BEFORE sorting to avoid findIndex collisions.
+            // In edit mode: keep array order so reorder arrows visually work.
+            // In view/print mode: sort by most-recent date.
+            const tagged = (data.experience || []).map((exp, idx) => ({ ...exp, __origIdx: idx }));
+            const sorted = isEditing
+              ? tagged
+              : [...tagged].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
             return sorted.map((exp, si) => {
               const originalIdx = exp.__origIdx;
               return (
