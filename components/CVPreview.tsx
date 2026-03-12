@@ -98,6 +98,14 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
   // Normalize any education levels within degree
   degree = normalizeEducationLevel(degree);
 
+  // Normalize ongewenste statuswaarden → approved terms (safety net if Gemini ignores prompt)
+  const s = status.trim().toLowerCase();
+  if (/^(lopend|in uitvoering|bezig|in progress|ongoing|studerend)$/.test(s)) {
+    status = 'studerend';
+  } else if (/^(niet afgerond|diploma niet behaald|nee|niet behaald|afgebroken|stopped|dropped)$/.test(s)) {
+    status = 'gestopt';
+  }
+
   return { ...edu, degree, status };
 };
 

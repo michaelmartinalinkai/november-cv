@@ -92,7 +92,7 @@ const normalizeEducationLevel = (text: string): string => {
   return text.replace(/(HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)/g, (match) => levels[match] || match);
 };
 
-const fixEducationEntry = (edu: { period: string; degree: string; status: string }) => {
+const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
   if (levelPattern.test(status.trim())) {
@@ -101,6 +101,13 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
     status = 'diploma behaald';
   }
   degree = normalizeEducationLevel(degree);
+  // Normalize ongewenste statuswaarden → approved terms
+  const s = status.trim().toLowerCase();
+  if (/^(lopend|in uitvoering|bezig|in progress|ongoing|studerend)$/.test(s)) {
+    status = 'studerend';
+  } else if (/^(niet afgerond|diploma niet behaald|nee|niet behaald|afgebroken|stopped|dropped)$/.test(s)) {
+    status = 'gestopt';
+  }
   return { ...edu, degree, status };
 };
 
