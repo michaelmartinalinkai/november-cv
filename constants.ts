@@ -95,6 +95,15 @@ BULLETS — AANVULLENDE REGELS:
 - GEEN limiet op het aantal bullets — verwerk ze allemaal.
 
 OPLEIDINGEN EXTRACTIE (CRUCIAAL):
+
+PERIOD VELD VOOR OPLEIDINGEN — HARDE REGELS:
+- Als er een maand EN jaar beschikbaar is: gebruik MM/YYYY formaat, bijv. "09/2019 - 07/2021"
+- Als er GEEN maand beschikbaar is: gebruik ALLEEN het jaar, bijv. "2016 - 2019"
+- NOOIT mengen: "2016 - 07/2019" is FOUT. Kies consequent: ofwel beide MM/YYYY ofwel beide YYYY
+- Jaar-tot-jaar: gebruik " - " (spatie, koppelstreepje, spatie), NOOIT schuine streep → "2005 - 2006" NIET "2005/2006"
+- Heden schrijf je als "heden" (kleine letters)
+- Kopieer datums EXACT van het originele CV — verzin of wijzig NOOIT jaren
+
 Het degree veld moet ALTIJD het onderwijsniveau VOORAAN hebben, gevolgd door de naam van de opleiding.
 Formaat degree: "[Niveau] [Naam van de opleiding]"
 Voorbeelden:

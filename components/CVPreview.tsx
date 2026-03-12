@@ -126,8 +126,15 @@ const formatDateToNumbers = (text: string): string => {
   // Step 4: normalize heden/nu/now/present → 'heden'
   result = result.replace(/\b(nu|now|present|today)\b/gi, 'heden');
 
-  // Step 5: normalize " / " separator (not part of MM/YYYY) → ' - '
+  // Step 5a: normalize " / " separator (not part of MM/YYYY) → ' - '
   result = result.replace(/ \/ /g, ' - ');
+
+  // Step 5b: catch YYYY/YYYY pattern (no spaces, e.g. "2005/2006") → "2005 - 2006"
+  // Must NOT match MM/YYYY so only replace when both sides are 4-digit years
+  result = result.replace(/\b(\d{4})\/(\d{4})\b/g, '$1 - $2');
+
+  // Step 5c: catch plain YYYY-YYYY (no spaces, e.g. "2014-2019") → "2014 - 2019"
+  result = result.replace(/\b(\d{4})-(\d{4})\b/g, '$1 - $2');
 
   return result;
 };
@@ -427,29 +434,81 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-3">
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
-        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-0" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
           {(data.education || []).map((edu, i) => {
             const fixedEdu = fixEducationEntry(edu);
             return (
               <React.Fragment key={i}>
-                <div className="opacity-70 font-normal whitespace-nowrap">
+                <div className="opacity-70 font-normal whitespace-nowrap flex items-start gap-1">
+                  {isEditing && (
+                    <span className="print:hidden flex flex-col mr-1">
+                      <button
+                        disabled={i === 0}
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          [newData.education[i - 1], newData.education[i]] = [newData.education[i], newData.education[i - 1]];
+                          onChange(newData);
+                        }}
+                        className="text-[8px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Omhoog"
+                      >▲</button>
+                      <button
+                        disabled={i === (data.education || []).length - 1}
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          [newData.education[i], newData.education[i + 1]] = [newData.education[i + 1], newData.education[i]];
+                          onChange(newData);
+                        }}
+                        className="text-[8px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Omlaag"
+                      >▼</button>
+                    </span>
+                  )}
                   <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
                 </div>
-                <div className="leading-snug">
-                  <span className="text-black inline">
-                    <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
-                  </span>
-                  {edu.school && (
-                    <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', i, 'school'], v)} isEditing={!!isEditing} /></span>
+                <div className="leading-snug flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-black inline">
+                      <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
+                    </span>
+                    {edu.school && (
+                      <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', i, 'school'], v)} isEditing={!!isEditing} /></span>
+                    )}
+                    <span className="font-normal opacity-70 whitespace-nowrap">
+                      {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                    </span>
+                  </div>
+                  {isEditing && (
+                    <button
+                      className="print:hidden text-[10px] text-red-400 hover:text-red-600 shrink-0"
+                      title="Verwijder opleiding"
+                      onClick={() => {
+                        if (!onChange) return;
+                        const newData = JSON.parse(JSON.stringify(data));
+                        newData.education.splice(i, 1);
+                        onChange(newData);
+                      }}
+                    >✕</button>
                   )}
-                  <span className="font-normal opacity-70 whitespace-nowrap">
-                    {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
-                  </span>
                 </div>
               </React.Fragment>
             );
           })}
         </div>
+        {isEditing && (
+          <button
+            className="print:hidden mt-2 text-[10px] text-green-600 hover:text-green-800 font-medium"
+            onClick={() => {
+              if (!onChange) return;
+              const newData = JSON.parse(JSON.stringify(data));
+              if (!newData.education) newData.education = [];
+              newData.education.push({ period: '', degree: '', status: 'diploma behaald', school: '' });
+              onChange(newData);
+            }}
+          >+ opleiding toevoegen</button>
+        )}
       </section>
 
       {data.courses && data.courses.length > 0 && (
@@ -489,88 +548,196 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>WERKERVARING</h3>
         </div>
         <div className="space-y-5">
-          {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
-            <div key={i} className="relative group/exp" style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-              {/* Page break ruler (edit mode only) */}
-              {exp.pageBreakBefore && isEditing && (
-                <PageBreakRuler onRemove={() => {
-                  if (!onChange) return;
-                  const newData = JSON.parse(JSON.stringify(data));
-                  const idx = newData.experience.findIndex((e: typeof exp) => e.period === exp.period && e.employer === exp.employer);
-                  if (idx !== -1) newData.experience[idx].pageBreakBefore = false;
-                  onChange(newData);
-                }} />
-              )}
-              {/* Actual print page break */}
-              {exp.pageBreakBefore && <PrintPageBreak />}
-              <div className="mb-2">
-                <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
-                  <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', i, 'period'], v)} isEditing={!!isEditing} />
-                </span>
-                {/* Employer + pipe + role flow as one inline line — no flex so long names wrap naturally */}
-                <div style={{ fontSize: '10.66px' }}>
-                  <span className="text-black">
-                    <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', i, 'employer'], v)} isEditing={!!isEditing} multiline />
-                  </span>
-                  <span className="text-black/80 mx-1">|</span>
-                  <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
-                    <EditableText
-                      value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
-                        ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
-                        : exp.role}
-                      onChange={(v) => handleEdit(['experience', i, 'role'], v)}
-                      isEditing={!!isEditing}
-                      multiline
-                    />
-                  </span>
-                </div>
-              </div>
-              <ul className="list-none space-y-0 ml-1">
-                {(exp.bullets || []).map((bullet, bi) => (
-                  <li key={bi} className="flex items-start gap-2 leading-[1.4]">
-                    <span className="flex-shrink-0 text-black" style={{ fontSize: '10.66px' }}>•</span>
-                    <span style={{ fontSize: '10.66px' }}>
-                      <EditableText
-                        value={bullet.trim().replace(/[.;]+$/, '')}
-                        onChange={(v) => handleEdit(['experience', i, 'bullets', bi], v)}
-                        isEditing={!!isEditing}
-                        multiline
-                      />
-                      {bi === exp.bullets.length - 1 ? '.' : ';'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {/* Edit-mode action buttons */}
-              {isEditing && (
-                <div className="print:hidden mt-2 flex gap-2 opacity-0 group-hover/exp:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
+          {(() => {
+            const sorted = [...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+            return sorted.map((exp, si) => {
+              const originalIdx = (data.experience || []).findIndex((e) => e.period === exp.period && e.employer === exp.employer);
+              return (
+                <div key={si} className="relative group/exp pl-5" style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                  {/* Page break ruler (edit mode only) */}
+                  {exp.pageBreakBefore && isEditing && (
+                    <PageBreakRuler onRemove={() => {
                       if (!onChange) return;
                       const newData = JSON.parse(JSON.stringify(data));
-                      const idx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
-                      if (idx !== -1) newData.experience[idx].pageBreakBefore = !newData.experience[idx].pageBreakBefore;
+                      if (originalIdx !== -1) newData.experience[originalIdx].pageBreakBefore = false;
                       onChange(newData);
-                    }}
-                    className={`text-[10px] px-2 py-0.5 rounded font-medium ${exp.pageBreakBefore ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
-                  >{exp.pageBreakBefore ? '✂ breuk actief' : '↵ pagina breuk'}</button>
-                  <button
-                    onClick={() => {
-                      if (!onChange) return;
-                      const newData = JSON.parse(JSON.stringify(data));
-                      const idx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
-                      if (idx !== -1) newData.experience.splice(idx, 1);
-                      onChange(newData);
-                    }}
-                    className="text-[10px] text-red-400 hover:text-red-600"
-                  >✕ verwijder functie</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+                    }} />
+                  )}
+                  {exp.pageBreakBefore && <PrintPageBreak />}
 
+                  {/* Reorder arrows */}
+                  {isEditing && (
+                    <div className="print:hidden absolute left-0 top-0 flex flex-col">
+                      <button
+                        disabled={si === 0}
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+                          const aIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si].period && e.employer === s[si].employer);
+                          const bIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si - 1].period && e.employer === s[si - 1].employer);
+                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
+                          onChange(newData);
+                        }}
+                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Omhoog"
+                      >▲</button>
+                      <button
+                        disabled={si === sorted.length - 1}
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+                          const aIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si].period && e.employer === s[si].employer);
+                          const bIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si + 1].period && e.employer === s[si + 1].employer);
+                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
+                          onChange(newData);
+                        }}
+                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Omlaag"
+                      >▼</button>
+                    </div>
+                  )}
+
+                  <div className="mb-2">
+                    <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
+                      <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
+                    </span>
+                    <div style={{ fontSize: '10.66px' }}>
+                      <span className="text-black">
+                        <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={!!isEditing} multiline />
+                      </span>
+                      <span className="text-black/80 mx-1">|</span>
+                      <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                            ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                            : exp.role}
+                          onChange={(v) => handleEdit(['experience', originalIdx, 'role'], v)}
+                          isEditing={!!isEditing}
+                          multiline
+                        />
+                      </span>
+                    </div>
+                  </div>
+
+                  <ul className="list-none space-y-0 ml-1">
+                    {(exp.bullets || []).map((bullet, bi) => (
+                      <li key={bi} className="flex items-start gap-1 leading-[1.4] group/bullet">
+                        {isEditing && (
+                          <span className="print:hidden flex flex-col shrink-0 mt-[1px]">
+                            <button
+                              disabled={bi === 0}
+                              onClick={() => {
+                                if (!onChange) return;
+                                const newData = JSON.parse(JSON.stringify(data));
+                                const bullets = newData.experience[originalIdx].bullets;
+                                [bullets[bi - 1], bullets[bi]] = [bullets[bi], bullets[bi - 1]];
+                                onChange(newData);
+                              }}
+                              className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
+                            >▲</button>
+                            <button
+                              disabled={bi === exp.bullets.length - 1}
+                              onClick={() => {
+                                if (!onChange) return;
+                                const newData = JSON.parse(JSON.stringify(data));
+                                const bullets = newData.experience[originalIdx].bullets;
+                                [bullets[bi], bullets[bi + 1]] = [bullets[bi + 1], bullets[bi]];
+                                onChange(newData);
+                              }}
+                              className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
+                            >▼</button>
+                          </span>
+                        )}
+                        <span className="flex-shrink-0 text-black" style={{ fontSize: '10.66px' }}>•</span>
+                        <span style={{ fontSize: '10.66px' }} className="flex-1">
+                          <EditableText
+                            value={bullet.trim().replace(/[.;]+$/, '')}
+                            onChange={(v) => handleEdit(['experience', originalIdx, 'bullets', bi], v)}
+                            isEditing={!!isEditing}
+                            multiline
+                          />
+                          {bi === exp.bullets.length - 1 ? '.' : ';'}
+                        </span>
+                        {isEditing && (
+                          <button
+                            className="print:hidden shrink-0 text-[9px] text-red-300 hover:text-red-500 opacity-0 group-hover/bullet:opacity-100 transition-opacity mt-[2px]"
+                            onClick={() => {
+                              if (!onChange) return;
+                              const newData = JSON.parse(JSON.stringify(data));
+                              newData.experience[originalIdx].bullets.splice(bi, 1);
+                              onChange(newData);
+                            }}
+                            title="Verwijder bullet"
+                          >✕</button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {isEditing && (
+                    <div className="print:hidden mt-2 flex gap-2 opacity-0 group-hover/exp:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          if (!newData.experience[originalIdx].bullets) newData.experience[originalIdx].bullets = [];
+                          newData.experience[originalIdx].bullets.push('');
+                          onChange(newData);
+                        }}
+                        className="text-[10px] text-green-600 hover:text-green-800 font-medium"
+                      >+ bullet</button>
+                      <button
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          if (originalIdx !== -1) newData.experience[originalIdx].pageBreakBefore = !newData.experience[originalIdx].pageBreakBefore;
+                          onChange(newData);
+                        }}
+                        className={`text-[10px] px-2 py-0.5 rounded font-medium ${exp.pageBreakBefore ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                      >{exp.pageBreakBefore ? '✂ breuk actief' : '↵ pagina breuk'}</button>
+                      <button
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          if (originalIdx !== -1) {
+                            const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+                            const sortedIdx = s.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
+                            if (sortedIdx !== -1) {
+                              const deletedItem = s[sortedIdx] as {period:string;employer:string;pageBreakBefore?:boolean};
+                              const nextItem = sortedIdx + 1 < s.length ? s[sortedIdx + 1] as {period:string;employer:string;pageBreakBefore?:boolean} : null;
+                              if (nextItem && (nextItem.pageBreakBefore || deletedItem.pageBreakBefore)) {
+                                const nextIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === nextItem.period && e.employer === nextItem.employer);
+                                if (nextIdx !== -1) newData.experience[nextIdx].pageBreakBefore = false;
+                              }
+                            }
+                            newData.experience.splice(originalIdx, 1);
+                          }
+                          onChange(newData);
+                        }}
+                        className="text-[10px] text-red-400 hover:text-red-600"
+                      >✕ verwijder functie</button>
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
+        </div>
+        {isEditing && (
+          <button
+            className="print:hidden mt-3 text-[10px] text-green-600 hover:text-green-800 font-medium"
+            onClick={() => {
+              if (!onChange) return;
+              const newData = JSON.parse(JSON.stringify(data));
+              if (!newData.experience) newData.experience = [];
+              newData.experience.push({ period: '', employer: '', role: '', bullets: [''] });
+              onChange(newData);
+            }}
+          >+ werkervaring toevoegen</button>
+        )}
+      </section>
       {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && (
         <OrangeSeparator
           hidden={(data.hideSeparators || [])[1]}
