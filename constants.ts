@@ -120,7 +120,27 @@ Voorbeelden:
 - "Havo"
 - "Hbo Sociaal Juridische Dienstverlening"
 
-Het status veld bevat ALLEEN de diplomastatus: "diploma behaald", "certificaat behaald", "niet afgerond", "lopend", etc.
+Het school veld bevat de naam van de onderwijsinstelling (ALLEEN de instelling, niet de opleiding).
+Extraheer dit ALTIJD als het op het CV staat. Voorbeelden:
+- "ROC Flevoland"
+- "Universiteit van Amsterdam"
+- "Hogeschool van Amsterdam"
+- "Albeda College"
+Als de instelling niet vermeld staat: laat het school veld leeg (geen waarde invullen).
+
+Het status veld bevat ALLEEN de diplomastatus. Gebruik UITSLUITEND één van deze exacte waarden:
+- "diploma behaald" → als de opleiding succesvol is afgerond met diploma
+- "propedeuse behaald" → als alleen de propedeuse is behaald
+- "certificaat behaald" → als een certificaat (geen diploma) is behaald
+- "gestopt" → als de opleiding voortijdig is verlaten of niet afgerond
+- "studerend" → als de opleiding nog bezig is op het moment van het CV
+
+VERBODEN statuswaarden — gebruik deze NOOIT:
+❌ "lopend", "in uitvoering", "bezig" → gebruik "studerend"
+❌ "niet afgerond", "diploma niet behaald", "nee", "niet behaald", "afgebroken" → gebruik "gestopt"
+❌ onderwijsniveaus (hbo, mbo, etc.) → horen in het degree veld, NOOIT in status
+❌ lege waarden of vrije tekst
+
 NOOIT het onderwijsniveau (hbo/mbo/etc.) in het status veld zetten.
 
 KAPITALISATIE VAN ONDERWIJSNIVEAUS - HARDE REGEL:
@@ -647,7 +667,7 @@ OVERIGE REGELS:
 1. NAAM: [Voornaam] [Achternaam] in Title Case.
 2. ANALYSE TAGS: Genereer EXACT 5 korte, krachtige tags (bijv. "GEDREVEN", "SOCIAAL DOMEIN", "RESULTAATGERICHT").
 3. OPLEIDINGEN: Sorteer op meest recent. Cursussen en opleidingen NOOIT door elkaar.
-4. ONDERWIJSNIVEAUS: Schrijf ALTIJD als: Hbo, Mbo, Mavo, Havo, Vwo, Vmbo, Wo (eerste letter hoofdletter, rest klein). Het niveau staat VOORAAN in het degree veld (bijv. "Hbo Sociaal Juridische Dienstverlening"). Status veld is ALLEEN voor diplomastatus ("diploma behaald", etc.).
+4. ONDERWIJSNIVEAUS: Schrijf ALTIJD als: Hbo, Mbo, Mavo, Havo, Vwo, Vmbo, Wo (eerste letter hoofdletter, rest klein). Het niveau staat VOORAAN in het degree veld (bijv. "Hbo Sociaal Juridische Dienstverlening"). Status veld gebruikt UITSLUITEND: "diploma behaald", "propedeuse behaald", "certificaat behaald", "gestopt", of "studerend". Nooit "lopend", "niet afgerond", "nee" of andere varianten.
 `;
 
 export const CV_SCHEMA: Schema = {
@@ -687,6 +707,7 @@ export const CV_SCHEMA: Schema = {
           period: { type: Type.STRING },
           degree: { type: Type.STRING },
           status: { type: Type.STRING },
+          school: { type: Type.STRING, description: "Naam van de onderwijsinstelling, bijv. ROC Flevoland of Universiteit van Amsterdam" },
         },
         required: ["period", "degree", "status"],
       },
