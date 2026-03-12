@@ -166,6 +166,12 @@ HERSCHRIJFREGELS (hiervan mag nooit worden afgeweken):
 1. Elke bullet begint met een werkwoord in de INFINITIEF
    ❌ "Agendabeheer"  →  ✅ "Uitvoeren van agendabeheer binnen de geldende planningsstructuur"
    ❌ "Verantwoordelijk voor klantcontact"  →  ✅ "Onderhouden van klantcontact en bewaken van servicenormen"
+
+   🚨 VERBODEN OPENERS — bullets mogen NOOIT beginnen met:
+   "Zowel", "Naast", "Tevens", "Daarnaast", "Ook", "Hierbij", "Waarbij", "Als ook"
+   ❌ "Zowel face-to-face als telefonisch contact hebben met klanten;"
+   ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+
 2. Elke bullet is een VOLLEDIGE zin — altijd: werkwoord + object + context
    Contextwoorden toevoegen waar nodig: binnen, conform, gericht op, in afstemming met, ten behoeve van
 3. Volgorde per functie: Kern → Dagelijkse taken → Coördinatie → Administratie/rapportage
@@ -173,6 +179,10 @@ HERSCHRIJFREGELS (hiervan mag nooit worden afgeweken):
 5. Elke bullet eindigt op ; — de LAATSTE bullet eindigt op .
 6. Grammatica- en spelfouten ALTIJD corrigeren
 7. Geen ik-vorm, geen marketingtaal, geen resultaatclaims
+
+🔴 MINIMUM 4 BULLETS PER FUNCTIE:
+Als een functie minder dan 4 bullets heeft: leid aanvullende bullets af uit de functienaam en context.
+Gebruik wat de rol logischerwijs inhoudt. Voeg GEEN feiten toe die nergens in het CV staan.
 
 OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
 
