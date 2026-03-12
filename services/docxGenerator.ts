@@ -423,13 +423,18 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
           new TextRun({ text: formatDateToNumbers(exp.period), color: COLOR_GREY, size: 16, font: FONT_BRAND }), // 8px * 2
         ]
       }),
-      // Employer | ROLE
+      // Employer (own line, green)
       new Paragraph({
         spacing: { before: 40 },
         children: [
-          new TextRun({ text: `${exp.employer}`, color: COLOR_GREEN, size: 16, font: FONT_BRAND }), // 8px
-          new TextRun({ text: ` | `, color: "cccccc", size: 16, font: FONT_BRAND }),
-          new TextRun({ text: cleanRole(exp.employer, exp.role).toUpperCase(), bold: true, size: 20, font: FONT_BRAND, color: COLOR_BLACK }) // 10px * 2, CAPS
+          new TextRun({ text: exp.employer, color: COLOR_GREEN, size: 16, font: FONT_BRAND }),
+        ]
+      }),
+      // ROLE (own line, bold uppercase)
+      new Paragraph({
+        spacing: { before: 20 },
+        children: [
+          new TextRun({ text: cleanRole(exp.employer, exp.role).toUpperCase(), bold: true, size: 20, font: FONT_BRAND, color: COLOR_BLACK })
         ]
       }),
       // Bullets
