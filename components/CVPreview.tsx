@@ -387,16 +387,32 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     </span>
                   </div>
                   {isEditing && (
-                    <button
-                      className="print:hidden text-[10px] text-red-400 hover:text-red-600 shrink-0"
-                      title="Verwijder opleiding"
-                      onClick={() => {
-                        if (!onChange) return;
-                        const newData = JSON.parse(JSON.stringify(data));
-                        newData.education.splice(origIdx, 1);
-                        onChange(newData);
-                      }}
-                    >✕</button>
+                    <div className="print:hidden flex gap-1 shrink-0">
+                      <button
+                        className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap"
+                        title="Verplaats naar cursussen"
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          const edu = newData.education[origIdx];
+                          // Move to courses: use degree as title, keep period
+                          if (!newData.courses) newData.courses = [];
+                          newData.courses.push({ period: edu.period || '', title: edu.degree || '', institute: edu.school || '' });
+                          newData.education.splice(origIdx, 1);
+                          onChange(newData);
+                        }}
+                      >→ cursus</button>
+                      <button
+                        className="text-[10px] text-red-400 hover:text-red-600"
+                        title="Verwijder opleiding"
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          newData.education.splice(origIdx, 1);
+                          onChange(newData);
+                        }}
+                      >✕</button>
+                    </div>
                   )}
                 </div>
               </React.Fragment>
@@ -417,23 +433,74 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         )}
       </section>
 
-      {data.courses && data.courses.length > 0 && (
+      {((data.courses && data.courses.length > 0) || isEditing) && (
         <section className="mb-6">
           <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
-          <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
-            <EditableText
-              value={(data.courses || []).map(c => stripCoursePrefix(c.title)).filter(t => t && t.trim()).join(' | ')}
-              onChange={(v) => {
-                const titles = v.split('|').map(s => s.trim()).filter(Boolean);
-                const updated = titles.map((title, i) => ({ ...((data.courses || [])[i] || {}), title }));
-                handleEdit(['courses'], updated as any);
-              }}
-              isEditing={!!isEditing}
-              multiline
-            />
-          </p>
+          {isEditing ? (
+            <div className="space-y-1">
+              {(data.courses || []).map((c, ci) => (
+                <div key={ci} className="print:hidden flex items-center gap-2 group/course pl-1">
+                  <span className="text-gray-300 text-[10px] shrink-0">•</span>
+                  <span className="flex-1 text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
+                    <EditableText
+                      value={stripCoursePrefix(c.title)}
+                      onChange={(v) => {
+                        if (!onChange) return;
+                        const newData = JSON.parse(JSON.stringify(data));
+                        newData.courses[ci].title = v;
+                        onChange(newData);
+                      }}
+                      isEditing={true}
+                    />
+                  </span>
+                  <button
+                    className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    title="Verplaats naar opleidingen"
+                    onClick={() => {
+                      if (!onChange) return;
+                      const newData = JSON.parse(JSON.stringify(data));
+                      const course = newData.courses[ci];
+                      if (!newData.education) newData.education = [];
+                      newData.education.push({
+                        period: course.period || '',
+                        degree: stripCoursePrefix(course.title),
+                        status: 'certificaat behaald',
+                        school: course.institute || ''
+                      });
+                      newData.courses.splice(ci, 1);
+                      onChange(newData);
+                    }}
+                  >→ opleiding</button>
+                  <button
+                    className="text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    title="Verwijder cursus"
+                    onClick={() => {
+                      if (!onChange) return;
+                      const newData = JSON.parse(JSON.stringify(data));
+                      newData.courses.splice(ci, 1);
+                      onChange(newData);
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+              <button
+                className="print:hidden mt-1 text-[10px] text-green-600 hover:text-green-800 font-medium"
+                onClick={() => {
+                  if (!onChange) return;
+                  const newData = JSON.parse(JSON.stringify(data));
+                  if (!newData.courses) newData.courses = [];
+                  newData.courses.push({ period: '', title: '' });
+                  onChange(newData);
+                }}
+              >+ cursus toevoegen</button>
+            </div>
+          ) : (
+            <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+              {(data.courses || []).map(c => stripCoursePrefix(c.title)).filter(t => t && t.trim()).join(' | ')}
+            </p>
+          )}
         </section>
       )}
 
