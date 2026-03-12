@@ -60,6 +60,7 @@ NAAMFORMATTERING:
 - NOOIT titels zoals "Mr", "Mrs", "De heer", "Mevrouw", "Dhr", "Mevr" opnemen in het name veld.
 - Alleen de echte voornaam (roepnaam) en achternaam in de output ("Voornaam Achternaam").
 - Roepnaam ALTIJD ZONDER aanhalingstekens of haakjes extraheren (bijv. Sertan, niet (Sertan)).
+- TUSSENVOEGSELS (van, de, den, der, ten, ter, van den, van de, van der): schrijf deze ALTIJD met een kleine letter. Voorbeelden: "Sterre van den Berg", "Lisa de Vries", "Mark van der Wal". Nooit "Van Den", "De", "Van Der" met hoofdletters als het een tussenvoegsel is.
 - Als er uren/week staat vermeld (bijv. "36 uur per week"), zet het getal ("36") in het hours veld.
 
 WERKERVARING EXTRACTIE (BELANGRIJK):

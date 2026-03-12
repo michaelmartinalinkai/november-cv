@@ -69,8 +69,11 @@ const formatDateToNumbers = (text: string): string => {
 const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
 const allNoBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
 
+const TUSSENVOEGSELS = new Set(['van', 'de', 'den', 'der', 'het', 'ten', 'ter', 'te', 'op', 'aan', 'in', 'bij']);
 const toTitleCase = (str: string) => {
-  return str.toLowerCase().split(' ').map(word => {
+  const words = str.toLowerCase().split(' ');
+  return words.map((word, i) => {
+    if (i > 0 && TUSSENVOEGSELS.has(word)) return word; // keep tussenvoegsel lowercase
     return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
 };
