@@ -156,35 +156,64 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
-    let promptText = `JE PRIMAIRE TAAK IS HERSCHRIJVEN — NIET KOPIËREN.
+    let promptText = `JE ENIGE TAAK IS TRANSFORMEREN. ELKE BULLET OPNIEUW SCHRIJVEN.
 
-🚨 WERKERVARING BULLETS — VERPLICHT HERSCHRIJVEN:
-Elke bullet in de input MOET worden herschreven naar de Novémber schrijfstijl.
-Een bullet die letterlijk overeenkomt met de input is FOUT en ONGELDIG.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WERKWIJZE — VERPLICHT VOOR ELKE BULLET AFZONDERLIJK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-HERSCHRIJFREGELS (hiervan mag nooit worden afgeweken):
-1. Elke bullet begint met een werkwoord in de INFINITIEF
-   ❌ "Agendabeheer"  →  ✅ "Uitvoeren van agendabeheer binnen de geldende planningsstructuur"
-   ❌ "Verantwoordelijk voor klantcontact"  →  ✅ "Onderhouden van klantcontact en bewaken van servicenormen"
+Behandel elke bullet als ruwe grondstof die volledig omgesmolten wordt.
+Doorloop voor ELKE bullet dit proces:
 
-   🚨 VERBODEN OPENERS — bullets mogen NOOIT beginnen met:
-   "Zowel", "Naast", "Tevens", "Daarnaast", "Ook", "Hierbij", "Waarbij", "Als ook"
-   ❌ "Zowel face-to-face als telefonisch contact hebben met klanten;"
-   ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+  Stap 1 → WAT is de kern van deze taak? (extraheer de essentie)
+  Stap 2 → VOOR WIE of WAARVOOR? (voeg object toe)
+  Stap 3 → IN WELKE CONTEXT? (voeg toe: binnen / conform / gericht op / in afstemming met)
+  Stap 4 → BEGIN met een INFINITIEF WERKWOORD
+  Stap 5 → CONTROLEER: verschilt de output substantieel van de input? Zo niet → herschrijf opnieuw
 
-2. Elke bullet is een VOLLEDIGE zin — altijd: werkwoord + object + context
-   Contextwoorden toevoegen waar nodig: binnen, conform, gericht op, in afstemming met, ten behoeve van
-3. Volgorde per functie: Kern → Dagelijkse taken → Coördinatie → Administratie/rapportage
-4. Alle bullets verwerken — GEEN bullets weggooien
-5. Elke bullet eindigt op ; — de LAATSTE bullet eindigt op .
-6. Grammatica- en spelfouten ALTIJD corrigeren
-7. Geen ik-vorm, geen marketingtaal, geen resultaatclaims
+De output bullet MOET aantoonbaar anders zijn dan de input.
+Zelfde betekenis is toegestaan. Zelfde woorden zijn NIET toegestaan.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TRANSFORMATIEVOORBEELDEN — PRECIES ZO WERKT HET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Input:  "Verlenen van crisisopvang, wonen, weekendopvang en dagbesteding;"
+❌ FOUT:  "Verlenen van zorg, wonen, weekendopvang en dagbesteding;" (te gelijkend)
+✅ GOED:  "Uitvoeren van zorgverlening binnen crisisopvang, woonvoorzieningen en dagbesteding conform het zorgplan;"
+
+Input:  "Zowel face-to-face als telefonisch en per mail contact hebben met klanten;"
+❌ FOUT:  "Contact hebben met klanten via telefoon, e-mail en persoonlijk gesprek;" (no infinitief opener)
+✅ GOED:  "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+
+Input:  "Omgaan met trauma, diverse beperkingen en stoornissen;"
+❌ FOUT:  "Begeleiden van cliënten met trauma, diverse beperkingen en stoornissen;" (geen context)
+✅ GOED:  "Begeleiden van cliënten met trauma, gedragsproblematiek en psychiatrische stoornissen binnen een gespecialiseerde zorgsetting;"
+
+Input:  "Deelnemen aan zelfsturende teams;"
+❌ FOUT:  "Deelnemen aan zelfsturende teams;" (letterlijk overgenomen — nooit acceptabel)
+✅ GOED:  "Werken binnen zelfsturende teams en bijdragen aan gezamenlijke taakverdeling en teamontwikkeling;"
+
+Input:  "Onderdeel zijn van diverse kwaliteitsgroepen;"
+❌ FOUT:  "Deelnemen aan diverse kwaliteitsgroepen;" (bijna identiek)
+✅ GOED:  "Deelnemen aan kwaliteitsgroepen en bijdragen aan de ontwikkeling en borging van kwaliteitsstandaarden;"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HARDE REGELS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Elke bullet begint met een INFINITIEF WERKWOORD — geen uitzonderingen
+2. VERBODEN OPENERS: "Zowel", "Naast", "Tevens", "Daarnaast", "Ook", "Hierbij", "Waarbij"
+3. Elke bullet = volledig: infinitief + object + context
+4. Volgorde: Kern → Dagelijkse taken → Coördinatie → Administratie
+5. Eindigt op ; — alleen LAATSTE bullet op .
+6. Geen ik-vorm, geen marketingtaal, geen resultaatclaims
+7. Grammatica- en spelfouten ALTIJD corrigeren
 
 🔴 MINIMUM 4 BULLETS PER FUNCTIE:
-Als een functie minder dan 4 bullets heeft: leid aanvullende bullets af uit de functienaam en context.
-Gebruik wat de rol logischerwijs inhoudt. Voeg GEEN feiten toe die nergens in het CV staan.
+Heeft de bron minder dan 4? Leid aanvullende bullets logisch af uit de functienaam en context.
 
-OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
+OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.\`;
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;
@@ -205,7 +234,7 @@ OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarhei
           systemInstruction: instruction,
           responseMimeType: "application/json",
           responseSchema: CV_SCHEMA,
-          temperature: 0.4
+          temperature: 0.65
         },
       });
       console.log("ai.models.generateContent returned.");
