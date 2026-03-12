@@ -33,9 +33,10 @@ const FONT_BRAND = "Garet";
 // Sort helper — mirrors CVPreview logic so DOCX order matches screen order
 const parsePeriodStart = (period: string): number => {
   if (!period) return 0;
-  const mmyyyy = period.match(/(\d{2})\/(\d{4})/);
+  const p = formatDateToNumbers(period); // normalize before parsing (mirrors CVPreview)
+  const mmyyyy = p.match(/(\d{2})\/(\d{4})/);
   if (mmyyyy) return parseInt(mmyyyy[2]) * 100 + parseInt(mmyyyy[1]);
-  const yyyy = period.match(/(\d{4})/);
+  const yyyy = p.match(/(\d{4})/);
   if (yyyy) return parseInt(yyyy[1]) * 100;
   return 0;
 };
@@ -46,6 +47,8 @@ const formatDateToNumbers = (text: string): string => {
   const monthMap: Record<string, string> = {
     'januari': '01', 'februari': '02', 'maart': '03', 'april': '04', 'mei': '05', 'juni': '06',
     'juli': '07', 'augustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'december': '12',
+    'january': '01', 'february': '02', 'march': '03', 'may': '05', 'june': '06',
+    'july': '07', 'august': '08', 'october': '10',
     'jan': '01', 'feb': '02', 'mrt': '03', 'mar': '03', 'apr': '04', 'jun': '06', 'jul': '07',
     'aug': '08', 'sep': '09', 'sept': '09', 'okt': '10', 'oct': '10', 'nov': '11', 'dec': '12',
   };
