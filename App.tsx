@@ -158,12 +158,11 @@ const App: React.FC = () => {
       const extractedNameRaw: string = (result as any)?.personalInfo?.name || '';
       const extractedIsInitialOnly = /^[A-Za-z]\./.test(extractedNameRaw.trim());
 
-      // Auto-process with 'new' template immediately
+      // Auto-process with new style immediately
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'PROCESSING', statusMessage: 'Stijlen...' } : q));
 
       const finalResult = await geminiService.parseCV({
         text: JSON.stringify(result),
-        template: 'new'
       });
 
       // If extraction only had an initial, parseCV may have hallucinated a first name.
@@ -178,7 +177,7 @@ const App: React.FC = () => {
       usageService.recordConversion(targetId, sourceHash, item.file.name, candidateName, `gen_${targetId}_${Date.now()}`);
       refreshCounters();
 
-      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'SUCCESS', statusMessage: 'Afgerond', result: finalResult as ParsedCV, template: 'new' } : q));
+      setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'SUCCESS', statusMessage: 'Afgerond', result: finalResult as ParsedCV } : q));
     } catch (err: any) {
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'ERROR', statusMessage: 'Fout', error: err.message } : q));
     } finally {
@@ -186,21 +185,16 @@ const App: React.FC = () => {
     }
   };
 
-  // Deprecated manual trigger (keeping for safety but unused in new flow)
-  const processTemplate = async (targetId: string, template: 'old' | 'new') => {
-    // Logic merged into startExtraction
-  };
-
-  const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, template?: 'old' | 'new', sourceId?: string) => {
+  const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
       const fileNameBase = `CV_${(data.personalInfo?.name || "Kandidaat").replace(/\s+/g, '_')}_NOVEMBER`;
 
       const effectiveSourceId = sourceId || crypto.randomUUID();
-      const contentHash = await usageService.generateHash(JSON.stringify(data) + (template || ''));
+      const contentHash = await usageService.generateHash(JSON.stringify(data));
 
       if (format === 'docx') {
-        const blob = await generateDocxBlob(data, template);
+        const blob = await generateDocxBlob(data);
         saveAs(blob, `${fileNameBase}.docx`);
 
         // Record conversion for DOCX
@@ -273,7 +267,7 @@ const App: React.FC = () => {
                   {isEditing ? "Klaar met bewerken" : "Bewerken"}
                 </Button>
                 <button
-                  onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.template, selectedItem.id)}
+                  onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.id)}
                   className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#EE8D70] text-white hover:bg-[#E07C60] border border-transparent shadow-lg h-10 px-8"
                 >
                   Download PDF
@@ -295,7 +289,6 @@ const App: React.FC = () => {
             )}
             <CVPreview
               data={selectedItem.result}
-              template={selectedItem.template}
               isEditing={isEditing}
               onChange={handlePreviewEdit}
             />

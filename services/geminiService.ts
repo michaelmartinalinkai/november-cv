@@ -1,7 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import {
   EXTRACT_SYSTEM_INSTRUCTION,
-  OLD_STYLE_SYSTEM_INSTRUCTION,
   NEW_STYLE_SYSTEM_INSTRUCTION,
   CV_SCHEMA
 } from "../constants";
@@ -16,7 +15,6 @@ export interface CVInput {
   }>;
   vacancyText?: string;
   extraContext?: string;
-  template?: 'old' | 'new';
   fileName?: string;
 }
 
@@ -221,9 +219,7 @@ OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarhei
 
     parts.push({ text: promptText });
 
-    console.log("Starting parseCV with template:", input.template);
-    const instruction = input.template === 'old' ? OLD_STYLE_SYSTEM_INSTRUCTION : NEW_STYLE_SYSTEM_INSTRUCTION;
-    console.log("Using instruction length:", instruction.length);
+    const instruction = NEW_STYLE_SYSTEM_INSTRUCTION;
 
     try {
       console.log("Calling ai.models.generateContent...");

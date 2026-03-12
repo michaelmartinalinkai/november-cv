@@ -82,7 +82,6 @@ export interface BatchItem {
   textContext?: string;
   base64Data?: string;
   mimeType?: string;
-  template?: 'old' | 'new';
 
   motivationLetter?: string;
   candidateProfile?: string;

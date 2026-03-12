@@ -138,15 +138,6 @@ const fetchImageAsBuffer = async (url: string): Promise<ArrayBuffer | null> => {
   }
 };
 
-const createOldStyleDocument = (data: ParsedCV): Document => {
-  // Existing implementation for old style - preserved as is but ensuring basic functionality
-  const children: any[] = [];
-  children.push(new Paragraph({
-    children: [new TextRun({ text: "Old Style Not Updated - Please Use New Style", size: 24 })]
-  }));
-  return new Document({ sections: [{ children }] });
-};
-
 const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, arrowBuffer: ArrayBuffer | null): Document => {
   // Helper to strip employer prefix from role if duplicated
   const cleanRole = (employer: string, role: string): string => {
@@ -482,11 +473,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
   });
 };
 
-export const generateDocxBlob = async (data: ParsedCV, template: 'old' | 'new' = 'new'): Promise<Blob> => {
-  if (template === 'old') {
-    return await Packer.toBlob(createOldStyleDocument(data));
-  }
-
+export const generateDocxBlob = async (data: ParsedCV): Promise<Blob> => {
   const [logoBuffer, arrowBuffer] = await Promise.all([
     fetchImageAsBuffer(LOGO_URL),
     fetchImageAsBuffer(WHITE_ARROW_URL)
