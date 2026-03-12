@@ -103,6 +103,25 @@ BULLETS — AANVULLENDE REGELS:
 
 OPLEIDINGEN EXTRACTIE (CRUCIAAL):
 
+WAT HOORT WAAR — HARDE SCHEIDING:
+- education[] → alleen echte diploma-opleidingen (Hbo, Mbo, Mavo, Havo, Vwo, Vmbo, Wo, universitaire studies)
+- courses[] → kortlopende cursussen, trainingen, bijscholingen, workshops, e-learnings
+- NERGENS → rijbewijzen (Rijbewijs B, BE, C, etc.) — deze NOOIT opnemen in education[] of courses[]
+- NERGENS → BHV, EHBO alleen als losse cursus in courses[], NOOIT in education[]
+
+❌ FOUT: education bevat "Rijbewijs B"
+❌ FOUT: courses bevat "Cursus EHBO" (woord 'cursus' hoeft niet herhaald)
+✅ GOED: courses bevat "EHBO" (sectietitel is al 'Cursussen')
+✅ GOED: courses bevat "Leidinggeven" (niet "Training leidinggeven")
+
+CURSUSSEN — TITELS ZONDER VOORVOEGSEL:
+Het title veld in courses[] mag NOOIT beginnen met "Cursus", "Training", "Opleiding", "Workshop" of andere categoriewoorden.
+Deze woorden zijn al zichtbaar als sectietitel in het CV. Herhaling is verboden.
+❌ "Cursus EHBO" → ✅ "EHBO"
+❌ "Training Leidinggeven" → ✅ "Leidinggeven"
+❌ "Workshop Communicatie" → ✅ "Communicatie"
+❌ "Opleiding tot intercedent" → ✅ "Intercedent"
+
 PERIOD VELD VOOR OPLEIDINGEN — HARDE REGELS:
 - Als er een maand EN jaar beschikbaar is: gebruik MM/YYYY formaat, bijv. "09/2019 - 07/2021"
 - Als er GEEN maand beschikbaar is: gebruik ALLEEN het jaar, bijv. "2016 - 2019"

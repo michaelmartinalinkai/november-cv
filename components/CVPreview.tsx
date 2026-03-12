@@ -109,6 +109,10 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
   return { ...edu, degree, status };
 };
 
+// Strip redundant category prefix from course titles (e.g. "Cursus EHBO" → "EHBO")
+const stripCoursePrefix = (title: string): string =>
+  title.replace(/^(cursus|training|opleiding|workshop|e-learning|webinar)\s+/i, '').trim();
+
 const formatDateToNumbers = (text: string): string => {
   if (!text) return text;
 
@@ -253,7 +257,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
               {data.courses.map((c, i) => (
                 <div key={i} className="flex gap-x-12">
                   <span className="w-[100px] shrink-0">{formatDateToNumbers(c.period)}</span>
-                  <span>{c.title}{c.institute ? ` - ${c.institute}` : ''}</span>
+                  <span>{stripCoursePrefix(c.title)}{c.institute ? ` - ${c.institute}` : ''}</span>
                 </div>
               ))}
             </div>
@@ -542,7 +546,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           </div>
           <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
             <EditableText
-              value={(data.courses || []).map(c => c.title).filter(t => t && t.trim()).join(' | ')}
+              value={(data.courses || []).map(c => stripCoursePrefix(c.title)).filter(t => t && t.trim()).join(' | ')}
               onChange={(v) => {
                 const titles = v.split('|').map(s => s.trim()).filter(Boolean);
                 const updated = titles.map((title, i) => ({ ...((data.courses || [])[i] || {}), title }));
