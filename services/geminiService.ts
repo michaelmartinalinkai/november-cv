@@ -213,7 +213,7 @@ HARDE REGELS
 🔴 MINIMUM 4 BULLETS PER FUNCTIE:
 Heeft de bron minder dan 4? Leid aanvullende bullets logisch af uit de functienaam en context.
 
-OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.\`;
+OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;

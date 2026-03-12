@@ -61,6 +61,11 @@ const App: React.FC = () => {
 
   const processingRef = useRef<Set<string>>(new Set());
 
+  // Reset edit mode when user switches between CVs in the queue
+  useEffect(() => {
+    setIsEditing(false);
+  }, [selectedResultId]);
+
   const refreshCounters = useCallback(async () => {
     // Show cached values instantly, then update with live data from Sheets
     setUsageCount(usageService.getCachedMonthCount());

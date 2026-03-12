@@ -171,9 +171,15 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                     children: [
                       new TextRun({
                         text: (() => {
-                          const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('onbekend');
+                          const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('onbekend') && !v.toLowerCase().includes('niet gespecificeerd');
                           const parts: string[] = [];
-                          parts.push(isValid(data.personalInfo.availability) ? `Beschikbaar per ${data.personalInfo.availability!}` : 'Beschikbaar op aanvraag');
+                          if (isValid(data.personalInfo.availability)) {
+                            const avail = (data.personalInfo.availability || '').trim();
+                            const availStr = /^per\b/i.test(avail) ? `Beschikbaar ${avail}` : `Beschikbaar per ${avail}`;
+                            parts.push(availStr);
+                          } else {
+                            parts.push('Beschikbaar op aanvraag');
+                          }
                           if (isValid(data.personalInfo.hours)) {
                             const h = data.personalInfo.hours!;
                             parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
@@ -357,6 +363,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                 new Paragraph({
                   children: [
                     new TextRun({ text: fixedEdu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
+                    ...(edu.school ? [new TextRun({ text: `, ${edu.school}`, color: COLOR_GREY, size: 16, font: FONT_BRAND })] : []),
                     new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
                   ]
                 })
