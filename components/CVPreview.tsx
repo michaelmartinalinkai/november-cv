@@ -5,7 +5,6 @@ import { EditableText } from './EditableText';
 
 interface CVPreviewProps {
   data: ParsedCV;
-  template?: 'old' | 'new';
   isEditing?: boolean;
   onChange?: (newData: ParsedCV) => void;
 }
@@ -155,7 +154,7 @@ const formatDateToNumbers = (text: string): string => {
 };
 
 
-export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', isEditing, onChange }) => {
+export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange }) => {
   // ==================== NEW: DYNAMIC SPACER LOGIC ====================
   // ALL hooks must be declared before any conditional return
   const containerRef = useRef<HTMLDivElement>(null);
@@ -195,127 +194,6 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
 
   // Early return AFTER all hooks (React rules)
   if (!data) return null;
-
-  // Common font settings for CVs
-  const baseFontSize = '10.66px'; // 8pt in pixels
-  const fontStyles = {
-    fontFamily: 'Garet, sans-serif',
-    color: '#000',
-    fontSize: baseFontSize,
-    lineHeight: '1.3'
-  };
-
-  if (template === 'old') {
-    return (
-      <div
-        className="w-[210mm] min-h-[297mm] mx-auto bg-white p-[20mm] relative flex flex-col no-shadow print:shadow-none print:m-0"
-        style={{ ...fontStyles, border: '1px solid #000' }}
-      >
-        {/* LOGO */}
-        <div className="mb-10">
-          <h1 className="font-bold tracking-tighter" style={{ fontSize: '26pt', color: '#000' }}>NOVÉMBER.</h1>
-        </div>
-
-        {/* PERSOONLIJKE GEGEVENS */}
-        <section className="mb-6">
-          <h2 className="font-bold mb-1">Persoonlijke gegevens:</h2>
-          <div className="grid grid-cols-[140px_1fr] gap-y-0.5">
-            <span>Naam:</span>
-            <span>{data.personalInfo?.name}</span>
-            <span>Beschikbaarheid:</span>
-            <span>{data.personalInfo?.availability}</span>
-            {data.personalInfo?.skj && (
-              <>
-                <span className="whitespace-nowrap">SKJ Registratienummer:</span>
-                <span>{data.personalInfo.skj} | afgiftedatum: {data.personalInfo.skjDate || ""}</span>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* OPLEIDINGEN */}
-        <section className="mb-6">
-          <h2 className="font-bold mb-2">Opleidingen:</h2>
-          <div className="space-y-0.5">
-            {[...(data.education || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((edu, i) => {
-              const fixedEdu = fixEducationEntry(edu);
-              return (
-                <div key={i} className="flex gap-x-12">
-                  <span className="w-[100px] shrink-0">{formatDateToNumbers(fixedEdu.period)}</span>
-                  <span>{fixedEdu.degree} ({fixedEdu.status})</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* CURSUSSEN */}
-        {data.courses && data.courses.length > 0 && (
-          <section className="mb-6">
-            <h2 className="font-bold mb-2">Cursussen:</h2>
-            <div className="space-y-0.5">
-              {data.courses.map((c, i) => (
-                <div key={i} className="flex gap-x-12">
-                  <span className="w-[100px] shrink-0">{formatDateToNumbers(c.period)}</span>
-                  <span>{stripCoursePrefix(c.title)}{c.institute ? ` - ${c.institute}` : ''}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* SYSTEEMKENNIS */}
-        <section className="mb-6">
-          <h2 className="font-bold mb-1">Systeemkennis:</h2>
-          <p>{(data.systems || []).join(' | ')}</p>
-        </section>
-
-        {/* TALENKENNIS */}
-        <section className="mb-6">
-          <h2 className="font-bold mb-1">Talenkennis:</h2>
-          <p>{(data.languages || []).join(' | ')}</p>
-        </section>
-
-        <div className="w-full h-[0.5pt] bg-black/40 my-6" />
-
-        {/* WERKERVARING */}
-        <section className="mb-6">
-          <h2 className="font-bold mb-4">Werkervaring:</h2>
-          <div className="space-y-8">
-            {[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((exp, i) => (
-              <div key={i} className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-0.5" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                <span className="text-neutral-500">Datum</span>
-                <span>{formatDateToNumbers(exp.period)}</span>
-
-                <span className="text-neutral-500">Werkgever</span>
-                <span>{exp.employer}</span>
-
-                <span className="text-neutral-500">Functie</span>
-                <span className="font-bold">{exp.role}</span>
-
-                <span className="text-neutral-500">Werkzaamheden:</span>
-                <div className="mt-1">
-                  <ul className="list-none space-y-0">
-                    {(exp.bullets || []).map((bullet, bi) => (
-                      <li key={bi} className="flex items-start gap-4">
-                        <span className="font-bold shrink-0">•</span>
-                        <span>{bullet.trim().replace(/[.;]+$/, '')}{bi === exp.bullets.length - 1 ? '.' : ';'}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* STICKY FOOTER */}
-        <div className="mt-auto pt-8 text-center opacity-70" style={{ fontSize: '6.5pt' }}>
-          NOVÉMBER. B.V. | Olympisch Stadion 24-28 | 1076 DE | Amsterdam | KVK 78054389 | NL861247656B01
-        </div>
-      </div>
-    );
-  }
 
   // --- NEW STYLE PREVIEW ---
   const rawTags = data.analysis?.tags || [];
