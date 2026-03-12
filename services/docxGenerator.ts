@@ -30,6 +30,39 @@ const COLOR_BLACK = "000000";
 // Fallback sequence: Garet, then Verdana, then sans-serif
 const FONT_BRAND = "Garet";
 
+// Sort helper — mirrors CVPreview logic so DOCX order matches screen order
+const parsePeriodStart = (period: string): number => {
+  if (!period) return 0;
+  const mmyyyy = period.match(/(\d{2})\/(\d{4})/);
+  if (mmyyyy) return parseInt(mmyyyy[2]) * 100 + parseInt(mmyyyy[1]);
+  const yyyy = period.match(/(\d{4})/);
+  if (yyyy) return parseInt(yyyy[1]) * 100;
+  return 0;
+};
+
+// Mirrors formatDateToNumbers in CVPreview — normalizes date strings for DOCX output
+const formatDateToNumbers = (text: string): string => {
+  if (!text) return text;
+  const monthMap: Record<string, string> = {
+    'januari': '01', 'februari': '02', 'maart': '03', 'april': '04', 'mei': '05', 'juni': '06',
+    'juli': '07', 'augustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'december': '12',
+    'jan': '01', 'feb': '02', 'mrt': '03', 'mar': '03', 'apr': '04', 'jun': '06', 'jul': '07',
+    'aug': '08', 'sep': '09', 'sept': '09', 'okt': '10', 'oct': '10', 'nov': '11', 'dec': '12',
+  };
+  let result = text.replace(/\s*[–—]\s*/g, ' - ');
+  result = result.replace(/([a-zA-Z]+)'?\s+(\d{4})/g, (match, monthStr, yearStr) => {
+    const key = monthStr.toLowerCase().replace(/['.]/g, '');
+    const num = monthMap[key];
+    return num ? num + '/' + yearStr : match;
+  });
+  result = result.replace(/(\s|^|-)(\d)\/(\d{4})/g, (m, pre, d, y) => pre + '0' + d + '/' + y);
+  result = result.replace(/\b(nu|now|present|today)\b/gi, 'heden');
+  result = result.replace(/ \/ /g, ' - ');
+  result = result.replace(/\b(\d{4})\/(\d{4})\b/g, '$1 - $2');
+  result = result.replace(/\b(\d{4})-(\d{4})\b/g, '$1 - $2');
+  return result;
+};
+
 const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
 const allNoBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
 
@@ -313,7 +346,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
               borders: allNoBorders,
               margins: { top: 20, bottom: 20 },
               children: [
-                new Paragraph({ children: [new TextRun({ text: fixedEdu.period, font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
+                new Paragraph({ children: [new TextRun({ text: formatDateToNumbers(fixedEdu.period), font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
               ]
             }),
             new TableCell({
@@ -358,12 +391,12 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       ]
     }),
 
-    ...(data.experience || []).flatMap(exp => [
+    ...[...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).flatMap(exp => [
       // Period
       new Paragraph({
         spacing: { before: 240 },
         children: [
-          new TextRun({ text: exp.period, color: COLOR_GREY, size: 16, font: FONT_BRAND }), // 8px * 2
+          new TextRun({ text: formatDateToNumbers(exp.period), color: COLOR_GREY, size: 16, font: FONT_BRAND }), // 8px * 2
         ]
       }),
       // Employer | ROLE
