@@ -549,11 +549,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         </div>
         <div className="space-y-5">
           {(() => {
-            const sorted = [...(data.experience || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+            // Tag each item with its original index BEFORE sorting to avoid findIndex collisions
+            const sorted = (data.experience || [])
+              .map((exp, idx) => ({ ...exp, __origIdx: idx }))
+              .sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
             return sorted.map((exp, si) => {
-              const originalIdx = (data.experience || []).findIndex((e) => e.period === exp.period && e.employer === exp.employer);
+              const originalIdx = exp.__origIdx;
               return (
-                <div key={si} className="relative group/exp pl-5" style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <div key={si} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                   {/* Page break ruler (edit mode only) */}
                   {exp.pageBreakBefore && isEditing && (
                     <PageBreakRuler onRemove={() => {
@@ -573,9 +576,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                         onClick={() => {
                           if (!onChange) return;
                           const newData = JSON.parse(JSON.stringify(data));
-                          const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
-                          const aIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si].period && e.employer === s[si].employer);
-                          const bIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si - 1].period && e.employer === s[si - 1].employer);
+                          // Use pre-tagged __origIdx from sorted array for safe swapping
+                          const aIdx = sorted[si].__origIdx;
+                          const bIdx = sorted[si - 1].__origIdx;
                           [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
                           onChange(newData);
                         }}
@@ -587,9 +590,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                         onClick={() => {
                           if (!onChange) return;
                           const newData = JSON.parse(JSON.stringify(data));
-                          const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
-                          const aIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si].period && e.employer === s[si].employer);
-                          const bIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === s[si + 1].period && e.employer === s[si + 1].employer);
+                          const aIdx = sorted[si].__origIdx;
+                          const bIdx = sorted[si + 1].__origIdx;
                           [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
                           onChange(newData);
                         }}
@@ -702,14 +704,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                           if (!onChange) return;
                           const newData = JSON.parse(JSON.stringify(data));
                           if (originalIdx !== -1) {
-                            const s = [...newData.experience].sort((a: {period:string}, b: {period:string}) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
-                            const sortedIdx = s.findIndex((e: {period:string;employer:string}) => e.period === exp.period && e.employer === exp.employer);
-                            if (sortedIdx !== -1) {
-                              const deletedItem = s[sortedIdx] as {period:string;employer:string;pageBreakBefore?:boolean};
-                              const nextItem = sortedIdx + 1 < s.length ? s[sortedIdx + 1] as {period:string;employer:string;pageBreakBefore?:boolean} : null;
-                              if (nextItem && (nextItem.pageBreakBefore || deletedItem.pageBreakBefore)) {
-                                const nextIdx = newData.experience.findIndex((e: {period:string;employer:string}) => e.period === nextItem.period && e.employer === nextItem.employer);
-                                if (nextIdx !== -1) newData.experience[nextIdx].pageBreakBefore = false;
+                            // Use __origIdx-tagged sorted array to safely find next item
+                            const nextSortedItem = sorted[si + 1];
+                            if (nextSortedItem) {
+                              const nextIdx = nextSortedItem.__origIdx;
+                              const deletedHadBreak = exp.pageBreakBefore;
+                              const nextHasBreak = newData.experience[nextIdx]?.pageBreakBefore;
+                              if (deletedHadBreak || nextHasBreak) {
+                                newData.experience[nextIdx].pageBreakBefore = false;
                               }
                             }
                             newData.experience.splice(originalIdx, 1);
