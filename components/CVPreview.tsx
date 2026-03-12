@@ -225,7 +225,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
         <section className="mb-6">
           <h2 className="font-bold mb-2">Opleidingen:</h2>
           <div className="space-y-0.5">
-            {(data.education || []).map((edu, i) => {
+            {[...(data.education || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map((edu, i) => {
               const fixedEdu = fixEducationEntry(edu);
               return (
                 <div key={i} className="flex gap-x-12">
@@ -441,30 +441,40 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>OPLEIDINGEN</h3>
         </div>
         <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
-          {(data.education || []).map((edu, i) => {
+          {(() => {
+            const tagged = (data.education || []).map((edu, idx) => ({ ...edu, __origIdx: idx }));
+            const sorted = isEditing
+              ? tagged
+              : [...tagged].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+            return sorted.map((edu, si) => {
+            const origIdx = edu.__origIdx;
             const fixedEdu = fixEducationEntry(edu);
             return (
-              <React.Fragment key={i}>
+              <React.Fragment key={si}>
                 <div className="opacity-70 font-normal whitespace-nowrap flex items-start gap-1">
                   {isEditing && (
                     <span className="print:hidden flex flex-col mr-1">
                       <button
-                        disabled={i === 0}
+                        disabled={si === 0}
                         onClick={() => {
                           if (!onChange) return;
                           const newData = JSON.parse(JSON.stringify(data));
-                          [newData.education[i - 1], newData.education[i]] = [newData.education[i], newData.education[i - 1]];
+                          const aIdx = sorted[si].__origIdx;
+                          const bIdx = sorted[si - 1].__origIdx;
+                          [newData.education[aIdx], newData.education[bIdx]] = [newData.education[bIdx], newData.education[aIdx]];
                           onChange(newData);
                         }}
                         className="text-[8px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
                         title="Omhoog"
                       >▲</button>
                       <button
-                        disabled={i === (data.education || []).length - 1}
+                        disabled={si === sorted.length - 1}
                         onClick={() => {
                           if (!onChange) return;
                           const newData = JSON.parse(JSON.stringify(data));
-                          [newData.education[i], newData.education[i + 1]] = [newData.education[i + 1], newData.education[i]];
+                          const aIdx = sorted[si].__origIdx;
+                          const bIdx = sorted[si + 1].__origIdx;
+                          [newData.education[aIdx], newData.education[bIdx]] = [newData.education[bIdx], newData.education[aIdx]];
                           onChange(newData);
                         }}
                         className="text-[8px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
@@ -472,18 +482,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                       >▼</button>
                     </span>
                   )}
-                  <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', i, 'period'], v)} isEditing={!!isEditing} />
+                  <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', origIdx, 'period'], v)} isEditing={!!isEditing} />
                 </div>
                 <div className="leading-snug flex items-start justify-between gap-2">
                   <div>
                     <span className="text-black inline">
-                      <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', i, 'degree'], v)} isEditing={!!isEditing} multiline />
+                      <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', origIdx, 'degree'], v)} isEditing={!!isEditing} multiline />
                     </span>
                     {edu.school && (
-                      <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', i, 'school'], v)} isEditing={!!isEditing} /></span>
+                      <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
                     )}
                     <span className="font-normal opacity-70 whitespace-nowrap">
-                      {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', i, 'status'], v)} isEditing={!!isEditing} />
+                      {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} />
                     </span>
                   </div>
                   {isEditing && (
@@ -493,7 +503,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                       onClick={() => {
                         if (!onChange) return;
                         const newData = JSON.parse(JSON.stringify(data));
-                        newData.education.splice(i, 1);
+                        newData.education.splice(origIdx, 1);
                         onChange(newData);
                       }}
                     >✕</button>
@@ -501,7 +511,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, template = 'new', is
                 </div>
               </React.Fragment>
             );
-          })}
+          })})()}
         </div>
         {isEditing && (
           <button

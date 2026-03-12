@@ -349,7 +349,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       borders: allNoBorders,
-      rows: (data.education || []).map(edu => {
+      rows: [...(data.education || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map(edu => {
         const fixedEdu = fixEducationEntry(edu);
         return new TableRow({
           children: [
