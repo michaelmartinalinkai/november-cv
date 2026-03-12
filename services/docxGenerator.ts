@@ -66,6 +66,10 @@ const formatDateToNumbers = (text: string): string => {
   return result;
 };
 
+// Strip redundant category prefix from course titles (e.g. "Cursus EHBO" → "EHBO")
+const stripCoursePrefix = (title: string): string =>
+  title.replace(/^(cursus|training|opleiding|workshop|e-learning|webinar)\s+/i, '').trim();
+
 const noBorder = { style: BorderStyle.NONE, size: 0, color: "auto" };
 const allNoBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
 
@@ -398,7 +402,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       }),
       new Paragraph({
         spacing: { before: 80 },
-        children: [new TextRun({ text: (data.courses || []).map(c => c.title).join(" | "), size: 16, font: FONT_BRAND })]
+        children: [new TextRun({ text: (data.courses || []).map(c => stripCoursePrefix(c.title)).join(" | "), size: 16, font: FONT_BRAND })]
       }),
       new Paragraph({ spacing: { before: 200 } }),
     ] : []),
