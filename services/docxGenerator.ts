@@ -41,6 +41,24 @@ const parsePeriodStart = (period: string): number => {
   return 0;
 };
 
+// Sort education by END date — heden = infinity so ongoing entries always sort first
+const parsePeriodEnd = (period: string): number => {
+  if (!period) return 0;
+  if (/heden|nu|now|present|today/i.test(period)) return 999999;
+  const p = formatDateToNumbers(period);
+  const allMmYyyy = [...p.matchAll(/(\d{2})\/(\d{4})/g)];
+  if (allMmYyyy.length > 0) {
+    const last = allMmYyyy[allMmYyyy.length - 1];
+    return parseInt(last[2]) * 100 + parseInt(last[1]);
+  }
+  const allYyyy = [...p.matchAll(/(\d{4})/g)];
+  if (allYyyy.length > 0) {
+    const last = allYyyy[allYyyy.length - 1];
+    return parseInt(last[1]) * 100;
+  }
+  return 0;
+};
+
 // Mirrors formatDateToNumbers in CVPreview — normalizes date strings for DOCX output
 const formatDateToNumbers = (text: string): string => {
   if (!text) return text;
@@ -351,7 +369,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
       borders: allNoBorders,
-      rows: [...(data.education || [])].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)).map(edu => {
+      rows: [...(data.education || [])].sort((a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period)).map(edu => {
         const fixedEdu = fixEducationEntry(edu);
         return new TableRow({
           children: [
