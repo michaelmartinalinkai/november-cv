@@ -83,6 +83,25 @@ const parsePeriodStart = (period: string): number => {
   return 0;
 };
 
+// Parse period END for education sorting — heden = infinity so ongoing entries always sort first
+const parsePeriodEnd = (period: string): number => {
+  if (!period) return 0;
+  if (/heden|nu|now|present|today/i.test(period)) return 999999; // always on top
+  const p = formatDateToNumbers(period);
+  // Take the LAST date in the string (end of range)
+  const allMmYyyy = [...p.matchAll(/(\d{2})\/(\d{4})/g)];
+  if (allMmYyyy.length > 0) {
+    const last = allMmYyyy[allMmYyyy.length - 1];
+    return parseInt(last[2]) * 100 + parseInt(last[1]);
+  }
+  const allYyyy = [...p.matchAll(/(\d{4})/g)];
+  if (allYyyy.length > 0) {
+    const last = allYyyy[allYyyy.length - 1];
+    return parseInt(last[1]) * 100;
+  }
+  return 0;
+};
+
 const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
@@ -335,11 +354,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             const tagged = (data.education || []).map((edu, idx) => ({ ...edu, __origIdx: idx }));
             const sorted = isEditing
               ? tagged
-              : [...tagged].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+              : [...tagged].sort((a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period));
             return sorted.map((edu, si) => {
-            const origIdx = edu.__origIdx;
-            const fixedEdu = fixEducationEntry(edu);
-            return (
+              const origIdx = edu.__origIdx;
+              const fixedEdu = fixEducationEntry(edu);
+              return (
               <React.Fragment key={si}>
                 <div className="opacity-70 font-normal whitespace-nowrap flex items-start gap-1">
                   {isEditing && (
@@ -417,7 +436,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 </div>
               </React.Fragment>
             );
-          })})()}
+            });
+          })()}
         </div>
         {isEditing && (
           <button
