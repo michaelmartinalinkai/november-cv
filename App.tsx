@@ -185,6 +185,16 @@ const App: React.FC = () => {
     }
   };
 
+  const processAll = async () => {
+    const pending = queue.filter(q => q.status === 'PENDING' || q.status === 'ERROR');
+    if (pending.length === 0) return;
+    setIsProcessingBatch(true);
+    for (const item of pending) {
+      await startExtraction(item.id);
+    }
+    setIsProcessingBatch(false);
+  };
+
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
@@ -327,8 +337,29 @@ const App: React.FC = () => {
               <div className="flex flex-col gap-10 lg:flex-row lg:items-start">
                 <div className="bg-white border border-neutral-200 flex flex-col h-[700px] shadow-sm no-print w-full lg:w-80 flex-shrink-0">
                   <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
-                    <h3 className="font-serif font-bold text-lg text-[#1E3A35]">Wachtrij</h3>
-                    <span className="text-[10px] font-bold bg-[#1E3A35] text-white px-2.5 py-0.5 rounded-full">{queue.length}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-serif font-bold text-lg text-[#1E3A35]">Wachtrij</h3>
+                        <span className="text-[10px] font-bold bg-[#1E3A35] text-white px-2.5 py-0.5 rounded-full">{queue.length}</span>
+                      </div>
+                      {(() => {
+                        const pendingCount = queue.filter(q => q.status === 'PENDING' || q.status === 'ERROR').length;
+                        const doneCount = queue.filter(q => q.status === 'SUCCESS').length;
+                        if (pendingCount === 0) return null;
+                        return (
+                          <button
+                            onClick={processAll}
+                            disabled={isProcessingBatch}
+                            className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[#EE8D70] text-white px-3 py-1.5 hover:bg-[#E07C60] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            {isProcessingBatch
+                              ? <><Loader2 size={10} className="animate-spin" /> {doneCount} / {queue.length} verwerkt</>
+                              : <><Play size={10} className="fill-current" /> Verwerk alle ({pendingCount})</>
+                            }
+                          </button>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {queue.map(item => (
