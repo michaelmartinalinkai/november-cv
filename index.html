@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NOVÉMBER. CV Conversion</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.cdnfonts.com/css/garet" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -17,7 +16,7 @@
   <script src="https://apis.google.com/js/api.js" async defer></script>
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Garet', sans-serif;
       background-color: #fdfdfd;
       color: #111;
       margin: 0;
@@ -32,22 +31,36 @@
       font-family: 'Agrandir', sans-serif;
     }
 
-    /* Variable font setup for future use (when Garet-Variable files are added to /public/fonts/) */
+    /* Garet fonts — served locally for reliable weight rendering */
     @font-face {
       font-family: 'Garet';
-      src: url('/fonts/Garet-Variable.woff2') format('woff2'),
-        url('/fonts/Garet-Variable.ttf') format('truetype');
-      font-weight: 100 1000;
+      src: url('/fonts/Garet-Regular.otf') format('opentype');
+      font-weight: 400;
       font-style: normal;
       font-display: swap;
     }
 
     @font-face {
       font-family: 'Garet';
-      src: url('/fonts/Garet-Variable-Italic.woff2') format('woff2'),
-        url('/fonts/Garet-Variable-Italic.ttf') format('truetype');
-      font-weight: 100 1000;
-      font-style: italic;
+      src: url('/fonts/Garet-Book.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Garet';
+      src: url('/fonts/Garet-Bold.woff') format('woff');
+      font-weight: 700 800;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Garet';
+      src: url('/fonts/Garet-Heavy.woff') format('woff');
+      font-weight: 850;
+      font-style: normal;
       font-display: swap;
     }
 
@@ -131,12 +144,10 @@
       .cv-print-thead td {
         height: 140px !important;
         padding-bottom: 20px !important;
-        background: white !important;
       }
 
       .cv-print-tfoot td {
         height: 110px !important;
-        background: white !important;
       }
 
       .cv-print-footer-fixed {
@@ -156,6 +167,15 @@
     }
 
     .cv-print-footer-fixed {
+      display: none;
+    }
+
+    /* Hide print-only table header/footer on screen */
+    .cv-print-table thead.cv-print-thead {
+      display: none;
+    }
+
+    .cv-print-table tfoot.cv-print-tfoot {
       display: none;
     }
 
@@ -197,7 +217,7 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/assets/index-Zz_2w1Gt.js"></script>
+  <script type="module" crossorigin src="/assets/index-CaXsAkwV.js"></script>
 </head>
 
 <body>
