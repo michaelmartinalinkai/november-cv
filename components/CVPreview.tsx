@@ -449,7 +449,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                           const edu = newData.education[origIdx];
                           // Move to courses: use degree as title, keep period
                           if (!newData.courses) newData.courses = [];
-                          newData.courses.push({ period: edu.period || '', title: edu.degree || '', institute: edu.school || '' });
+                          newData.courses.push({ period: edu.period || '', title: edu.degree || '', institute: [edu.school, edu.plaats].filter(Boolean).join(', ') });
                           newData.education.splice(origIdx, 1);
                           onChange(newData);
                         }}
