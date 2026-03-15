@@ -582,7 +582,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             return sorted.map((exp, si) => {
               const originalIdx = exp.__origIdx;
               return (
-                <div key={si} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                   {/* Page break ruler (edit mode only) */}
                   {exp.pageBreakBefore && isEditing && (
                     <PageBreakRuler onRemove={() => {
