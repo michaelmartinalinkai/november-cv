@@ -378,7 +378,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
               borders: allNoBorders,
               margins: { top: 20, bottom: 20 },
               children: [
-                new Paragraph({ children: [new TextRun({ text: formatDateToNumbers(fixedEdu.period), font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
+                new Paragraph({ children: [new TextRun({ text: formatDateToNumbers(fixedEdu.period).replace(/\b\d{2}\/(\d{4})/g, '$1'), font: FONT_BRAND, size: 16, color: COLOR_GREY })] })
               ]
             }),
             new TableCell({

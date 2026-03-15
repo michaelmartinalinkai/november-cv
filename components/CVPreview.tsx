@@ -119,7 +119,11 @@ const splitPeriod = (period: string): { start: string; end: string } => {
   return { start: normalized.trim(), end: '' };
 };
 
-const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
+// Strip month from a date part — "09/2019" → "2019", "2019" → "2019", "heden" → "heden"
+const yearOnly = (part: string): string => {
+  const m = part.match(/(\d{4})/);
+  return m ? m[1] : part;
+}; = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
 
@@ -414,10 +418,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     (() => {
                       const { start, end } = splitPeriod(fixedEdu.period);
                       return (
-                        <span className="inline-grid whitespace-nowrap" style={{ gridTemplateColumns: '4.2em 1.2em 4.2em' }}>
-                          <span>{start}</span>
+                        <span className="inline-grid whitespace-nowrap" style={{ gridTemplateColumns: '4.5ch 1.5ch 4.5ch', fontVariantNumeric: 'tabular-nums' }}>
+                          <span className="text-left">{yearOnly(start)}</span>
                           <span className="text-center">{end ? '-' : ''}</span>
-                          <span>{end}</span>
+                          <span className="text-left">{yearOnly(end)}</span>
                         </span>
                       );
                     })()
