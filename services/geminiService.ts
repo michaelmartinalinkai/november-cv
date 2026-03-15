@@ -211,6 +211,14 @@ HARDE REGELS
 🔴 MINIMUM 4 BULLETS PER FUNCTIE:
 Heeft de bron minder dan 4? Leid aanvullende bullets logisch af uit de functienaam en context.
 
+🔴 KORTE INPUT = ALTIJD UITBREIDEN — HARDE REGEL:
+Een bullet van 5 woorden of minder is PER DEFINITIE onvolledig. ALTIJD uitbouwen tot een volledige zin.
+❌ "Administratie;" → ✅ "Verzorgen van administratieve werkzaamheden en verwerken van gegevens conform de geldende procedures;"
+❌ "Klantcontact;" → ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+❌ "Rapportages schrijven;" → ✅ "Opstellen en verwerken van rapportages en verslaglegging conform de geldende richtlijnen;"
+❌ "Coördineren;" → ✅ "Coördineren van de dagelijkse werkzaamheden en bewaken van de voortgang binnen het team;"
+❌ "Begeleiden van cliënten;" → ✅ "Begeleiden van cliënten bij het bereiken van persoonlijke doelen conform het ondersteuningsplan;"
+
 OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
 
     if (input.text) {
