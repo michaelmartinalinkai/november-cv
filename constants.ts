@@ -238,10 +238,17 @@ Stap 5 — CONTROLEER: Is dit een volledige zin? Zo niet → uitbreiden
 🔴 ACTIEF UITBREIDEN — De bot voegt zelf context toe als de bron te summier is.
 Een bullet van 2-3 woorden is ALTIJD onvolledig en MOET worden uitgebouwd.
 
-🔴 MINIMUM BULLETS PER FUNCTIE — HARDE REGEL:
+🔴 MINIMUM bullets per functie — HARDE REGEL:
 Elke functie krijgt MINIMAAL 4 bullets in de output, ongeacht hoeveel bullets de bron heeft.
 Als de bron minder dan 4 bullets heeft: leid aanvullende bullets AF uit de functienaam en context.
 Dit is GEEN verzinnen — dit is standaard CV-schrijven op basis van wat de functie logischerwijs inhoudt.
+
+🔴 KORTE INPUT = ALTIJD UITBREIDEN — HARDE REGEL:
+Een bullet van 5 woorden of minder is PER DEFINITIE onvolledig en MOET worden uitgebouwd.
+❌ "Administratie;" → ✅ "Verzorgen van administratieve werkzaamheden en verwerken van gegevens conform de geldende procedures;"
+❌ "Klantcontact;" → ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
+❌ "Rapportages schrijven;" → ✅ "Opstellen en verwerken van rapportages en verslaglegging conform de geldende richtlijnen;"
+❌ "Begeleiden van cliënten;" → ✅ "Begeleiden van cliënten bij het bereiken van persoonlijke doelen conform het ondersteuningsplan;"
 
 AANVULREGEL — Hoe aanvullende bullets genereren:
 1. Gebruik de functienaam als basis: wat doet iemand in deze rol logischerwijs?

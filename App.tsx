@@ -165,6 +165,31 @@ const App: React.FC = () => {
         text: JSON.stringify(result),
       });
 
+      // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
+      // Phase 2 sometimes mutates years despite "EXACT kopieer" instructions.
+      // Override all period values from phase 2 with phase 1 values — guaranteed accuracy.
+      if (result.experience && finalResult.experience) {
+        result.experience.forEach((exp: any, i: number) => {
+          if (finalResult.experience[i] && exp.period) {
+            finalResult.experience[i].period = exp.period;
+          }
+        });
+      }
+      if (result.education && finalResult.education) {
+        result.education.forEach((edu: any, i: number) => {
+          if (finalResult.education[i] && edu.period) {
+            finalResult.education[i].period = edu.period;
+          }
+        });
+      }
+      if (result.courses && finalResult.courses) {
+        result.courses.forEach((course: any, i: number) => {
+          if (finalResult.courses[i] && course.period) {
+            finalResult.courses[i].period = course.period;
+          }
+        });
+      }
+
       // If extraction only had an initial, parseCV may have hallucinated a first name.
       // Override with the name from the filename (e.g. "CV_van_Alice_Mahfouz...") if available.
       const nameFromFile = extractNameFromFilename(item.file.name);
