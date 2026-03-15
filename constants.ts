@@ -147,6 +147,14 @@ Extraheer dit ALTIJD als het op het CV staat. Voorbeelden:
 - "Albeda College"
 Als de instelling niet vermeld staat: laat het school veld leeg (geen waarde invullen).
 
+Het plaats veld bevat de vestigingsplaats van de instelling (ALLEEN de stad, niet de instelling of opleiding).
+Extraheer dit ALTIJD als het op het CV staat. Voorbeelden:
+- "Almere"
+- "Rotterdam"
+- "Amsterdam"
+Als de stad niet vermeld staat: laat het plaats veld leeg (geen waarde invullen).
+NOOIT de stad invullen als aanname — alleen als het expliciet op het CV staat.
+
 Het status veld bevat ALLEEN de diplomastatus. Gebruik UITSLUITEND één van deze exacte waarden:
 - "diploma behaald" → als de opleiding succesvol is afgerond met diploma
 - "propedeuse behaald" → als alleen de propedeuse is behaald
@@ -637,6 +645,7 @@ export const CV_SCHEMA: Schema = {
           degree: { type: Type.STRING },
           status: { type: Type.STRING },
           school: { type: Type.STRING, description: "Naam van de onderwijsinstelling, bijv. ROC Flevoland of Universiteit van Amsterdam" },
+          plaats: { type: Type.STRING, description: "Vestigingsplaats van de onderwijsinstelling, bijv. Almere of Rotterdam" },
         },
         required: ["period", "degree", "status"],
       },

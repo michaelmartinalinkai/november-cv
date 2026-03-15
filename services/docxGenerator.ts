@@ -114,7 +114,7 @@ const normalizeEducationLevel = (text: string): string => {
   return text.replace(/(HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)/g, (match) => levels[match] || match);
 };
 
-const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
+const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string; plaats?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
   if (levelPattern.test(status.trim())) {
@@ -390,6 +390,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                   children: [
                     new TextRun({ text: fixedEdu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
                     ...(edu.school ? [new TextRun({ text: `, ${edu.school}`, color: COLOR_GREY, size: 16, font: FONT_BRAND })] : []),
+                    ...(edu.plaats ? [new TextRun({ text: `, ${edu.plaats}`, color: COLOR_GREY, size: 16, font: FONT_BRAND })] : []),
                     new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
                   ]
                 })
