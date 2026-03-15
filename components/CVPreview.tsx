@@ -102,6 +102,23 @@ const parsePeriodEnd = (period: string): number => {
   return 0;
 };
 
+// Split a period string into start and end parts for aligned rendering
+// "2015 - 2020" → { start: "2015", end: "2020" }
+// "09/2019 - heden" → { start: "09/2019", end: "heden" }
+// "2015" → { start: "2015", end: "" }
+const splitPeriod = (period: string): { start: string; end: string } => {
+  const normalized = formatDateToNumbers(period || '');
+  const sep = normalized.match(/\s[-–—]\s/);
+  if (sep) {
+    const idx = normalized.indexOf(sep[0]);
+    return {
+      start: normalized.slice(0, idx).trim(),
+      end: normalized.slice(idx + sep[0].length).trim(),
+    };
+  }
+  return { start: normalized.trim(), end: '' };
+};
+
 const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
@@ -360,7 +377,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               const fixedEdu = fixEducationEntry(edu);
               return (
               <React.Fragment key={si}>
-                <div className="opacity-70 font-normal whitespace-nowrap flex items-start gap-1">
+                <div className="opacity-70 font-normal flex items-start gap-1">
                   {isEditing && (
                     <span className="print:hidden flex flex-col mr-1">
                       <button
@@ -391,7 +408,20 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                       >▼</button>
                     </span>
                   )}
-                  <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', origIdx, 'period'], v)} isEditing={!!isEditing} />
+                  {isEditing ? (
+                    <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', origIdx, 'period'], v)} isEditing={true} />
+                  ) : (
+                    (() => {
+                      const { start, end } = splitPeriod(fixedEdu.period);
+                      return (
+                        <span className="inline-grid whitespace-nowrap" style={{ gridTemplateColumns: 'minmax(2.8em,max-content) 1.2em minmax(2.8em,max-content)' }}>
+                          <span className="text-right">{start}</span>
+                          <span className="text-center">{end ? '-' : ''}</span>
+                          <span>{end}</span>
+                        </span>
+                      );
+                    })()
+                  )}
                 </div>
                 <div className="leading-snug flex items-start justify-between gap-2">
                   <div>
