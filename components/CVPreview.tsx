@@ -591,7 +591,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             return sorted.map((exp, si) => {
               const originalIdx = exp.__origIdx;
               return (
-                <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif' }}>
                   {/* Page break ruler (edit mode only) */}
                   {exp.pageBreakBefore && isEditing && (
                     <PageBreakRuler onRemove={() => {
@@ -636,7 +636,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     </div>
                   )}
 
-                  <div className="mb-2">
+                  <div className="mb-2" style={{ breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
                     <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                       <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
                     </span>
@@ -660,7 +660,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
 
                   <ul className="list-none space-y-0 ml-1">
                     {(exp.bullets || []).map((bullet, bi) => (
-                      <li key={bi} className="flex items-start gap-1 leading-[1.4] group/bullet">
+                      <li key={bi} className="flex items-start gap-1 leading-[1.4] group/bullet" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                         {isEditing && (
                           <span className="print:hidden flex flex-col shrink-0 mt-[1px]">
                             <button
