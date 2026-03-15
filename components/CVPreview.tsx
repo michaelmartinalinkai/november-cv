@@ -414,8 +414,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     (() => {
                       const { start, end } = splitPeriod(fixedEdu.period);
                       return (
-                        <span className="inline-grid whitespace-nowrap" style={{ gridTemplateColumns: 'minmax(2.8em,max-content) 1.2em minmax(2.8em,max-content)' }}>
-                          <span className="text-right">{start}</span>
+                        <span className="inline-grid whitespace-nowrap" style={{ gridTemplateColumns: '4.2em 1.2em 4.2em' }}>
+                          <span>{start}</span>
                           <span className="text-center">{end ? '-' : ''}</span>
                           <span>{end}</span>
                         </span>
