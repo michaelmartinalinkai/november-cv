@@ -251,22 +251,20 @@ OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarhei
         const cleanedJson = this.extractJson(text);
         const parsed = JSON.parse(cleanedJson) as ParsedCV;
 
-        // New Style Specific: Ensure 5 tags
-        if (input.template === 'new') {
-          if (!parsed.analysis) {
-            parsed.analysis = {
-              scores: { overall: 80, relevance: 80, skillMatch: 80, completeness: 80, consistency: 80, professional: 80 },
-              profile: { sector: "Sociaal Domein", role: parsed.personalInfo.name, seniority: "Medior" },
-              tags: ["Professional", "Gedreven", "Expert", "Novêmber", "Kandidaat"],
-              strengths: [],
-              weaknesses: [],
-              summary: ""
-            };
-          } else if (!parsed.analysis.tags || parsed.analysis.tags.length < 5) {
-            const currentTags = parsed.analysis.tags || [];
-            const fillers = ["Professional", "Gedreven", "Expert", "Novêmber", "Kandidaat"];
-            parsed.analysis.tags = [...currentTags, ...fillers].slice(0, 5);
-          }
+        // Ensure 5 tags always present
+        if (!parsed.analysis) {
+          parsed.analysis = {
+            scores: { overall: 80, relevance: 80, skillMatch: 80, completeness: 80, consistency: 80, professional: 80 },
+            profile: { sector: "Sociaal Domein", role: parsed.personalInfo.name, seniority: "Medior" },
+            tags: ["Professional", "Gedreven", "Expert", "Novêmber", "Kandidaat"],
+            strengths: [],
+            weaknesses: [],
+            summary: ""
+          };
+        } else if (!parsed.analysis.tags || parsed.analysis.tags.length < 5) {
+          const currentTags = parsed.analysis.tags || [];
+          const fillers = ["Professional", "Gedreven", "Expert", "Novêmber", "Kandidaat"];
+          parsed.analysis.tags = [...currentTags, ...fillers].slice(0, 5);
         }
 
         return parsed;
