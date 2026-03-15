@@ -575,8 +575,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         }}
       />
 
-      <section className="mb-6">
-        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+      <section className="mb-6" style={{ breakInside: 'avoid-page' }}>
+        <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4" style={{ breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
           <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>WERKERVARING</h3>
         </div>
         <div className="space-y-5">
