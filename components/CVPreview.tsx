@@ -117,13 +117,15 @@ const splitPeriod = (period: string): { start: string; end: string } => {
     };
   }
   return { start: normalized.trim(), end: '' };
-};
+}; 
 
 // Strip month from a date part — "09/2019" → "2019", "2019" → "2019", "heden" → "heden"
 const yearOnly = (part: string): string => {
   const m = part.match(/(\d{4})/);
   return m ? m[1] : part;
-}; = (edu: { period: string; degree: string; status: string; school?: string }) => {
+};
+
+const fixEducationEntry = (edu: { period: string; degree: string; status: string; school?: string }) => {
   const levelPattern = /^(Hbo|Mbo|Mavo|Havo|Vwo|Vmbo|Wo|HBO|MBO|MAVO|HAVO|VWO|VMBO|WO|hbo|mbo|mavo|havo|vwo|vmbo|wo)$/i;
   let { degree, status } = edu;
 
