@@ -235,7 +235,10 @@ const App: React.FC = () => {
         // Record conversion for DOCX
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`, data.personalInfo?.name || 'Onbekend');
       } else {
+        const prevTitle = document.title;
+        document.title = fileNameBase;
         window.print();
+        document.title = prevTitle;
         // Record conversion for PDF (print)
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`, data.personalInfo?.name || 'Onbekend');
       }
