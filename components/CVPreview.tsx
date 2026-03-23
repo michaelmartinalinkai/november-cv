@@ -270,7 +270,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             isEditing={!!isEditing}
           />
         </h1>
-        <div className="text-[#e3fd01]" style={{ fontSize: '9px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
+        <div className="text-[#e3fd01]" style={{ fontSize: '11px', fontFamily: 'Agrandir, sans-serif', fontWeight: 400 }}>
           {isEditing ? (
             <div className="flex flex-col gap-1 items-start mt-2">
               <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>

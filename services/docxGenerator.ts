@@ -218,7 +218,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                           return parts.join(' | ') || 'Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd';
                         })(),
                         color: COLOR_LIME,
-                        size: 18, // 9px * 2
+                        size: 22, // 11px * 2
                         font: 'Agrandir'
                       })
                     ]
