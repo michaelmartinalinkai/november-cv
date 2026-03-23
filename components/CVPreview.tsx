@@ -139,12 +139,10 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
   // Normalize any education levels within degree
   degree = normalizeEducationLevel(degree);
 
-  // Normalize ongewenste statuswaarden → approved terms (safety net if Gemini ignores prompt)
-  const s = status.trim().toLowerCase();
-  if (/^(lopend|in uitvoering|bezig|in progress|ongoing|studerend)$/.test(s)) {
-    status = 'studerend';
-  } else if (/^(niet afgerond|diploma niet behaald|nee|niet behaald|afgebroken|stopped|dropped)$/.test(s)) {
-    status = 'gestopt';
+  // Only show status if it is a form of "behaald" — everything else is hidden
+  const BEHAALD = /^(diploma behaald|propedeuse behaald|certificaat behaald)$/i;
+  if (!BEHAALD.test(status.trim())) {
+    status = '';
   }
 
   return { ...edu, degree, status };
@@ -441,7 +439,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                       <span className="font-normal opacity-70">, <EditableText value={edu.plaats || ''} onChange={(v) => handleEdit(['education', origIdx, 'plaats'], v)} isEditing={!!isEditing} /></span>
                     )}
                     <span className="font-normal opacity-70 whitespace-nowrap">
-                      {' '}- <EditableText value={fixedEdu.status || ''} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} />
+                      {fixedEdu.status ? <>{' '}- <EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <>{' '}- <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /></> : null)}
                     </span>
                   </div>
                   {isEditing && (
