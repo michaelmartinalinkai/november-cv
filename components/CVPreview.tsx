@@ -773,7 +773,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
           >+ werkervaring toevoegen</button>
         )}
       </section>
-      {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && (
+      {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0) || isEditing) && (
         <OrangeSeparator
           hidden={(data.hideSeparators || [])[1]}
           isEditing={isEditing}
@@ -788,7 +788,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
       )}
 
       <div className="space-y-6 mt-4">
-        {data.systems && data.systems.length > 0 && (
+        {(data.systems && data.systems.length > 0 || isEditing) && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
               <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>SYSTEEMKENNIS</h3>
@@ -799,22 +799,27 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 onChange={(v) => handleEdit(['systems'], v.split('|').map(s => s.trim()).filter(Boolean))}
                 isEditing={!!isEditing}
                 multiline
+                placeholder="Voeg systemen toe, gescheiden door |"
               />
             </p>
           </section>
         )}
 
-        {data.languages && data.languages.length > 0 && (
+        {(data.languages && data.languages.length > 0 || isEditing) && (
           <section>
             <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-2">
               <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>TALENKENNIS</h3>
             </div>
             <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
               <EditableText
-                value={(data.languages || []).join(' | ')}
-                onChange={(v) => handleEdit(['languages'], v.split('|').map(s => s.trim()).filter(Boolean))}
+                value={(data.languages && data.languages.length > 0 ? data.languages : (isEditing ? ['Nederlands', 'Engels'] : [])).join(' | ')}
+                onChange={(v) => {
+                  const langs = v.split('|').map(s => s.trim()).filter(Boolean);
+                  handleEdit(['languages'], langs);
+                }}
                 isEditing={!!isEditing}
                 multiline
+                placeholder="Voeg talen toe, gescheiden door |"
               />
             </p>
           </section>
