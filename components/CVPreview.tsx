@@ -291,8 +291,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               }
               if (isValid(data.personalInfo?.skj)) {
                 const skj = data.personalInfo!.skj!;
-                const skjDate = isValid(data.personalInfo?.skjDate) ? ` (afgegeven op ${data.personalInfo!.skjDate})` : '';
-                parts.push(`SKJ-Registratie: ${skj}${skjDate}`);
+                parts.push(`SKJ-Registratie: ${skj}`);
+                if (isValid(data.personalInfo?.skjDate)) parts.push(`Afgegeven op ${data.personalInfo!.skjDate}`);
               }
               return parts.join(' | ') || "Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd";
             })()
