@@ -77,7 +77,10 @@ EXTRAHEER ALS VOLGT:
   • NOOIT mengen: "sept 2023 - 01/2024" is FOUT → moet "09/2023 - 01/2024"
   • Heden schrijf je als "heden" (kleine letters)
   • Kopieer datums EXACT van het originele CV — verzin of wijzig NOOIT jaren
-- employer: "Gemeente Den Haag" (ALLEEN de werkgever, NIET de functie)
+- employer: "Gemeente Den Haag" (ALLEEN de werkgever, NIET de functie, NIET de vestigingsplaats)
+  ❌ FOUT: "Schakenbosch, Leidschendam" → ✅ GOED: "Schakenbosch"
+  ❌ FOUT: "Gemeente Utrecht, Utrecht" → ✅ GOED: "Gemeente Utrecht"
+  Plaatsnamen en steden NOOIT opnemen in het employer veld — alleen de naam van de organisatie/werkgever.
 - role: "Jeugd en Gezinscoach Consulent Jeugd" (ALLEEN de functie, in Title Case, geen dubbele spaties)
 - bullets: Haal ALLE bullets op, BEWAAR de infinitief vorm (Begeleiden, Voeren, etc.)
 
