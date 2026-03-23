@@ -49,6 +49,13 @@ export interface ParsedCV {
   }>;
   systems?: string[];
   languages: string[];
+  references?: Array<{
+    name: string;
+    contact: string;
+    role?: string;
+    company?: string;
+  }>;
+  referencesOnRequest?: boolean;
   experience: Array<{
     period: string;
     employer: string;

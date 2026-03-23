@@ -825,6 +825,79 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
           </section>
         )}
       </div>
+
+      {/* REFERENTIES */}
+      {((data.references && data.references.length > 0) || data.referencesOnRequest || isEditing) && (
+        <>
+          <OrangeSeparator
+            hidden={(data.hideSeparators || [])[2]}
+            isEditing={isEditing}
+            onToggle={() => {
+              if (!onChange) return;
+              const newData = JSON.parse(JSON.stringify(data));
+              if (!newData.hideSeparators) newData.hideSeparators = [];
+              newData.hideSeparators[2] = !newData.hideSeparators[2];
+              onChange(newData);
+            }}
+          />
+          <section className="mt-4 mb-6">
+            <div className="inline-block bg-[#e3fd01] px-3 py-1 mb-4">
+              <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>REFERENTIES</h3>
+            </div>
+
+            {/* Op aanvraag toggle in edit mode */}
+            {isEditing && (
+              <div className="print:hidden mb-3 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (!onChange) return;
+                    const newData = JSON.parse(JSON.stringify(data));
+                    newData.referencesOnRequest = !newData.referencesOnRequest;
+                    if (newData.referencesOnRequest) newData.references = [];
+                    onChange(newData);
+                  }}
+                  className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded ${data.referencesOnRequest ? 'bg-[#1E3A35] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {data.referencesOnRequest ? '✓ Op aanvraag beschikbaar' : 'Op aanvraag beschikbaar'}
+                </button>
+              </div>
+            )}
+
+            {data.referencesOnRequest && !isEditing && (
+              <p className="pl-1 opacity-70" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>Op aanvraag beschikbaar</p>
+            )}
+
+            {!data.referencesOnRequest && (
+              <div className="space-y-4 pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+                {(data.references || []).map((ref, ri) => (
+                  <div key={ri} className="relative group/ref">
+                    <div>
+                      <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={!!isEditing} />
+                      {(ref.contact || isEditing) && <span className="opacity-70"> | <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={!!isEditing} /></span>}
+                    </div>
+                    {(ref.role || ref.company || isEditing) && (
+                      <div className="opacity-70">
+                        <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={!!isEditing} />
+                        {(ref.company || isEditing) && <span> | <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={!!isEditing} /></span>}
+                      </div>
+                    )}
+                    {isEditing && (
+                      <button className="print:hidden absolute right-0 top-0 text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/ref:opacity-100 transition-opacity"
+                        onClick={() => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references.splice(ri, 1); onChange(d); }}>✕</button>
+                    )}
+                  </div>
+                ))}
+                {isEditing && (
+                  <button className="print:hidden text-[10px] text-green-600 hover:text-green-800 font-medium"
+                    onClick={() => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); if (!d.references) d.references = []; d.references.push({ name: '', contact: '', role: '', company: '' }); onChange(d); }}>
+                    + referentie toevoegen
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 
