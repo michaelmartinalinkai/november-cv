@@ -123,12 +123,10 @@ const fixEducationEntry = (edu: { period: string; degree: string; status: string
     status = 'diploma behaald';
   }
   degree = normalizeEducationLevel(degree);
-  // Normalize ongewenste statuswaarden → approved terms
-  const s = status.trim().toLowerCase();
-  if (/^(lopend|in uitvoering|bezig|in progress|ongoing|studerend)$/.test(s)) {
-    status = 'studerend';
-  } else if (/^(niet afgerond|diploma niet behaald|nee|niet behaald|afgebroken|stopped|dropped)$/.test(s)) {
-    status = 'gestopt';
+  // Only show status if it is a form of "behaald" — everything else is hidden
+  const BEHAALD = /^(diploma behaald|propedeuse behaald|certificaat behaald)$/i;
+  if (!BEHAALD.test(status.trim())) {
+    status = '';
   }
   return { ...edu, degree, status };
 };
@@ -391,7 +389,7 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                     new TextRun({ text: fixedEdu.degree, color: COLOR_BLACK, size: 16, font: FONT_BRAND }),
                     ...(edu.school ? [new TextRun({ text: `, ${edu.school}`, color: COLOR_GREY, size: 16, font: FONT_BRAND })] : []),
                     ...(edu.plaats ? [new TextRun({ text: `, ${edu.plaats}`, color: COLOR_GREY, size: 16, font: FONT_BRAND })] : []),
-                    new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })
+                    ...(fixedEdu.status ? [new TextRun({ text: ` - ${fixedEdu.status}`, font: FONT_BRAND, size: 16, color: COLOR_GREY })] : []),
                   ]
                 })
               ]
