@@ -10,7 +10,7 @@ import { geminiService, CVInput } from './services/geminiService';
 import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
 import { BatchItem, ParsedCV } from './types';
-import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X } from 'lucide-react';
+import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import saveAs from 'file-saver';
 import { loadGoogleScripts } from './services/driveService';
@@ -58,6 +58,7 @@ const App: React.FC = () => {
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const undoStackRef = useRef<Map<string, ParsedCV[]>>(new Map());
 
   const processingRef = useRef<Set<string>>(new Set());
 
@@ -65,6 +66,18 @@ const App: React.FC = () => {
   useEffect(() => {
     setIsEditing(false);
   }, [selectedResultId]);
+
+  // Ctrl+Z keyboard shortcut for undo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && isEditing) {
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isEditing, selectedResultId]);
 
   const refreshCounters = useCallback(async () => {
     // Show cached values instantly, then update with live data from Sheets
@@ -253,12 +266,37 @@ const App: React.FC = () => {
 
   const handlePreviewEdit = (newData: ParsedCV) => {
     if (!selectedResultId) return;
+    // Push current state to undo stack before applying change
+    const currentItem = queue.find(i => i.id === selectedResultId);
+    if (currentItem?.result) {
+      const stack = undoStackRef.current.get(selectedResultId) || [];
+      stack.push(JSON.parse(JSON.stringify(currentItem.result)));
+      if (stack.length > 50) stack.shift(); // max 50 steps
+      undoStackRef.current.set(selectedResultId, stack);
+    }
     setQueue(prev => prev.map(item =>
       item.id === selectedResultId
         ? { ...item, result: newData }
         : item
     ));
   };
+
+  const handleUndo = () => {
+    if (!selectedResultId) return;
+    const stack = undoStackRef.current.get(selectedResultId) || [];
+    if (stack.length === 0) return;
+    const previous = stack.pop();
+    undoStackRef.current.set(selectedResultId, stack);
+    setQueue(prev => prev.map(item =>
+      item.id === selectedResultId
+        ? { ...item, result: previous }
+        : item
+    ));
+  };
+
+  const canUndo = selectedResultId
+    ? (undoStackRef.current.get(selectedResultId)?.length ?? 0) > 0
+    : false;
 
   const renderDashboardContent = () => {
     const selectedItem = queue.find(i => i.id === selectedResultId);
@@ -304,6 +342,17 @@ const App: React.FC = () => {
                   <Settings size={14} className="mr-2" />
                   {isEditing ? "Klaar met bewerken" : "Bewerken"}
                 </Button>
+                {isEditing && (
+                  <button
+                    onClick={handleUndo}
+                    disabled={!canUndo}
+                    title="Ongedaan maken (Ctrl+Z)"
+                    className="h-10 px-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest border border-neutral-200 text-neutral-500 hover:text-neutral-800 hover:border-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <Undo2 size={13} />
+                    Ongedaan
+                  </button>
+                )}
                 <button
                   onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.id)}
                   className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#EE8D70] text-white hover:bg-[#E07C60] border border-transparent shadow-lg h-10 px-8"
