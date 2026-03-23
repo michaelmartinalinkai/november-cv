@@ -477,7 +477,33 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
         ]
       }),
       new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: (data.languages || []).join(" | "), size: 16, font: FONT_BRAND })] }),
-    ] : [])
+    ] : []),
+
+    // REFERENTIES
+    ...((data.references && data.references.length > 0) || data.referencesOnRequest ? [
+      new Paragraph({ spacing: { before: 400, after: 200 }, border: { bottom: { color: COLOR_SALMON, size: 4, style: BorderStyle.SINGLE } } }),
+      new Paragraph({
+        children: [new TextRun({ text: "  REFERENTIES  ", bold: true, size: 24, font: "Agrandir", shading: { fill: COLOR_LIME, color: "auto" } })]
+      }),
+      ...(data.referencesOnRequest ? [
+        new Paragraph({ spacing: { before: 160 }, children: [new TextRun({ text: "Op aanvraag beschikbaar", size: 16, font: FONT_BRAND, color: COLOR_GREY })] }),
+      ] : (data.references || []).flatMap(ref => [
+        new Paragraph({
+          spacing: { before: 200 },
+          children: [
+            new TextRun({ text: ref.name, size: 16, font: FONT_BRAND }),
+            ...(ref.contact ? [new TextRun({ text: ` | ${ref.contact}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
+          ]
+        }),
+        ...((ref.role || ref.company) ? [new Paragraph({
+          spacing: { before: 20 },
+          children: [
+            ...(ref.role ? [new TextRun({ text: ref.role, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
+            ...(ref.company ? [new TextRun({ text: ` | ${ref.company}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
+          ]
+        })] : []),
+      ])),
+    ] : []),
   ];
 
   return new Document({

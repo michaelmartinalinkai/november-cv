@@ -172,6 +172,18 @@ VERBODEN statuswaarden — gebruik deze NOOIT:
 
 REDEN: Alleen behaalde statussen worden getoond op het CV. Alles wat niet gelijk is aan "behaald" wordt weggelaten.
 
+REFERENTIES EXTRACTIE:
+- Als het CV concrete referenten vermeldt: extraheer naam, contactgegeven (e-mail of telefoon), functietitel en werkgever in het references[] veld.
+- Als het CV "op aanvraag beschikbaar" of een vergelijkbare zin vermeldt: stel referencesOnRequest: true in en laat references[] leeg.
+- Als het CV geen referenties vermeldt: laat references[] leeg en stel referencesOnRequest: false in.
+- Kopieer contactgegevens EXACT — verzin of wijzig NOOIT e-mailadressen of telefoonnummers.
+
+Voorbeeld:
+references: [
+  { name: "Maria Achterberg", contact: "maria@november.nl", role: "Teamleider Sociaal Domein", company: "Gemeente Zoetermeer" },
+  { name: "Joany Eilbracht", contact: "06 24 62 65 37", role: "Financieel medewerker", company: "Superflora" }
+]
+
 KAPITALISATIE VAN ONDERWIJSNIVEAUS - HARDE REGEL:
 Gebruik ALTIJD deze exacte schrijfwijze (eerste letter hoofdletter, rest kleine letters):
 - Hbo (NOOIT HBO of hbo)
@@ -672,6 +684,20 @@ export const CV_SCHEMA: Schema = {
     },
     systems: { type: Type.ARRAY, items: { type: Type.STRING } },
     languages: { type: Type.ARRAY, items: { type: Type.STRING } },
+    referencesOnRequest: { type: Type.BOOLEAN, description: "true als het CV 'op aanvraag beschikbaar' of vergelijkbaar vermeldt" },
+    references: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING, description: "Naam van de referent" },
+          contact: { type: Type.STRING, description: "E-mailadres of telefoonnummer" },
+          role: { type: Type.STRING, description: "Functietitel van de referent" },
+          company: { type: Type.STRING, description: "Werkgever van de referent" },
+        },
+        required: ["name", "contact"],
+      },
+    },
     analysis: {
       type: Type.OBJECT,
       properties: {
