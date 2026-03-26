@@ -435,9 +435,6 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     {edu.school && (
                       <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
                     )}
-                    {edu.plaats && (
-                      <span className="font-normal opacity-70">, <EditableText value={edu.plaats || ''} onChange={(v) => handleEdit(['education', origIdx, 'plaats'], v)} isEditing={!!isEditing} /></span>
-                    )}
                     <span className="font-normal opacity-70 whitespace-nowrap">
                       {fixedEdu.status ? <>{' '}- <EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <>{' '}- <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /></> : null)}
                     </span>
