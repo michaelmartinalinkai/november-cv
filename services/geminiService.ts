@@ -219,7 +219,12 @@ Een bullet van 5 woorden of minder is PER DEFINITIE onvolledig. ALTIJD uitbouwen
 ❌ "Coördineren;" → ✅ "Coördineren van de dagelijkse werkzaamheden en bewaken van de voortgang binnen het team;"
 ❌ "Begeleiden van cliënten;" → ✅ "Begeleiden van cliënten bij het bereiken van persoonlijke doelen conform het ondersteuningsplan;"
 
-OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.`;
+OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarheid, opleidingen.
+
+🚨 SCHOOL VELD VERPLICHT BEWAREN:
+Het "school" veld in education MOET altijd worden overgenomen uit de input.
+Als input school: "Hogeschool InHolland" heeft, moet output dat ook hebben. Nooit weglaten.
+Als er geen school in de input staat, gebruik dan een lege string "".`;
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;

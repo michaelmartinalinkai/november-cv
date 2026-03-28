@@ -668,7 +668,7 @@ export const CV_SCHEMA: Schema = {
           school: { type: Type.STRING, description: "Naam van de onderwijsinstelling, bijv. ROC Flevoland of Universiteit van Amsterdam" },
           plaats: { type: Type.STRING, description: "Vestigingsplaats van de onderwijsinstelling, bijv. Almere of Rotterdam" },
         },
-        required: ["period", "degree", "status"],
+        required: ["period", "degree", "status", "school"],
       },
     },
     courses: {
