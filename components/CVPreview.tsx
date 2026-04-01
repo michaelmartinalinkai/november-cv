@@ -292,7 +292,15 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 parts.push(`SKJ-Registratie: ${skj}`);
                 if (isValid(data.personalInfo?.skjDate)) parts.push(`Afgegeven op ${data.personalInfo!.skjDate}`);
               }
-              return parts.join(' | ') || "Niet gespecificeerd | Niet gespecificeerd uur per week | SKJ-Registratie: Niet gespecificeerd";
+              return (
+                <span style={{ display: 'flex', flexWrap: 'wrap', gap: '0 0', lineHeight: 1.5 }}>
+                  {parts.map((part, i) => (
+                    <span key={i} style={{ whiteSpace: 'nowrap' }}>
+                      {part}{i < parts.length - 1 && <span style={{ margin: '0 4px' }}>|</span>}
+                    </span>
+                  ))}
+                </span>
+              );
             })()
           )}
         </div>
