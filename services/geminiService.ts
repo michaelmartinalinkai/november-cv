@@ -125,7 +125,7 @@ export class GeminiService {
     });
 
     const response = await this.generateWithRetry(ai, {
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: { parts },
       config: {
         systemInstruction: EXTRACT_SYSTEM_INSTRUCTION,
@@ -237,7 +237,7 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
     try {
       console.log("Calling ai.models.generateContent...");
       const response = await this.generateWithRetry(ai, {
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         contents: { parts },
         config: {
           systemInstruction: instruction,
