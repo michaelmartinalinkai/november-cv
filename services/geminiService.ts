@@ -311,7 +311,7 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
     const bullets = text
       .split('\n')
       .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
-      .filter((l: string) => l.length > 5);
+      .filter((l: string) => l.length > 2);
 
     return { bullets };
   }

@@ -254,7 +254,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         bullets: job.bullets,
       });
       if (result.bullets.length > 0) {
-        onChange(['experience', expIdx, 'bullets'], result.bullets);
+        const newData = JSON.parse(JSON.stringify(data));
+        newData.experience[expIdx].bullets = result.bullets;
+        onChange(newData);
       }
     } catch (e) {
       console.error('Regenerate failed', e);
