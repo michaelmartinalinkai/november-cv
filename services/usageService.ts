@@ -71,6 +71,38 @@ class UsageService {
     }
   }
 
+  // ─── POST: record a regenerate (per-job rewrite) ────────────────────────────
+  public async recordRegenerate(
+    cvId: string,
+    candidateName: string,
+    jobRole: string
+  ): Promise<boolean> {
+    const url = this.getTrackingUrl();
+    if (!url) return false;
+
+    const adminUser = this.getAdminUser() || 'Onbekend';
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'regenerate',
+          event_id: crypto.randomUUID(),
+          cv_id: cvId,
+          file_name: jobRole,
+          candidate_name: candidateName,
+          admin_user: adminUser,
+        }),
+        mode: 'no-cors',
+      });
+      return true;
+    } catch (e) {
+      console.error('Failed to record regenerate:', e);
+      return false;
+    }
+  }
+
   // ─── GET: live from Google Sheets ────────────────────────────────────────────
   public async fetchLiveSummary(): Promise<{ summary: UsageSummary[]; total: number }> {
     const url = this.getTrackingUrl();

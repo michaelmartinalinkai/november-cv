@@ -3,6 +3,7 @@ import { ParsedCV } from '../types';
 import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
 import { EditableText } from './EditableText';
 import { geminiService } from '../services/geminiService';
+import { usageService } from '../services/usageService';
 
 interface CVPreviewProps {
   data: ParsedCV;
@@ -257,6 +258,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         const newData = JSON.parse(JSON.stringify(data));
         newData.experience[expIdx].bullets = result.bullets;
         onChange(newData);
+        usageService.recordRegenerate(
+          data.personalInfo?.name || 'unknown',
+          data.personalInfo?.name || 'Onbekend',
+          job.role
+        );
       }
     } catch (e) {
       console.error('Regenerate failed', e);
