@@ -2,6 +2,7 @@ import React, { useRef, useState, useLayoutEffect } from 'react';
 import { ParsedCV } from '../types';
 import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
 import { EditableText } from './EditableText';
+import { geminiService } from '../services/geminiService';
 
 interface CVPreviewProps {
   data: ParsedCV;
@@ -202,6 +203,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const footerRef = useRef<HTMLDivElement>(null);
   const pageHeightRef = useRef<HTMLDivElement>(null);        // hidden 297mm reference
   const [spacerHeight, setSpacerHeight] = useState(0);
+  const [regeneratingIdx, setRegeneratingIdx] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     if (!data) return; // guard inside effect — hooks must always be called
@@ -239,6 +241,27 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const rawTags = data.analysis?.tags || [];
   const displaySkills = [...rawTags.slice(0, 5)];
   while (displaySkills.length < 5) displaySkills.push("Professional");
+
+  const handleRegenerateJob = async (expIdx: number) => {
+    if (!data?.experience) return;
+    const job = data.experience[expIdx];
+    setRegeneratingIdx(expIdx);
+    try {
+      const result = await geminiService.regenerateJob({
+        period: job.period,
+        employer: job.employer,
+        role: job.role,
+        bullets: job.bullets,
+      });
+      if (result.bullets.length > 0) {
+        onChange(['experience', expIdx, 'bullets'], result.bullets);
+      }
+    } catch (e) {
+      console.error('Regenerate failed', e);
+    } finally {
+      setRegeneratingIdx(null);
+    }
+  };
 
   const handleEdit = (path: (string | number)[], value: string) => {
     if (!onChange) return;
@@ -759,6 +782,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                         }}
                         className="text-[10px] text-red-400 hover:text-red-600"
                       >✕ verwijder functie</button>
+                      <button
+                        onClick={() => handleRegenerateJob(originalIdx)}
+                        disabled={regeneratingIdx === originalIdx}
+                        className={`text-[10px] px-2 py-0.5 rounded font-medium ${regeneratingIdx === originalIdx ? 'bg-orange-200 text-orange-400 cursor-wait' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'}`}
+                      >{regeneratingIdx === originalIdx ? '⟳ herschrijven...' : '↺ herschrijf bullets'}</button>
                     </div>
                   )}
                 </div>

@@ -282,6 +282,39 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
       throw error;
     }
   }
+
+  async regenerateJob(job: { period: string; employer: string; role: string; bullets: string[] }): Promise<{ bullets: string[] }> {
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
+    const bulletList = job.bullets.map((b, i) => (i + 1) + '. ' + b).join('\n');
+    const prompt = 'JE ENIGE TAAK IS HERSCHRIJVEN. ELKE BULLET OPNIEUW SCHRIJVEN.\n\n'
+      + 'Je ontvangt één werkervaring. Herschrijf ALLE bullets naar Novémber-stijl.\n\n'
+      + 'FUNCTIE: ' + job.role + '\n'
+      + 'WERKGEVER: ' + job.employer + '\n'
+      + 'PERIODE: ' + job.period + '\n\n'
+      + 'ORIGINELE BULLETS:\n' + bulletList + '\n\n'
+      + 'REGELS:\n'
+      + '- Herschrijf ELKE bullet — nooit letterlijk overnemen\n'
+      + '- Begin elke bullet met een INFINITIEF werkwoord\n'
+      + '- Voeg context toe: binnen / conform / gericht op / in afstemming met\n'
+      + '- Behoud het AANTAL bullets — geen bullets weglaten\n'
+      + '- Elke bullet eindigt op puntkomma (;) — de LAATSTE op punt (.)\n'
+      + '- Corrigeer spel- en grammaticafouten\n'
+      + '- Output ALLEEN de herschreven bullets als genummerde lijst (1. 2. 3. ...)';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.5 }
+    });
+
+    const text = response.text || '';
+    const bullets = text
+      .split('\n')
+      .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
+      .filter((l: string) => l.length > 5);
+
+    return { bullets };
+  }
 }
 
 export const geminiService = new GeminiService();
