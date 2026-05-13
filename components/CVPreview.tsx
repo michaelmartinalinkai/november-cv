@@ -281,7 +281,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
               const parts: string[] = [];
               const avail = (data.personalInfo!.availability! || '').trim();
-              const availStr = /^per/i.test(avail) ? `Beschikbaar ${avail}` : `Beschikbaar per ${avail}`;
+              const isDirect = /^direct$/i.test(avail) || /^per\s+direct$/i.test(avail);
+              const availStr = isDirect ? 'Per direct beschikbaar' : `Beschikbaar per ${avail}`;
               parts.push(isValid(data.personalInfo?.availability) ? availStr : 'Beschikbaar op aanvraag');
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;

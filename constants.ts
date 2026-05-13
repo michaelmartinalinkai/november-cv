@@ -104,6 +104,21 @@ BULLETS — AANVULLENDE REGELS:
   ❌ "Zowel face-to-face als telefonisch contact hebben met klanten;"
   ✅ "Onderhouden van klantcontact via persoonlijke gesprekken, telefoon en e-mail;"
 
+🚨 HARDE REGEL — BULLETS NOOIT VERWIJDEREN:
+- Het aantal bullets in de output MOET minimaal gelijk zijn aan het aantal bullets in de bron.
+- NOOIT bullets weglaten, samenvoegen of inkorten tenzij de betekenis 100% identiek is.
+- Als de bron 8 bullets heeft, moet de output minimaal 8 bullets hebben.
+- Controleer voor elke functie: tel de bronbullets, tel de outputbullets — ze moeten overeenkomen.
+- Een bullet mag alleen worden samengevoegd als hij exact hetzelfde zegt als een andere bullet.
+- Bij twijfel: houd beide bullets apart.
+
+🚨 HARDE REGEL — CHRONOLOGISCHE VOLGORDE:
+- Werkervaring ALTIJD gesorteerd van meest recent naar oudst, op basis van STARTDATUM.
+- Kijk naar het jaar (en maand indien beschikbaar) van de startdatum.
+- De meest recente functie staat BOVENAAN, de oudste ONDERAAN.
+- Verander de datums NOOIT — alleen de volgorde van de functies.
+- Controleer de volgorde altijd opnieuw voor je de output teruggeeft.
+
 OPLEIDINGEN EXTRACTIE (CRUCIAAL):
 
 WAT HOORT WAAR — HARDE SCHEIDING:
