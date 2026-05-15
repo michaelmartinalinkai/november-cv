@@ -310,12 +310,12 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
 
-  // ORANGE SEPARATOR
+  // ORANGE SEPARATOR (matches CSS: #f27f61, full width, 1pt thin)
   orangeSep: {
-    height: 2,
-    backgroundColor: COLOR_ORANGE_SEP,
-    marginVertical: 14,
-    width: '40%',
+    height: 1,
+    backgroundColor: COLOR_TAG_ORANGE,
+    marginVertical: 18,
+    width: '100%',
   },
 
   // REFERENCES
