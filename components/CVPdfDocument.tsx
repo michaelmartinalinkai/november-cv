@@ -4,15 +4,16 @@ import { ParsedCV } from '../types';
 
 // ─── FONT REGISTRATION ───────────────────────────────────────────────────────
 // IMPORTANT: Use .ttf (not .woff) to avoid character-drop bugs in @react-pdf
+const FONT_BASE = (typeof window !== 'undefined' ? window.location.origin : '') + '/fonts/';
+
 Font.register({
   family: 'Garet',
   fonts: [
-    { src: '/fonts/Garet-Book.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Garet-Bold.ttf', fontWeight: 'bold' },
+    { src: FONT_BASE + 'Garet-Book.ttf', fontWeight: 'normal' },
+    { src: FONT_BASE + 'Garet-Bold.ttf', fontWeight: 'bold' },
   ],
 });
 
-// Disable hyphenation (otherwise long Dutch words get hyphenated mid-line)
 Font.registerHyphenationCallback(word => [word]);
 
 // ─── COLORS ──────────────────────────────────────────────────────────────────
@@ -23,6 +24,10 @@ const COLOR_ORANGE_SEP = '#FF6B35';
 const COLOR_BLACK = '#000000';
 const COLOR_WHITE = '#FFFFFF';
 const COLOR_GREY = '#666666';
+
+// ─── ASSET URLs ──────────────────────────────────────────────────────────────
+const LOGO_PNG = (typeof window !== 'undefined' ? window.location.origin : '') + '/logo.png';
+const ARROW_PNG = (typeof window !== 'undefined' ? window.location.origin : '') + '/logo-footer.png';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
     paddingTop: 0,
-    paddingBottom: 80, // Reserve space for fixed footer
+    paddingBottom: 90, // Reserve space for fixed footer (80) + small gap
   },
 
   // HEADER
@@ -135,6 +140,7 @@ const styles = StyleSheet.create({
   headerLeft: {
     flex: 1,
     justifyContent: 'center',
+    paddingRight: 20,
   },
   headerName: {
     fontSize: 30,
@@ -160,6 +166,7 @@ const styles = StyleSheet.create({
   headerLogo: {
     width: 60,
     height: 60,
+    objectFit: 'contain',
   },
 
   // BODY
@@ -199,7 +206,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
-  // SECTION TITLE (lime green bar with black text)
+  // SECTION TITLE (lime green bar)
   sectionTitleWrap: {
     alignSelf: 'flex-start',
     backgroundColor: COLOR_LIME,
@@ -241,15 +248,17 @@ const styles = StyleSheet.create({
   expBlock: {
     marginBottom: 12,
   },
+  expHeaderWrap: {
+    marginBottom: 4,
+  },
   expPeriod: {
     fontSize: 9.5,
     color: COLOR_GREY,
     marginBottom: 1,
   },
-  expHeader: {
+  expHeaderRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 4,
   },
   expEmployer: {
     fontSize: 9.5,
@@ -312,44 +321,38 @@ const styles = StyleSheet.create({
     color: COLOR_GREY,
   },
 
-  // FIXED FOOTER (renders on every page)
+  // FIXED FOOTER (renders on every page) — matches CSS design: dark green band + lime stripes + arrow image
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 50,
+    height: 56,
     backgroundColor: COLOR_DARK_GREEN,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 40,
   },
   footerLimeBarLeft: {
     position: 'absolute',
     left: 0,
-    top: '50%',
-    height: 8,
-    width: '64%',
+    top: 28,
+    height: 9,
+    width: '65%',
     backgroundColor: COLOR_LIME,
-    marginTop: -4,
   },
   footerLimeBarRight: {
     position: 'absolute',
     right: 0,
-    top: '50%',
-    height: 8,
+    top: 28,
+    height: 9,
     width: '24%',
     backgroundColor: COLOR_LIME,
-    marginTop: -4,
   },
-  footerBrand: {
-    color: COLOR_WHITE,
-    fontSize: 8,
-    fontWeight: 'bold',
-    letterSpacing: 2,
+  footerArrow: {
     position: 'absolute',
-    bottom: 6,
-    right: 40,
+    left: '67%',
+    top: 14,
+    width: 28,
+    height: 28,
+    objectFit: 'contain',
   },
 });
 
@@ -379,8 +382,8 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
         {/* Fixed Footer — renders on every page */}
         <View style={styles.footer} fixed>
           <View style={styles.footerLimeBarLeft} />
+          <Image src={ARROW_PNG} style={styles.footerArrow} />
           <View style={styles.footerLimeBarRight} />
-          <Text style={styles.footerBrand}>NOVÉMBER. RECRUITMENT</Text>
         </View>
 
         {/* HEADER (only on first page) */}
@@ -396,6 +399,7 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
               ))}
             </View>
           </View>
+          <Image src={LOGO_PNG} style={styles.headerLogo} />
         </View>
 
         <View style={styles.body}>
@@ -424,7 +428,7 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
                 const { start, end } = splitPeriod(edu.period);
                 const periodStr = end ? `${yearOnly(start)} - ${yearOnly(end)}` : yearOnly(start);
                 return (
-                  <View key={i} style={styles.eduRow}>
+                  <View key={i} style={styles.eduRow} wrap={false}>
                     <Text style={styles.eduPeriod}>{periodStr}</Text>
                     <Text style={styles.eduContent}>
                       {edu.degree}
@@ -444,7 +448,7 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
               {data.courses.map((c, i) => {
                 const period = c.period ? formatDateToNumbers(c.period) : '';
                 return (
-                  <View key={i} style={styles.eduRow}>
+                  <View key={i} style={styles.eduRow} wrap={false}>
                     <Text style={styles.eduPeriod}>{period}</Text>
                     <Text style={styles.eduContent}>
                       {stripCoursePrefix(c.title)}
@@ -468,17 +472,21 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
                   role = role.replace(new RegExp(`^${escaped}\\s*\\|?\\s*`, 'i'), '').trim();
                 }
                 return (
-                  <View key={i} style={styles.expBlock} wrap={false} break={!!exp.pageBreakBefore && i > 0}>
-                    <Text style={styles.expPeriod}>{formatDateToNumbers(exp.period)}</Text>
-                    <View style={styles.expHeader}>
-                      <Text style={styles.expEmployer}>{exp.employer}</Text>
-                      {role && (
-                        <>
-                          <Text style={styles.expSep}>|</Text>
-                          <Text style={styles.expRole}>{role.toUpperCase()}</Text>
-                        </>
-                      )}
+                  <View key={i} style={styles.expBlock} break={!!exp.pageBreakBefore && i > 0}>
+                    {/* period + employer + role MUST stay together */}
+                    <View style={styles.expHeaderWrap} wrap={false}>
+                      <Text style={styles.expPeriod}>{formatDateToNumbers(exp.period)}</Text>
+                      <View style={styles.expHeaderRow}>
+                        <Text style={styles.expEmployer}>{exp.employer}</Text>
+                        {role && (
+                          <>
+                            <Text style={styles.expSep}>|</Text>
+                            <Text style={styles.expRole}>{role.toUpperCase()}</Text>
+                          </>
+                        )}
+                      </View>
                     </View>
+                    {/* bullets — each can break across pages if needed, but a single bullet stays whole */}
                     {(exp.bullets || []).map((bullet, bi) => {
                       const clean = (bullet || '').trim().replace(/[.;]+$/, '');
                       const suffix = bi === exp.bullets.length - 1 ? '.' : ';';
