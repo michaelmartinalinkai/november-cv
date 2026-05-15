@@ -122,16 +122,18 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 0,
-    paddingBottom: 90, // Reserve space for fixed footer (80) + small gap
+    paddingTop: 30, // Top breathing room on every page; header negates this on page 1 with negative margin
+    paddingBottom: 90, // Reserve space for fixed footer (56) + safety gap
   },
 
-  // HEADER
+  // HEADER (bleeds past page padding to touch edges on page 1)
   header: {
     backgroundColor: COLOR_DARK_GREEN,
     color: COLOR_WHITE,
     paddingHorizontal: 40,
     paddingVertical: 28,
+    marginTop: -30,
+    marginHorizontal: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -379,13 +381,6 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Fixed Footer — renders on every page */}
-        <View style={styles.footer} fixed>
-          <View style={styles.footerLimeBarLeft} />
-          <Image src={ARROW_PNG} style={styles.footerArrow} />
-          <View style={styles.footerLimeBarRight} />
-        </View>
-
         {/* HEADER (only on first page) */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -550,6 +545,13 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
               </View>
             </>
           )}
+        </View>
+
+        {/* Fixed Footer — renders on every page at bottom */}
+        <View style={styles.footer} fixed>
+          <View style={styles.footerLimeBarLeft} />
+          <Image src={ARROW_PNG} style={styles.footerArrow} />
+          <View style={styles.footerLimeBarRight} />
         </View>
       </Page>
     </Document>
