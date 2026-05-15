@@ -199,8 +199,15 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                           const parts: string[] = [];
                           if (isValid(data.personalInfo.availability)) {
                             const avail = (data.personalInfo.availability || '').trim();
-                            const isDirect = /^direct$/i.test(avail) || /^per[ ]+direct$/i.test(avail);
-                            const availStr = isDirect ? 'Per direct beschikbaar' : `Beschikbaar per ${avail}`;
+                            const lowerAvail = avail.toLowerCase().trim();
+                            let availStr: string;
+                            if (lowerAvail.includes('direct')) {
+                              availStr = 'Per direct beschikbaar';
+                            } else if (lowerAvail.includes('beschikbaar')) {
+                              availStr = avail;
+                            } else {
+                              availStr = `Beschikbaar per ${avail}`;
+                            }
                             parts.push(availStr);
                           } else {
                             parts.push('Beschikbaar op aanvraag');
