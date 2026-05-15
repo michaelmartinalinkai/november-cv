@@ -122,18 +122,16 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 30, // Top breathing room on every page; header negates this on page 1 with negative margin
+    paddingTop: 30, // Breathing room on every page (including page 1 above header)
     paddingBottom: 90, // Reserve space for fixed footer (56) + safety gap
   },
 
-  // HEADER (bleeds past page padding to touch edges on page 1)
+  // HEADER (touches edges on page 1)
   header: {
     backgroundColor: COLOR_DARK_GREEN,
     color: COLOR_WHITE,
     paddingHorizontal: 40,
     paddingVertical: 28,
-    marginTop: -30,
-    marginHorizontal: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
