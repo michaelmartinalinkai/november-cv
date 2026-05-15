@@ -9,6 +9,8 @@ import { UsageModal } from './components/UsageModal';
 import { geminiService, CVInput } from './services/geminiService';
 import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
+import { CVPdfDocument } from './components/CVPdfDocument';
+import { pdf } from '@react-pdf/renderer';
 import { BatchItem, ParsedCV } from './types';
 import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
 import * as mammoth from 'mammoth';
@@ -248,11 +250,11 @@ const App: React.FC = () => {
         // Record conversion for DOCX
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`, data.personalInfo?.name || 'Onbekend');
       } else {
-        const prevTitle = document.title;
-        document.title = fileNameBase;
-        window.print();
-        document.title = prevTitle;
-        // Record conversion for PDF (print)
+        // Generate real text-searchable PDF using @react-pdf/renderer
+        // This produces ATS-readable PDFs with selectable text (not rasterized)
+        const blob = await pdf(<CVPdfDocument data={data} />).toBlob();
+        saveAs(blob, `${fileNameBase}.pdf`);
+        // Record conversion for PDF
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`, data.personalInfo?.name || 'Onbekend');
       }
 

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@google/genai": "1.32.0",
+    "@react-pdf/renderer": "^4.5.1",
     "clsx": "2.1.1",
     "docx": "9.5.1",
     "file-saver": "2.0.5",
