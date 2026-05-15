@@ -207,14 +207,19 @@ const styles = StyleSheet.create({
   },
   tag: {
     backgroundColor: COLOR_TAG_ORANGE,
-    color: COLOR_WHITE,
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 999,
+    minWidth: 130,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tagText: {
+    color: COLOR_WHITE,
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
-    minWidth: 130,
+    lineHeight: 1,
   },
 
   // SECTION TITLE (lime green bar)
@@ -314,7 +319,8 @@ const styles = StyleSheet.create({
   orangeSep: {
     height: 1,
     backgroundColor: COLOR_TAG_ORANGE,
-    marginVertical: 18,
+    marginTop: 8,
+    marginBottom: 14,
     width: '100%',
   },
 
@@ -413,12 +419,20 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
               <Text style={styles.tagsTitle}>WAAR DEZE PROFESSIONAL STERK IN IS</Text>
               {tagsRow1.length > 0 && (
                 <View style={styles.tagsRow}>
-                  {tagsRow1.map((t, i) => <Text key={i} style={styles.tag}>{t}</Text>)}
+                  {tagsRow1.map((t, i) => (
+                    <View key={i} style={styles.tag}>
+                      <Text style={styles.tagText}>{t}</Text>
+                    </View>
+                  ))}
                 </View>
               )}
               {tagsRow2.length > 0 && (
                 <View style={styles.tagsRow}>
-                  {tagsRow2.map((t, i) => <Text key={i} style={styles.tag}>{t}</Text>)}
+                  {tagsRow2.map((t, i) => (
+                    <View key={i} style={styles.tag}>
+                      <Text style={styles.tagText}>{t}</Text>
+                    </View>
+                  ))}
                 </View>
               )}
             </View>
