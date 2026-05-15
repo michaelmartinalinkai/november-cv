@@ -215,7 +215,8 @@ const styles = StyleSheet.create({
   tag: {
     backgroundColor: COLOR_TAG_ORANGE,
     paddingHorizontal: 20,
-    paddingVertical: 7,
+    paddingTop: 8,
+    paddingBottom: 6, // less bottom because @react-pdf baseline sits low; more top pushes text into visual center
     borderRadius: 999,
     minWidth: 130,
     alignItems: 'center',
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
-    lineHeight: 1,
+    lineHeight: 1.2,
     textTransform: 'uppercase',
   },
 
