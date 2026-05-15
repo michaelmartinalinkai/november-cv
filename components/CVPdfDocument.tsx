@@ -3,227 +3,41 @@ import { Document, Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/
 import { ParsedCV } from '../types';
 
 // ─── FONT REGISTRATION ───────────────────────────────────────────────────────
-// Garet font (local) — used for body text
+// IMPORTANT: Use .ttf (not .woff) to avoid character-drop bugs in @react-pdf
 Font.register({
   family: 'Garet',
   fonts: [
-    { src: `${window.location.origin}/fonts/Garet-Book.woff`, fontWeight: 'normal' },
-    { src: `${window.location.origin}/fonts/Garet-Bold.woff`, fontWeight: 'bold' },
+    { src: '/fonts/Garet-Book.ttf', fontWeight: 'normal' },
+    { src: '/fonts/Garet-Bold.ttf', fontWeight: 'bold' },
   ],
 });
 
-// Helmet font fallback for "Agrandir" since Agrandir is not freely available
-// Using a similar sans-serif fallback that comes with @react-pdf
-Font.register({
-  family: 'Helvetica',
-  src: 'Helvetica',
-});
-
-// Disable hyphenation
+// Disable hyphenation (otherwise long Dutch words get hyphenated mid-line)
 Font.registerHyphenationCallback(word => [word]);
 
 // ─── COLORS ──────────────────────────────────────────────────────────────────
-const COLOR_DARK_GREEN = '#1E3A35';
+const COLOR_DARK_GREEN = '#284d32';
 const COLOR_LIME = '#e3fd01';
-const COLOR_ORANGE = '#FF6B35';
+const COLOR_TAG_ORANGE = '#f27f61';
+const COLOR_ORANGE_SEP = '#FF6B35';
 const COLOR_BLACK = '#000000';
 const COLOR_WHITE = '#FFFFFF';
 const COLOR_GREY = '#666666';
-const COLOR_LIGHT_GREY = '#999999';
 
-// ─── STYLES ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: 'Garet',
-    fontSize: 9,
-    color: COLOR_BLACK,
-    backgroundColor: COLOR_WHITE,
-    padding: 0,
-  },
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-  // Header
-  header: {
-    backgroundColor: COLOR_DARK_GREEN,
-    color: COLOR_WHITE,
-    padding: 24,
-    marginBottom: 0,
-  },
-  headerName: {
-    fontFamily: 'Helvetica',
-    fontWeight: 'bold',
-    fontSize: 28,
-    color: COLOR_WHITE,
-    marginBottom: 6,
-  },
-  headerSubtitle: {
-    fontSize: 10,
-    color: COLOR_LIME,
-    fontWeight: 'normal',
-    lineHeight: 1.5,
-  },
-
-  // Body sections
-  body: {
-    padding: 24,
-  },
-
-  // Section titles (lime green background bar)
-  sectionTitle: {
-    backgroundColor: COLOR_LIME,
-    color: COLOR_BLACK,
-    fontFamily: 'Helvetica',
-    fontWeight: 'bold',
-    fontSize: 11,
-    padding: '4 8',
-    marginBottom: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    alignSelf: 'flex-start',
-  },
-
-  // Tags (analysis)
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 16,
-  },
-  tag: {
-    backgroundColor: COLOR_LIME,
-    color: COLOR_BLACK,
-    padding: '3 8',
-    fontSize: 9,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // Orange separator line
-  separator: {
-    borderBottomWidth: 1.5,
-    borderBottomColor: COLOR_ORANGE,
-    marginVertical: 12,
-  },
-
-  // Education / Course rows
-  row: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  rowPeriod: {
-    width: 100,
-    fontSize: 9,
-    color: COLOR_GREY,
-  },
-  rowContent: {
-    flex: 1,
-    fontSize: 9,
-    color: COLOR_BLACK,
-  },
-  rowContentSecondary: {
-    fontSize: 9,
-    color: COLOR_GREY,
-  },
-
-  // Experience block
-  expBlock: {
-    marginBottom: 14,
-  },
-  expHeader: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  expPeriod: {
-    width: 100,
-    fontSize: 9,
-    color: COLOR_GREY,
-  },
-  expDetails: {
-    flex: 1,
-  },
-  expEmployer: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: COLOR_BLACK,
-    marginBottom: 2,
-  },
-  expRole: {
-    fontSize: 9,
-    color: COLOR_GREY,
-    marginBottom: 6,
-  },
-  bullet: {
-    flexDirection: 'row',
-    marginBottom: 2,
-    paddingLeft: 8,
-  },
-  bulletDot: {
-    width: 8,
-    fontSize: 9,
-    color: COLOR_BLACK,
-  },
-  bulletText: {
-    flex: 1,
-    fontSize: 9,
-    color: COLOR_BLACK,
-    lineHeight: 1.4,
-  },
-
-  // Systeemkennis / Talenkennis
-  twoCol: {
-    flexDirection: 'row',
-    gap: 24,
-  },
-  col: {
-    flex: 1,
-  },
-  colItem: {
-    fontSize: 9,
-    color: COLOR_BLACK,
-    marginBottom: 2,
-  },
-
-  // References
-  refBlock: {
-    marginBottom: 8,
-  },
-  refName: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: COLOR_BLACK,
-  },
-  refContact: {
-    fontSize: 9,
-    color: COLOR_GREY,
-  },
-
-  // Footer
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLOR_DARK_GREEN,
-    color: COLOR_WHITE,
-    padding: 8,
-    fontSize: 8,
-    textAlign: 'center',
-  },
-});
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-const isValid = (v?: string | null): boolean =>
-  !!v && v.trim() !== '' &&
-  !v.toLowerCase().includes('niet gespecificeerd') &&
-  !v.toLowerCase().includes('onbekend');
+const toTitleCase = (str: string) => {
+  if (!str) return str;
+  return str.replace(/\b\w+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+};
 
 const formatDateToNumbers = (text: string): string => {
   if (!text) return text;
   const monthMap: Record<string, string> = {
     'januari': '01', 'februari': '02', 'maart': '03', 'april': '04', 'mei': '05', 'juni': '06',
     'juli': '07', 'augustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'december': '12',
-    'jan': '01', 'feb': '02', 'mrt': '03', 'mar': '03', 'apr': '04', 'jun': '06', 'jul': '07',
-    'aug': '08', 'sep': '09', 'sept': '09', 'okt': '10', 'oct': '10', 'nov': '11', 'dec': '12',
+    'jan': '01', 'feb': '02', 'mrt': '03', 'apr': '04', 'jun': '06', 'jul': '07',
+    'aug': '08', 'sep': '09', 'sept': '09', 'okt': '10', 'nov': '11', 'dec': '12',
   };
   let result = text.replace(/\s*[–—]\s*/g, ' - ');
   result = result.replace(/([a-zA-Z]+)'?\s+(\d{4})/g, (match, monthStr, yearStr) => {
@@ -246,176 +60,488 @@ const parsePeriodStart = (period: string): number => {
   return 0;
 };
 
-// ─── HEADER SUBTITLE LINE ────────────────────────────────────────────────────
-const buildHeaderSubtitle = (data: ParsedCV): string => {
+const parsePeriodEnd = (period: string): number => {
+  if (!period) return 0;
+  const p = formatDateToNumbers(period);
+  const matches = [...p.matchAll(/(\d{2})\/(\d{4})/g)];
+  if (matches.length > 0) {
+    const last = matches[matches.length - 1];
+    return parseInt(last[2]) * 100 + parseInt(last[1]);
+  }
+  const yearMatches = [...p.matchAll(/(\d{4})/g)];
+  if (yearMatches.length > 0) {
+    return parseInt(yearMatches[yearMatches.length - 1][1]) * 100;
+  }
+  return 0;
+};
+
+const yearOnly = (s: string): string => {
+  if (!s) return '';
+  const m = s.match(/\d{4}/);
+  return m ? m[0] : s.trim();
+};
+
+const splitPeriod = (period: string): { start: string; end: string } => {
+  if (!period) return { start: '', end: '' };
+  const parts = formatDateToNumbers(period).split(/\s*-\s*/);
+  return { start: parts[0] || '', end: parts[1] || '' };
+};
+
+const stripCoursePrefix = (title: string): string => {
+  if (!title) return title;
+  return title.replace(/^(Training|Cursus|Leergang|Workshop)\s+/i, '').trim();
+};
+
+const buildHeaderSubtitle = (data: ParsedCV): string[] => {
+  const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
   const parts: string[] = [];
   const avail = (data.personalInfo?.availability || '').trim();
   const isDirect = /^direct$/i.test(avail) || /^per\s+direct$/i.test(avail);
-  if (isValid(avail)) {
-    parts.push(isDirect ? 'Per direct beschikbaar' : `Beschikbaar per ${avail}`);
-  } else {
-    parts.push('Beschikbaar op aanvraag');
-  }
+  const availStr = isDirect ? 'Per direct beschikbaar' : `Beschikbaar per ${avail}`;
+  parts.push(isValid(data.personalInfo?.availability) ? availStr : 'Beschikbaar op aanvraag');
   if (isValid(data.personalInfo?.hours)) {
     const h = data.personalInfo!.hours!;
-    parts.push(h.includes('uur per week') ? h : `${h} uur per week`);
+    parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
   }
   if (isValid(data.personalInfo?.skj)) {
     parts.push(`SKJ-Registratie: ${data.personalInfo!.skj}`);
-    if (isValid(data.personalInfo?.skjDate)) {
-      parts.push(`Afgegeven op ${data.personalInfo!.skjDate}`);
-    }
+    if (isValid(data.personalInfo?.skjDate)) parts.push(`Afgegeven op ${data.personalInfo!.skjDate}`);
   }
-  return parts.join('  |  ');
+  return parts;
 };
 
-// ─── DOCUMENT ────────────────────────────────────────────────────────────────
-interface Props {
-  data: ParsedCV;
-}
+// ─── STYLES ──────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  page: {
+    fontFamily: 'Garet',
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+    backgroundColor: COLOR_WHITE,
+    paddingTop: 0,
+    paddingBottom: 80, // Reserve space for fixed footer
+  },
+
+  // HEADER
+  header: {
+    backgroundColor: COLOR_DARK_GREEN,
+    color: COLOR_WHITE,
+    paddingHorizontal: 40,
+    paddingVertical: 28,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 130,
+  },
+  headerLeft: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerName: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: COLOR_WHITE,
+    letterSpacing: -0.6,
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 9,
+    color: COLOR_LIME,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    lineHeight: 1.5,
+  },
+  headerSubtitlePart: {
+    color: COLOR_LIME,
+  },
+  headerSubtitleSep: {
+    color: COLOR_LIME,
+    marginHorizontal: 3,
+  },
+  headerLogo: {
+    width: 60,
+    height: 60,
+  },
+
+  // BODY
+  body: {
+    paddingHorizontal: 40,
+    paddingTop: 20,
+  },
+
+  // TAGS SECTION
+  tagsSection: {
+    marginBottom: 18,
+    alignItems: 'center',
+  },
+  tagsTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLOR_BLACK,
+    textAlign: 'center',
+    marginBottom: 10,
+    letterSpacing: 0.5,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  tag: {
+    backgroundColor: COLOR_TAG_ORANGE,
+    color: COLOR_WHITE,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 999,
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    minWidth: 100,
+  },
+
+  // SECTION TITLE (lime green bar with black text)
+  sectionTitleWrap: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLOR_LIME,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLOR_BLACK,
+    letterSpacing: 0.3,
+  },
+
+  section: {
+    marginBottom: 16,
+  },
+
+  // EDUCATION / COURSES rows
+  eduRow: {
+    flexDirection: 'row',
+    marginBottom: 2,
+  },
+  eduPeriod: {
+    width: 80,
+    fontSize: 9.5,
+    color: COLOR_GREY,
+  },
+  eduContent: {
+    flex: 1,
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+  },
+  eduSchool: {
+    color: COLOR_GREY,
+  },
+
+  // WORK EXPERIENCE
+  expBlock: {
+    marginBottom: 12,
+  },
+  expPeriod: {
+    fontSize: 9.5,
+    color: COLOR_GREY,
+    marginBottom: 1,
+  },
+  expHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 4,
+  },
+  expEmployer: {
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+  },
+  expSep: {
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+    marginHorizontal: 3,
+  },
+  expRole: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLOR_BLACK,
+    textTransform: 'uppercase',
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    marginBottom: 1,
+    paddingLeft: 4,
+  },
+  bulletDot: {
+    fontSize: 9.5,
+    marginRight: 4,
+    color: COLOR_BLACK,
+  },
+  bulletText: {
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+    flex: 1,
+    lineHeight: 1.35,
+  },
+
+  // SYSTEMS / LANGUAGES
+  pipeText: {
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+    paddingLeft: 4,
+  },
+
+  // ORANGE SEPARATOR
+  orangeSep: {
+    height: 2,
+    backgroundColor: COLOR_ORANGE_SEP,
+    marginVertical: 14,
+    width: '40%',
+  },
+
+  // REFERENCES
+  refBlock: {
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
+  refMain: {
+    fontSize: 9.5,
+    color: COLOR_BLACK,
+  },
+  refSecondary: {
+    fontSize: 9.5,
+    color: COLOR_GREY,
+  },
+
+  // FIXED FOOTER (renders on every page)
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 50,
+    backgroundColor: COLOR_DARK_GREEN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  footerLimeBarLeft: {
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    height: 8,
+    width: '64%',
+    backgroundColor: COLOR_LIME,
+    marginTop: -4,
+  },
+  footerLimeBarRight: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    height: 8,
+    width: '24%',
+    backgroundColor: COLOR_LIME,
+    marginTop: -4,
+  },
+  footerBrand: {
+    color: COLOR_WHITE,
+    fontSize: 8,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    position: 'absolute',
+    bottom: 6,
+    right: 40,
+  },
+});
+
+// ─── COMPONENT ────────────────────────────────────────────────────────────────
+
+interface Props { data: ParsedCV; }
 
 export const CVPdfDocument: React.FC<Props> = ({ data }) => {
+  const subtitleParts = buildHeaderSubtitle(data);
+  const tags = (data.analysis?.tags || []).slice(0, 5);
+  const tagsRow1 = tags.slice(0, 3);
+  const tagsRow2 = tags.slice(3, 5);
+
+  // Sort education by most recent end-date, experience by most recent start-date
+  const sortedEducation = [...(data.education || [])].sort(
+    (a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period)
+  );
   const sortedExperience = [...(data.experience || [])].sort(
     (a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)
   );
-  const hideSeps = data.hideSeparators || [];
+
+  const hideSep = data.hideSeparators || [];
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* ─── HEADER ─────────────────────────────────────────── */}
-        <View style={styles.header} fixed>
-          <Text style={styles.headerName}>{data.personalInfo?.name || 'Naam'}</Text>
-          <Text style={styles.headerSubtitle}>{buildHeaderSubtitle(data)}</Text>
+        {/* Fixed Footer — renders on every page */}
+        <View style={styles.footer} fixed>
+          <View style={styles.footerLimeBarLeft} />
+          <View style={styles.footerLimeBarRight} />
+          <Text style={styles.footerBrand}>NOVÉMBER. RECRUITMENT</Text>
+        </View>
+
+        {/* HEADER (only on first page) */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerName}>{toTitleCase(data.personalInfo?.name || 'Kandidaat Naam')}</Text>
+            <View style={styles.headerSubtitle}>
+              {subtitleParts.map((part, i) => (
+                <React.Fragment key={i}>
+                  <Text style={styles.headerSubtitlePart}>{part}</Text>
+                  {i < subtitleParts.length - 1 && <Text style={styles.headerSubtitleSep}>|</Text>}
+                </React.Fragment>
+              ))}
+            </View>
+          </View>
         </View>
 
         <View style={styles.body}>
-          {/* ─── TAGS / ANALYSIS ────────────────────────────────── */}
-          {data.analysis?.tags && data.analysis.tags.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>WAAR DEZE PROFESSIONAL STERK IN IS</Text>
-              <View style={styles.tagsContainer}>
-                {data.analysis.tags.map((tag, i) => (
-                  <Text key={i} style={styles.tag}>{tag}</Text>
-                ))}
-              </View>
+          {/* TAGS */}
+          {tags.length > 0 && (
+            <View style={styles.tagsSection}>
+              <Text style={styles.tagsTitle}>WAAR DEZE PROFESSIONAL STERK IN IS</Text>
+              {tagsRow1.length > 0 && (
+                <View style={styles.tagsRow}>
+                  {tagsRow1.map((t, i) => <Text key={i} style={styles.tag}>{t}</Text>)}
+                </View>
+              )}
+              {tagsRow2.length > 0 && (
+                <View style={styles.tagsRow}>
+                  {tagsRow2.map((t, i) => <Text key={i} style={styles.tag}>{t}</Text>)}
+                </View>
+              )}
             </View>
           )}
 
-          {/* ─── OPLEIDINGEN ─────────────────────────────────── */}
-          {data.education && data.education.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>OPLEIDINGEN</Text>
-              {data.education.map((edu, i) => (
-                <View key={i} style={styles.row}>
-                  <Text style={styles.rowPeriod}>{formatDateToNumbers(edu.period)}</Text>
-                  <View style={styles.rowContent}>
-                    <Text>
-                      <Text>{edu.degree}</Text>
-                      {edu.school ? <Text style={styles.rowContentSecondary}>, {edu.school}</Text> : null}
-                      <Text style={styles.rowContentSecondary}> - {edu.status}</Text>
+          {/* OPLEIDINGEN */}
+          {sortedEducation.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>OPLEIDINGEN</Text></View>
+              {sortedEducation.map((edu, i) => {
+                const { start, end } = splitPeriod(edu.period);
+                const periodStr = end ? `${yearOnly(start)} - ${yearOnly(end)}` : yearOnly(start);
+                return (
+                  <View key={i} style={styles.eduRow}>
+                    <Text style={styles.eduPeriod}>{periodStr}</Text>
+                    <Text style={styles.eduContent}>
+                      {edu.degree}
+                      {edu.school ? <Text style={styles.eduSchool}>, {edu.school}</Text> : null}
+                      {edu.status ? <Text style={styles.eduSchool}> - {edu.status}</Text> : null}
                     </Text>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
 
-          {/* ─── CURSUSSEN ───────────────────────────────────── */}
+          {/* CURSUSSEN */}
           {data.courses && data.courses.length > 0 && (
-            <View style={{ marginTop: 12 }}>
-              <Text style={styles.sectionTitle}>CURSUSSEN</Text>
-              {data.courses.map((c, i) => (
-                <View key={i} style={styles.row}>
-                  <Text style={styles.rowPeriod}>{formatDateToNumbers(c.period)}</Text>
-                  <View style={styles.rowContent}>
-                    <Text>
-                      <Text>{c.title}</Text>
-                      {c.institute ? <Text style={styles.rowContentSecondary}>, {c.institute}</Text> : null}
+            <View style={styles.section}>
+              <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>CURSUSSEN</Text></View>
+              {data.courses.map((c, i) => {
+                const period = c.period ? formatDateToNumbers(c.period) : '';
+                return (
+                  <View key={i} style={styles.eduRow}>
+                    <Text style={styles.eduPeriod}>{period}</Text>
+                    <Text style={styles.eduContent}>
+                      {stripCoursePrefix(c.title)}
+                      {c.institute ? <Text style={styles.eduSchool}>, {c.institute}</Text> : null}
                     </Text>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
 
-          {/* ─── ORANGE SEPARATOR ─────────────────────────────── */}
-          {!hideSeps[0] && <View style={styles.separator} />}
-
-          {/* ─── WERKERVARING ────────────────────────────────── */}
+          {/* WERKERVARING */}
           {sortedExperience.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>WERKERVARING</Text>
-              {sortedExperience.map((exp, i) => (
-                <View key={i} style={styles.expBlock} wrap={false} break={exp.pageBreakBefore && i > 0}>
-                  <View style={styles.expHeader}>
+            <View style={styles.section}>
+              <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>WERKERVARING</Text></View>
+              {sortedExperience.map((exp, i) => {
+                // Strip employer prefix from role if duplicated
+                let role = exp.role || '';
+                if (exp.employer && role.toUpperCase().startsWith(exp.employer.toUpperCase())) {
+                  const escaped = exp.employer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  role = role.replace(new RegExp(`^${escaped}\\s*\\|?\\s*`, 'i'), '').trim();
+                }
+                return (
+                  <View key={i} style={styles.expBlock} wrap={false} break={!!exp.pageBreakBefore && i > 0}>
                     <Text style={styles.expPeriod}>{formatDateToNumbers(exp.period)}</Text>
-                    <View style={styles.expDetails}>
+                    <View style={styles.expHeader}>
                       <Text style={styles.expEmployer}>{exp.employer}</Text>
-                      <Text style={styles.expRole}>{exp.role}</Text>
-                      {(exp.bullets || []).map((bullet, j) => (
-                        <View key={j} style={styles.bullet}>
-                          <Text style={styles.bulletDot}>•</Text>
-                          <Text style={styles.bulletText}>{bullet}</Text>
-                        </View>
-                      ))}
+                      {role && (
+                        <>
+                          <Text style={styles.expSep}>|</Text>
+                          <Text style={styles.expRole}>{role.toUpperCase()}</Text>
+                        </>
+                      )}
                     </View>
+                    {(exp.bullets || []).map((bullet, bi) => {
+                      const clean = (bullet || '').trim().replace(/[.;]+$/, '');
+                      const suffix = bi === exp.bullets.length - 1 ? '.' : ';';
+                      return (
+                        <View key={bi} style={styles.bulletRow} wrap={false}>
+                          <Text style={styles.bulletDot}>•</Text>
+                          <Text style={styles.bulletText}>{clean}{suffix}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
 
-          {/* ─── ORANGE SEPARATOR ─────────────────────────────── */}
-          {!hideSeps[1] && <View style={styles.separator} />}
+          {/* Orange separator before Systemen/Talen */}
+          {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && !hideSep[1] && (
+            <View style={styles.orangeSep} />
+          )}
 
-          {/* ─── SYSTEEMKENNIS + TALENKENNIS ──────────────────── */}
-          {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0)) && (
-            <View style={styles.twoCol}>
-              {data.systems && data.systems.length > 0 && (
-                <View style={styles.col}>
-                  <Text style={styles.sectionTitle}>SYSTEEMKENNIS</Text>
-                  {data.systems.map((s, i) => (
-                    <Text key={i} style={styles.colItem}>• {s}</Text>
-                  ))}
-                </View>
-              )}
-              {data.languages && data.languages.length > 0 && (
-                <View style={styles.col}>
-                  <Text style={styles.sectionTitle}>TALENKENNIS</Text>
-                  {data.languages.map((l, i) => (
-                    <Text key={i} style={styles.colItem}>• {l}</Text>
-                  ))}
-                </View>
-              )}
+          {/* SYSTEEMKENNIS */}
+          {data.systems && data.systems.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>SYSTEEMKENNIS</Text></View>
+              <Text style={styles.pipeText}>{data.systems.join(' | ')}</Text>
             </View>
           )}
 
-          {/* ─── REFERENCES ──────────────────────────────────── */}
+          {/* TALENKENNIS */}
+          {data.languages && data.languages.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>TALENKENNIS</Text></View>
+              <Text style={styles.pipeText}>{data.languages.join(' | ')}</Text>
+            </View>
+          )}
+
+          {/* REFERENTIES */}
           {((data.references && data.references.length > 0) || data.referencesOnRequest) && (
-            <View style={{ marginTop: 16 }}>
-              <Text style={styles.sectionTitle}>REFERENTIES</Text>
-              {data.referencesOnRequest ? (
-                <Text style={{ fontSize: 9, color: COLOR_GREY }}>Op aanvraag beschikbaar</Text>
-              ) : (
-                (data.references || []).map((ref, i) => (
-                  <View key={i} style={styles.refBlock}>
-                    <Text style={styles.refName}>
-                      {ref.name}
-                      {ref.role ? <Text style={styles.refContact}>, {ref.role}</Text> : null}
-                      {ref.company ? <Text style={styles.refContact}> bij {ref.company}</Text> : null}
-                    </Text>
-                    <Text style={styles.refContact}>{ref.contact}</Text>
-                  </View>
-                ))
-              )}
-            </View>
+            <>
+              {!hideSep[2] && <View style={styles.orangeSep} />}
+              <View style={styles.section}>
+                <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>REFERENTIES</Text></View>
+                {data.referencesOnRequest ? (
+                  <Text style={[styles.pipeText, { color: COLOR_GREY }]}>Op aanvraag beschikbaar</Text>
+                ) : (
+                  (data.references || []).map((ref, ri) => (
+                    <View key={ri} style={styles.refBlock} wrap={false}>
+                      <Text style={styles.refMain}>
+                        {ref.name}
+                        {ref.contact ? <Text style={styles.refSecondary}> | {ref.contact}</Text> : null}
+                      </Text>
+                      {(ref.role || ref.company) && (
+                        <Text style={styles.refSecondary}>
+                          {ref.role}{ref.role && ref.company ? ' | ' : ''}{ref.company}
+                        </Text>
+                      )}
+                    </View>
+                  ))
+                )}
+              </View>
+            </>
           )}
-        </View>
-
-        {/* ─── FOOTER ─────────────────────────────────────────── */}
-        <View style={styles.footer} fixed>
-          <Text>NOVÉMBER. RECRUITMENT</Text>
         </View>
       </Page>
     </Document>
