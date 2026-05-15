@@ -449,19 +449,18 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
           {data.courses && data.courses.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionTitleWrap}><Text style={styles.sectionTitle}>CURSUSSEN</Text></View>
-              {data.courses.map((c, i) => {
-                const period = c.period ? formatDateToNumbers(c.period) : '';
-                return (
-                  <View key={i} style={styles.eduRow} wrap={false}>
-                    <Text style={styles.eduPeriod}>{period}</Text>
-                    <Text style={styles.eduContent}>
-                      {stripCoursePrefix(c.title)}
-                      {c.institute ? <Text style={styles.eduSchool}>, {c.institute}</Text> : null}
-                    </Text>
-                  </View>
-                );
-              })}
+              <Text style={styles.pipeText}>
+                {data.courses
+                  .map(c => stripCoursePrefix(c.title))
+                  .filter(t => t && t.trim())
+                  .join(' | ')}
+              </Text>
             </View>
+          )}
+
+          {/* Orange separator between Cursussen and Werkervaring */}
+          {!hideSep[0] && (data.courses && data.courses.length > 0) && (
+            <View style={styles.orangeSep} />
           )}
 
           {/* WERKERVARING */}
