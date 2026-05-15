@@ -98,7 +98,18 @@ const stripCoursePrefix = (title: string): string => {
 };
 
 const buildHeaderSubtitle = (data: ParsedCV): string[] => {
-  const isValid = (v?: string | null) => v && v.trim() !== '' && !v.toLowerCase().includes('niet gespecificeerd') && !v.toLowerCase().includes('onbekend');
+  const isValid = (v?: string | null) => {
+    if (!v) return false;
+    const trimmed = v.trim();
+    if (!trimmed) return false;
+    const lower = trimmed.toLowerCase();
+    // Reject placeholders, field names, and "unspecified" markers
+    if (lower.includes('niet gespecificeerd')) return false;
+    if (lower.includes('onbekend')) return false;
+    if (lower === 'skj' || lower === 'skjdate' || lower === 'availability' || lower === 'hours') return false;
+    if (lower === 'n/a' || lower === 'na' || lower === '-') return false;
+    return true;
+  };
   const parts: string[] = [];
   const avail = (data.personalInfo?.availability || '').trim();
   const isDirect = /^direct$/i.test(avail) || /^per\s+direct$/i.test(avail);
