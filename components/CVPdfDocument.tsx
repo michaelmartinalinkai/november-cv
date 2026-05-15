@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 1,
+    textTransform: 'uppercase',
   },
 
   // SECTION TITLE (lime green bar)
