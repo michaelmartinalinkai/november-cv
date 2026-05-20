@@ -687,9 +687,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   )}
 
                   <div className="mb-2" style={{ breakInside: 'avoid', pageBreakInside: 'avoid', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Datum</div>}
                     <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                       <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
                     </span>
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Werkgever | Functie</div>}
                     <div style={{ fontSize: '10.66px' }}>
                       <span className="text-black">
                         <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={!!isEditing} multiline />
@@ -708,6 +710,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     </div>
                   </div>
 
+                  {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Taken / Verantwoordelijkheden</div>}
                   <ul className="list-none space-y-0 ml-1">
                     {(exp.bullets || []).map((bullet, bi) => (
                       <li key={bi} className="flex items-start gap-1 leading-[1.4] group/bullet" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
@@ -741,7 +744,19 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                         <span style={{ fontSize: '10.66px' }} className="flex-1">
                           <EditableText
                             value={bullet.trim().replace(/[.;]+$/, '')}
-                            onChange={(v) => handleEdit(['experience', originalIdx, 'bullets', bi], v)}
+                            onChange={(v) => {
+                              // Detect multi-line content (paste from Word/text) and split into separate bullets
+                              const lines = v.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+                              if (lines.length > 1) {
+                                if (!onChange) return;
+                                const newData = JSON.parse(JSON.stringify(data));
+                                // Replace current bullet with the first line, then insert remaining lines after
+                                newData.experience[originalIdx].bullets.splice(bi, 1, ...lines);
+                                onChange(newData);
+                              } else {
+                                handleEdit(['experience', originalIdx, 'bullets', bi], v);
+                              }
+                            }}
                             isEditing={!!isEditing}
                             multiline
                           />
