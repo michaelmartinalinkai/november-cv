@@ -206,6 +206,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const [spacerHeight, setSpacerHeight] = useState(0);
   const [regeneratingIdx, setRegeneratingIdx] = useState<number | null>(null);
 
+  // Punt 11 — Page-break overlay in edit mode
+  // Bereken het aantal en de pixel-offsets van A4 paginabreuken zodat we een
+  // dotted line op iedere 297mm-grens kunnen tekenen tijdens bewerken.
+  const [pageBreaks, setPageBreaks] = useState<{ pagePx: number; totalPx: number }>({ pagePx: 0, totalPx: 0 });
+
   useLayoutEffect(() => {
     if (!data) return; // guard inside effect — hooks must always be called
     const calculateSpacer = () => {
@@ -225,6 +230,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
       // If the last page is mostly empty, footer sits naturally below content — no giant gap.
       const lastPageUsed = pagePx - needed;
       setSpacerHeight(lastPageUsed >= pagePx * 0.75 ? needed : 0);
+
+      // Punt 11 — sla totaal aantal pixels content op zodat we paginabreuken kunnen renderen
+      setPageBreaks({ pagePx, totalPx: contentHeight + footerHeight });
     };
 
     // Run after every render + when data changes
@@ -844,7 +852,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             </div>
             <p className="pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
               <EditableText
-                value={(data.systems || []).join(' | ')}
+                // Punt 10 — "Microsoft 365" is altijd default pre-filled wanneer er nog
+                // geen systemen zijn ingevuld; bewerkbaar net als de rest.
+                value={(data.systems && data.systems.length > 0 ? data.systems : (isEditing ? ['Microsoft 365'] : [])).join(' | ')}
                 onChange={(v) => handleEdit(['systems'], v.split('|').map(s => s.trim()).filter(Boolean))}
                 isEditing={!!isEditing}
                 multiline
@@ -1004,6 +1014,34 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
       <div ref={footerRef} className="print:hidden">
         {footerContent}
       </div>
+
+      {/* Punt 11 — Pagina-breuk overlay (alleen edit mode, niet zichtbaar in print/PDF).
+          Tekent een gestippelde lijn op elke 297mm-grens binnen de CV-container
+          zodat de gebruiker direct ziet waar straks een paginabreuk valt. */}
+      {isEditing && pageBreaks.pagePx > 0 && (
+        <div
+          aria-hidden
+          className="print:hidden pointer-events-none absolute left-0 right-0"
+          style={{ top: 0, height: pageBreaks.totalPx, zIndex: 40 }}
+        >
+          {Array.from({ length: Math.max(0, Math.floor(pageBreaks.totalPx / pageBreaks.pagePx)) }).map((_, i) => (
+            <div
+              key={`pb-${i}`}
+              className="absolute left-0 right-0 flex items-center"
+              style={{ top: (i + 1) * pageBreaks.pagePx - 1, height: 0 }}
+            >
+              <div className="flex-1 border-t-2 border-dashed border-blue-400/80" />
+              <span
+                className="mx-3 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-blue-600 bg-white border border-blue-300 rounded select-none whitespace-nowrap"
+                style={{ transform: 'translateY(-50%)' }}
+              >
+                ✂ Einde pagina {i + 1}
+              </span>
+              <div className="flex-1 border-t-2 border-dashed border-blue-400/80" />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

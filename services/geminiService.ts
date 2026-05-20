@@ -16,6 +16,11 @@ export interface CVInput {
   vacancyText?: string;
   extraContext?: string;
   fileName?: string;
+  // Punt 9 — vrije guidance van de recruiter waar de keywords zich op moeten focussen
+  // (alternatief voor een geüploade vacature). Voorbeeld: "ervaring jeugdzorg + crisisinterventies".
+  profileFocus?: string;
+  // Punt 13 — als true: minimale rewrites, alleen schoonmaken/extenden
+  finalGradeMode?: boolean;
 }
 
 export class GeminiService {
@@ -154,7 +159,47 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const parts: any[] = [];
 
-    let promptText = `JE ENIGE TAAK IS TRANSFORMEREN. ELKE BULLET OPNIEUW SCHRIJVEN.
+    // Punt 12 — bewaar het originele aantal bullets per functie zodat we na de call
+    // kunnen controleren of de AI niets heeft weggegooid.
+    let originalBulletCounts: number[] = [];
+    let originalExperience: Array<{ employer: string; role: string; bullets: string[] }> = [];
+    try {
+      const parsedSrc = JSON.parse(input.text || '{}');
+      if (Array.isArray(parsedSrc.experience)) {
+        originalExperience = parsedSrc.experience.map((e: any) => ({
+          employer: e?.employer || '',
+          role: e?.role || '',
+          bullets: Array.isArray(e?.bullets) ? e.bullets.filter((b: any) => typeof b === 'string' && b.trim()) : [],
+        }));
+        originalBulletCounts = originalExperience.map(e => e.bullets.length);
+      }
+    } catch { /* niet parseable → skip check */ }
+
+    // Punt 9 — profile-focus context (door recruiter ingevoerd of uit vacature)
+    let focusBlock = '';
+    if (input.vacancyText && input.vacancyText.trim()) {
+      focusBlock = `\n\n--- VACATURE-CONTEXT (Punt 9) ---\nAlign de 5 tags ("WAAR DEZE PROFESSIONAL STERK IN IS") met deze vacature. Kies tags die de match met deze vacature laten zien.\n${input.vacancyText.trim()}`;
+    } else if (input.profileFocus && input.profileFocus.trim()) {
+      focusBlock = `\n\n--- PROFIEL-FOCUS (Punt 9 — door recruiter opgegeven) ---\nDe 5 tags MOETEN deze focus weerspiegelen: "${input.profileFocus.trim()}".`;
+    } else {
+      focusBlock = `\n\n--- DEFAULT KEYWORD-FOCUS (Punt 9) ---\nGeen vacature of profiel-focus aanwezig. Genereer de 5 tags op basis van:\n  (1) Kernkwaliteiten uit de werkervaring (terugkerende sterke punten over meerdere functies),\n  (2) Expertisegebieden (sector + specialisatie zoals "jeugdzorg", "schulddienstverlening"),\n  (3) Recurring strengths uit bullets (woorden / thema's die meermaals voorkomen).\nVermijd generieke vulwoorden ("Professional", "Gedreven") tenzij de input écht niets concreets bevat.`;
+    }
+
+    // Punt 13 — final-grade mode: minimale aanpassingen
+    let finalGradePreamble = '';
+    if (input.finalGradeMode) {
+      finalGradePreamble = `🔵 FINAL-GRADE MODUS ACTIEF (Punt 13 — Maria Achterberg feedback):
+Dit CV is al eerder geformatteerd in Novémber-stijl. Houd de inhoud, wording en bullets ZOVEEL MOGELIJK ongewijzigd. Doe ALLEEN:
+  - Spel- en grammaticafouten corrigeren;
+  - Ontbrekende velden aanvullen (school, plaats) als ze in de bron staan;
+  - Nieuwe werkervaring toevoegen als die in de bron staat en in de huidige output ontbreekt;
+  - Bullet-volgorde behouden, niet herschikken;
+  - GEEN volledige herformulering, GEEN bullets weghalen, GEEN bullets samenvoegen.
+
+`;
+    }
+
+    let promptText = finalGradePreamble + `JE ENIGE TAAK IS TRANSFORMEREN. ELKE BULLET OPNIEUW SCHRIJVEN.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WERKWIJZE — VERPLICHT VOOR ELKE BULLET AFZONDERLIJK
@@ -230,6 +275,17 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;
     }
 
+    promptText += focusBlock;
+
+    // Punt 12 — herhaal de hard floor expliciet bij de input zelf
+    if (originalBulletCounts.length > 0) {
+      promptText += `\n\n--- BULLET-COUNT FLOOR (Punt 12) ---\nVoor elke functie hieronder geldt: aantal bullets in de output >= aantal bullets in de input.`;
+      originalBulletCounts.forEach((cnt, i) => {
+        const empl = originalExperience[i]?.employer || `functie ${i + 1}`;
+        promptText += `\n  • ${empl}: minimaal ${cnt} bullets (input had er ${cnt}).`;
+      });
+    }
+
     parts.push({ text: promptText });
 
     const instruction = NEW_STYLE_SYSTEM_INSTRUCTION;
@@ -270,6 +326,47 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
           const currentTags = parsed.analysis.tags || [];
           const fillers = ["Professional", "Gedreven", "Expert", "Novêmber", "Kandidaat"];
           parsed.analysis.tags = [...currentTags, ...fillers].slice(0, 5);
+        }
+
+        // Punt 12 — BULLET PRESERVATION POST-PROCESS
+        // Per functie: als de AI minder bullets heeft teruggeven dan de bron, restore de ontbrekende
+        // bullets vanuit het origineel zodat we GARANDEREN dat er niets verdwijnt. We matchen op
+        // employer (case-insensitive) zodat herordening door de AI niet uitmaakt.
+        if (parsed.experience && originalExperience.length > 0) {
+          parsed.experience.forEach((parsedExp: any, i: number) => {
+            // Zoek matchende originele functie op employer (fallback: zelfde index)
+            const parsedEmpl = (parsedExp?.employer || '').toLowerCase().trim();
+            const orig = originalExperience.find(o => o.employer.toLowerCase().trim() === parsedEmpl)
+                      || originalExperience[i];
+            if (!orig) return;
+
+            const outBullets: string[] = Array.isArray(parsedExp.bullets)
+              ? parsedExp.bullets.filter((b: any) => typeof b === 'string' && b.trim())
+              : [];
+
+            if (outBullets.length < orig.bullets.length) {
+              const missing = orig.bullets.length - outBullets.length;
+              console.warn(
+                `[Punt 12] Bullet-reductie gedetecteerd bij "${orig.employer}": input had ${orig.bullets.length} bullets, output ${outBullets.length}. Restore ${missing} ontbrekende bullet(s) uit origineel.`
+              );
+              // Voeg de overige originele bullets toe (vanaf positie outBullets.length)
+              // zonder duplicates - simpele check op lowercase-trimmed contents
+              const seen = new Set(outBullets.map(b => b.toLowerCase().trim().replace(/[.;]+$/, '')));
+              const toAppend = orig.bullets
+                .filter(b => !seen.has(b.toLowerCase().trim().replace(/[.;]+$/, '')))
+                .slice(0, missing);
+              parsedExp.bullets = [...outBullets, ...toAppend];
+            }
+          });
+        }
+
+        // Punt 10 — Microsoft 365 altijd vooraan in systems
+        if (!parsed.systems) parsed.systems = [];
+        const hasMs365 = parsed.systems.some((s: string) =>
+          /microsoft\s*(365|office|m365)|office\s*365|ms\s*365/i.test(s || '')
+        );
+        if (!hasMs365) {
+          parsed.systems = ['Microsoft 365', ...parsed.systems];
         }
 
         return parsed;
