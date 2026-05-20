@@ -299,7 +299,7 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
           systemInstruction: instruction,
           responseMimeType: "application/json",
           responseSchema: CV_SCHEMA,
-          temperature: 0.65
+          temperature: 0.45
         },
       });
       console.log("ai.models.generateContent returned.");
@@ -383,32 +383,46 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
   async regenerateJob(job: { period: string; employer: string; role: string; bullets: string[] }): Promise<{ bullets: string[] }> {
     const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const bulletList = job.bullets.map((b, i) => (i + 1) + '. ' + b).join('\n');
-    const prompt = 'JE ENIGE TAAK IS HERSCHRIJVEN. ELKE BULLET OPNIEUW SCHRIJVEN.\n\n'
-      + 'Je ontvangt één werkervaring. Herschrijf ALLE bullets naar Novémber-stijl.\n\n'
+    const prompt = 'TAAK: HERSCHRIJF ELKE BULLET BEHOUDEND.\n\n'
+      + 'BELANGRIJKSTE REGEL: BEHOUD DE INHOUDELIJKE BETEKENIS EN FEITEN VAN ELKE BULLET. Verzin geen nieuwe verantwoordelijkheden. Voeg geen taken toe die niet in de bron staan. Maak teksten NIET ingewikkelder dan ze al zijn.\n\n'
+      + 'Je herschrijft alleen de FORMULERING — niet de inhoud — zodat alle bullets de Novémber-stijl volgen.\n\n'
       + 'FUNCTIE: ' + job.role + '\n'
       + 'WERKGEVER: ' + job.employer + '\n'
       + 'PERIODE: ' + job.period + '\n\n'
       + 'ORIGINELE BULLETS:\n' + bulletList + '\n\n'
       + 'REGELS:\n'
-      + '- Herschrijf ELKE bullet — nooit letterlijk overnemen\n'
-      + '- Begin elke bullet met een INFINITIEF werkwoord\n'
-      + '- Voeg context toe: binnen / conform / gericht op / in afstemming met\n'
-      + '- Behoud het AANTAL bullets — geen bullets weglaten\n'
-      + '- Elke bullet eindigt op puntkomma (;) — de LAATSTE op punt (.)\n'
-      + '- Corrigeer spel- en grammaticafouten\n'
-      + '- Output ALLEEN de herschreven bullets als genummerde lijst (1. 2. 3. ...)';
+      + '- BEHOUD DE FEITEN. Wat de bron zegt = wat de output zegt.\n'
+      + '- HOUD HET SIMPEL. Geen onnodig complexe zinsbouw of jargon. Korte, professionele zinnen.\n'
+      + '- AANTAL bullets MOET exact ' + job.bullets.length + ' zijn. Niet minder, niet meer.\n'
+      + '- Begin elke bullet met een INFINITIEF werkwoord (Begeleiden van..., Uitvoeren van..., etc.).\n'
+      + '- Voeg context-woorden toe waar passend: binnen / conform / gericht op / in afstemming met.\n'
+      + '- Corrigeer spel- en grammaticafouten zonder de boodschap te veranderen.\n'
+      + '- Elke bullet eindigt op puntkomma (;) — de LAATSTE op punt (.).\n'
+      + '- NOOIT bullets samenvoegen. NOOIT informatie weglaten. NOOIT informatie toevoegen die niet in de bron staat.\n'
+      + '- Output ALLEEN de herschreven bullets als genummerde lijst (1. 2. 3. ...) — geen inleiding, geen uitleg.';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      config: { temperature: 0.5 }
+      config: { temperature: 0.3 } // lower = more consistent, less drift across re-clicks
     });
 
     const text = response.text || '';
-    const bullets = text
+    let bullets = text
       .split('\n')
       .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
       .filter((l: string) => l.length > 2);
+
+    // Post-process safety: if AI returned fewer bullets than original, restore the missing ones from source
+    if (bullets.length < job.bullets.length) {
+      const missing = job.bullets.length - bullets.length;
+      console.warn(`[Regenerate] Bullet drop: ${job.bullets.length} input vs ${bullets.length} output. Restoring ${missing}.`);
+      const seen = new Set(bullets.map(b => b.toLowerCase().trim().replace(/[.;]+$/, '')));
+      const toAppend = job.bullets
+        .filter(b => !seen.has(b.toLowerCase().trim().replace(/[.;]+$/, '')))
+        .slice(0, missing);
+      bullets = [...bullets, ...toAppend];
+    }
 
     return { bullets };
   }

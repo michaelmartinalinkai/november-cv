@@ -666,7 +666,21 @@ Genereer NOOIT output die qua schrijfstijl afwijkt van de bovenstaande standaard
 OVERIGE REGELS:
 0. GRAMMATICA & SPELLING: Verbeter ALTIJD spel- en grammaticafouten uit het originele CV. Corrigeer zinnen zonder de inhoud te veranderen. Nooit fouten overnemen.
 1. NAAM: [Voornaam] [Achternaam] in Title Case.
-2. ANALYSE TAGS: Genereer EXACT 5 korte, krachtige tags (bijv. "GEDREVEN", "SOCIAAL DOMEIN", "RESULTAATGERICHT").
+2. ANALYSE TAGS — EXACT 5 STRENGTHS OP BASIS VAN ECHTE BEWIJS:
+   De 5 tags MOETEN inhoudelijk sterk en specifiek zijn — NIET generiek.
+   ❌ FOUT: "Professional", "Gedreven", "Expert", "Toegewijd" — te vaag, kan op iedereen slaan.
+   ✅ GOED: "JEUGDZORG", "CRISISINTERVENTIE", "SCHULDDIENSTVERLENING", "DOSSIERREGIE", "BESTUURSRECHT".
+
+   WERKWIJZE:
+   (a) Scan alle werkervaring bullets — wat zijn de TERUGKERENDE thema's, sectoren en expertises?
+   (b) Identificeer de KERNKWALITEITEN die uit meerdere functies blijken (niet uit één functie alleen).
+   (c) Kies expertises die de kandidaat ECHT onderscheiden — wat ze WERKELIJK kunnen.
+   (d) Voorkeur voor: sectoren (jeugdzorg, schulddienstverlening), specifieke vaardigheden (crisisinterventie, casuïstiek-regie), domeinkennis (bestuursrecht, toeslagenwet).
+
+   FORMAT:
+   - Korte krachtige termen (max 3 woorden, bij voorkeur 1-2)
+   - Inhoudelijk specifiek, niet beschrijvend
+   - Geen vulwoorden ("Gedreven", "Professional", "Expert", "Ervaren")
 3. OPLEIDINGEN: Sorteer op meest recent. Cursussen en opleidingen NOOIT door elkaar.
 4. ONDERWIJSNIVEAUS: Schrijf ALTIJD als: Hbo, Mbo, Mavo, Havo, Vwo, Vmbo, Wo (eerste letter hoofdletter, rest klein). Het niveau staat VOORAAN in het degree veld (bijv. "Hbo Sociaal Juridische Dienstverlening"). Status veld gebruikt UITSLUITEND: "diploma behaald", "propedeuse behaald", "certificaat behaald", of leeg. Nooit "studerend", "gestopt", "lopend", "niet afgerond", "nee" of andere varianten — alles wat niet gelijk is aan behaald wordt weggelaten.
 `;

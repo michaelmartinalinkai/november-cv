@@ -62,6 +62,7 @@ export interface ParsedCV {
     role: string;
     bullets: string[];
     pageBreakBefore?: boolean;
+    pinned?: boolean;
   }>;
   hideSeparators?: boolean[];
   analysis?: CVAnalysis;

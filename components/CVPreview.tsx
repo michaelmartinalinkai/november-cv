@@ -633,11 +633,17 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
           {(() => {
             // Tag each item with its original index BEFORE sorting to avoid findIndex collisions.
             // In edit mode: keep array order so reorder arrows visually work.
-            // In view/print mode: sort by most-recent date.
+            // In view/print mode: pinned items first, then sort by most-recent date.
             const tagged = (data.experience || []).map((exp, idx) => ({ ...exp, __origIdx: idx }));
             const sorted = isEditing
               ? tagged
-              : [...tagged].sort((a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period));
+              : [...tagged].sort((a, b) => {
+                  // Pinned items always come first
+                  if (a.pinned && !b.pinned) return -1;
+                  if (!a.pinned && b.pinned) return 1;
+                  // Within same pin status, sort by start date (most recent first)
+                  return parsePeriodStart(b.period) - parsePeriodStart(a.period);
+                });
             return sorted.map((exp, si) => {
               const originalIdx = exp.__origIdx;
               return (
@@ -825,6 +831,16 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                         disabled={regeneratingIdx === originalIdx}
                         className={`text-[10px] px-2 py-0.5 rounded font-medium ${regeneratingIdx === originalIdx ? 'bg-orange-200 text-orange-400 cursor-wait' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'}`}
                       >{regeneratingIdx === originalIdx ? '⟳ herschrijven...' : '↺ herschrijf bullets'}</button>
+                      <button
+                        onClick={() => {
+                          if (!onChange) return;
+                          const newData = JSON.parse(JSON.stringify(data));
+                          newData.experience[originalIdx].pinned = !newData.experience[originalIdx].pinned;
+                          onChange(newData);
+                        }}
+                        className={`text-[10px] px-2 py-0.5 rounded font-medium ${exp.pinned ? 'bg-blue-200 text-blue-700' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                        title={exp.pinned ? 'Klik om los te maken — sortering keert terug naar datum' : 'Vastpinnen — deze functie blijft bovenaan ongeacht datum'}
+                      >{exp.pinned ? '📌 vastgepind' : '📌 pin naar boven'}</button>
                     </div>
                   )}
                 </div>

@@ -396,9 +396,11 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
   const sortedEducation = [...(data.education || [])].sort(
     (a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period)
   );
-  const sortedExperience = [...(data.experience || [])].sort(
-    (a, b) => parsePeriodStart(b.period) - parsePeriodStart(a.period)
-  );
+  const sortedExperience = [...(data.experience || [])].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return parsePeriodStart(b.period) - parsePeriodStart(a.period);
+  });
 
   const hideSep = data.hideSeparators || [];
 
