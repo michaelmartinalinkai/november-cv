@@ -693,6 +693,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   )}
 
                   <div className="mb-2" style={{ breakInside: 'avoid', pageBreakInside: 'avoid', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
+                    {exp.pinned && (
+                      <div className="print:hidden inline-block bg-blue-100 text-blue-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mb-1">
+                        📌 Vastgepind bovenaan
+                      </div>
+                    )}
                     {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Datum</div>}
                     <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                       <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
