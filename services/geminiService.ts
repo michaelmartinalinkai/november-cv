@@ -331,13 +331,26 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
         // Punt 12 — BULLET PRESERVATION POST-PROCESS
         // Per functie: als de AI minder bullets heeft teruggeven dan de bron, restore de ontbrekende
         // bullets vanuit het origineel zodat we GARANDEREN dat er niets verdwijnt. We matchen op
-        // employer (case-insensitive) zodat herordening door de AI niet uitmaakt.
+        // employer met fuzzy normalisatie zodat kleine wijzigingen (kapitalisatie, leestekens) geen
+        // mismatch geven.
         if (parsed.experience && originalExperience.length > 0) {
-          parsed.experience.forEach((parsedExp: any, i: number) => {
-            // Zoek matchende originele functie op employer (fallback: zelfde index)
-            const parsedEmpl = (parsedExp?.employer || '').toLowerCase().trim();
-            const orig = originalExperience.find(o => o.employer.toLowerCase().trim() === parsedEmpl)
-                      || originalExperience[i];
+          // Helper: aggressieve normalisatie voor matching (strip leestekens, lowercase, normalize spaces)
+          const normalize = (s: string) => s.toLowerCase().trim()
+            .replace(/[.,;:!?'"`()\[\]{}]/g, '')
+            .replace(/\s+/g, ' ');
+
+          // Use Promise.all so styleBullets calls can run in parallel
+          await Promise.all(parsed.experience.map(async (parsedExp: any, i: number) => {
+            const parsedEmpl = normalize(parsedExp?.employer || '');
+            // Try exact normalized match first, then startsWith/contains, then index fallback
+            let orig = originalExperience.find(o => normalize(o.employer) === parsedEmpl);
+            if (!orig) {
+              orig = originalExperience.find(o => {
+                const n = normalize(o.employer);
+                return parsedEmpl.length > 0 && (n.startsWith(parsedEmpl) || parsedEmpl.startsWith(n) || n.includes(parsedEmpl) || parsedEmpl.includes(n));
+              });
+            }
+            if (!orig) orig = originalExperience[i];
             if (!orig) return;
 
             const outBullets: string[] = Array.isArray(parsedExp.bullets)
@@ -347,17 +360,22 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
             if (outBullets.length < orig.bullets.length) {
               const missing = orig.bullets.length - outBullets.length;
               console.warn(
-                `[Punt 12] Bullet-reductie gedetecteerd bij "${orig.employer}": input had ${orig.bullets.length} bullets, output ${outBullets.length}. Restore ${missing} ontbrekende bullet(s) uit origineel.`
+                `[Punt 12] Bullet-reductie gedetecteerd bij "${orig.employer}": input had ${orig.bullets.length} bullets, output ${outBullets.length}. Restore ${missing} ontbrekende bullet(s) uit origineel + re-style.`
               );
-              // Voeg de overige originele bullets toe (vanaf positie outBullets.length)
-              // zonder duplicates - simpele check op lowercase-trimmed contents
               const seen = new Set(outBullets.map(b => b.toLowerCase().trim().replace(/[.;]+$/, '')));
-              const toAppend = orig.bullets
+              const rawMissing = orig.bullets
                 .filter(b => !seen.has(b.toLowerCase().trim().replace(/[.;]+$/, '')))
                 .slice(0, missing);
-              parsedExp.bullets = [...outBullets, ...toAppend];
+
+              // Re-style the restored bullets so they match Novémber-style instead of being raw
+              const styledMissing = await this.styleBullets(rawMissing, {
+                role: parsedExp.role || orig.role || '',
+                employer: parsedExp.employer || orig.employer || '',
+              });
+
+              parsedExp.bullets = [...outBullets, ...styledMissing];
             }
-          });
+          }));
         }
 
         // Punt 10 — Microsoft 365 altijd vooraan in systems
@@ -377,6 +395,46 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
     } catch (error: any) {
       console.error("Gemini API Error in parseCV:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Style raw bullets to match Novémber-style without changing content.
+   * Used in post-process restore — keeps the meaning identical, only fixes phrasing.
+   */
+  async styleBullets(rawBullets: string[], context: { role: string; employer: string }): Promise<string[]> {
+    if (rawBullets.length === 0) return [];
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
+    const bulletList = rawBullets.map((b, i) => (i + 1) + '. ' + b).join('\n');
+    const prompt = 'TAAK: HERSCHRIJF DEZE BULLETS NAAR NOVÉMBER-STIJL.\n\n'
+      + 'BELANGRIJK: BEHOUD DE INHOUDELIJKE BETEKENIS EXACT. Verander geen feiten, voeg geen taken toe, verwijder niks.\n\n'
+      + 'CONTEXT — Functie: ' + context.role + ' bij ' + context.employer + '\n\n'
+      + 'INPUT BULLETS:\n' + bulletList + '\n\n'
+      + 'REGELS:\n'
+      + '- Aantal bullets in output MOET exact ' + rawBullets.length + ' zijn.\n'
+      + '- Elke bullet begint met INFINITIEF werkwoord.\n'
+      + '- Voeg context-woorden toe: binnen / conform / gericht op / in afstemming met.\n'
+      + '- Corrigeer spel- en grammaticafouten.\n'
+      + '- Behoud alle feiten en informatie uit de bron.\n'
+      + '- Elke bullet eindigt op ; (de laatste op .).\n'
+      + '- Output ALLEEN de bullets als genummerde lijst (1. 2. 3. ...) — geen uitleg.';
+
+    try {
+      const response = await this.generateWithRetry(ai, {
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { temperature: 0.3 }
+      });
+      const text = response.text || '';
+      const styled = text
+        .split('\n')
+        .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
+        .filter((l: string) => l.length > 2);
+      // If AI returned fewer than expected, return original raws rather than losing content
+      return styled.length >= rawBullets.length ? styled : rawBullets;
+    } catch (e) {
+      console.warn('[styleBullets] Failed to restyle, returning raw bullets:', e);
+      return rawBullets;
     }
   }
 

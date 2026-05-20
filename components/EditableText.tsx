@@ -44,6 +44,27 @@ export const EditableText: React.FC<EditableTextProps> = ({
         }
     };
 
+    // Force plain text paste across all browsers — strips HTML formatting, preserves \n for multi-line
+    const handlePaste = (e: React.ClipboardEvent) => {
+        if (!isEditing) return;
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain') || '';
+        // document.execCommand is deprecated but the most reliable cross-browser way to insert text
+        // inside a contentEditable while preserving cursor position
+        try {
+            document.execCommand('insertText', false, text);
+        } catch {
+            // Fallback for browsers where execCommand is disabled — manually insert at selection
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(text));
+                range.collapse(false);
+            }
+        }
+    };
+
     const Tag = 'span';
 
     return (
@@ -54,6 +75,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
             onFocus={() => setIsFocused(true)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             className={clsx(
                 className,
                 isEditing && 'outline-none cursor-text',
