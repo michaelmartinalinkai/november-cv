@@ -60,6 +60,10 @@ const App: React.FC = () => {
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // Punt 9 — profielfocus die de tag-generatie stuurt wanneer er geen vacature is.
+  const [profileFocus, setProfileFocus] = useState<string>('');
+  // Punt 13 — final-grade mode: minimale rewrites bij re-upload van al-Novémber-stijl CV's.
+  const [finalGradeMode, setFinalGradeMode] = useState<boolean>(false);
   const undoStackRef = useRef<Map<string, ParsedCV[]>>(new Map());
 
   const processingRef = useRef<Set<string>>(new Set());
@@ -176,8 +180,32 @@ const App: React.FC = () => {
       // Auto-process with new style immediately
       setQueue(prev => prev.map(q => q.id === targetId ? { ...q, status: 'PROCESSING', statusMessage: 'Stijlen...' } : q));
 
+      // Punt 13 — auto-detect "final-grade" CV's: bestandsnaam bevat "NOVEMBER" of
+      // bron-text bevat de typische Novémber-footerstring / het Novémber-merk.
+      const looksFinalGrade = (() => {
+        if (finalGradeMode) return true; // expliciete toggle wint altijd
+        const fn = (item.file.name || '').toLowerCase();
+        if (/november|nov[eê]mber/.test(fn)) return true;
+        const txt = (item.textContext || '').toLowerCase();
+        if (/nov[eê]mber\./.test(txt)) return true;
+        // signaal: alle bullets eindigen al op ; of . (Novémber-stijl)
+        try {
+          const exp = (result as any)?.experience || [];
+          if (exp.length >= 2) {
+            const flat = exp.flatMap((e: any) => e?.bullets || []) as string[];
+            if (flat.length >= 6) {
+              const styled = flat.filter(b => /[;.]\s*$/.test(b)).length;
+              if (styled / flat.length >= 0.8) return true;
+            }
+          }
+        } catch { /* noop */ }
+        return false;
+      })();
+
       const finalResult = await geminiService.parseCV({
         text: JSON.stringify(result),
+        profileFocus: profileFocus || undefined,
+        finalGradeMode: looksFinalGrade,
       });
 
       // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
@@ -411,6 +439,43 @@ const App: React.FC = () => {
         <>
           <UsageModal isOpen={isUsageModalOpen} onClose={() => setIsUsageModalOpen(false)} />
           <main className="container mx-auto px-4 mt-12 max-w-6xl">
+            {/* Punt 9 + 13 — Recruiter-controls vóór upload: focus voor keywords + final-grade toggle */}
+            <div className="mb-6 no-print max-w-3xl mx-auto bg-white border border-neutral-200 p-5 shadow-sm">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-2">
+                    Focus voor keywords (optioneel)
+                  </label>
+                  <input
+                    type="text"
+                    value={profileFocus}
+                    onChange={(e) => setProfileFocus(e.target.value)}
+                    placeholder="Bijv. 'jeugdzorg, crisisinterventies, regie complexe casuïstiek'"
+                    className="w-full px-3 py-2 text-sm border border-neutral-200 focus:outline-none focus:border-[#EE8D70] transition-colors"
+                  />
+                  <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
+                    Stuurt de 5 sterke-punten-tags. Leeg laten = automatische focus op kernkwaliteiten + expertise + terugkerende sterke punten uit werkervaring.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFinalGradeMode(v => !v)}
+                    className={clsx(
+                      "px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border transition-all",
+                      finalGradeMode
+                        ? "bg-[#1E3A35] text-white border-[#1E3A35]"
+                        : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400"
+                    )}
+                  >
+                    {finalGradeMode ? '✓ Final-grade upload-modus' : 'Final-grade upload-modus'}
+                  </button>
+                  <p className="text-[10px] text-neutral-400 leading-snug flex-1">
+                    Aan = al-geformatteerd CV opnieuw uploaden (alleen kleine edits + extends, geen volledige rewrite). Detectie is ook automatisch op basis van bestandsnaam/inhoud.
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="mb-8 no-print"><FileUploader onFilesSelect={addToQueue} /></div>
             {queue.length > 0 && (
               <div className="flex flex-col gap-10 lg:flex-row lg:items-start">
