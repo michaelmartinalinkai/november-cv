@@ -269,7 +269,9 @@ const App: React.FC = () => {
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
-      const fileNameBase = `CV_${(data.personalInfo?.name || "Kandidaat").replace(/\s+/g, '_')}_NOVEMBER`;
+      // Sanitize: keep letters, digits, dashes, underscores; replace everything else with _
+      const sanitize = (s: string) => s.replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const fileNameBase = `CV_${sanitize(data.personalInfo?.name || "Kandidaat")}_NOVEMBER`;
 
       const effectiveSourceId = sourceId || crypto.randomUUID();
       const contentHash = await usageService.generateHash(JSON.stringify(data));
@@ -299,7 +301,8 @@ const App: React.FC = () => {
 
   const handleDownloadCoverLetter = async (data: ParsedCV) => {
     try {
-      const fileNameBase = `Motivatiebrief_${(data.personalInfo?.name || "Kandidaat").replace(/\s+/g, '_')}_NOVEMBER`;
+      const sanitize = (s: string) => s.replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const fileNameBase = `Motivatiebrief_${sanitize(data.personalInfo?.name || "Kandidaat")}_NOVEMBER`;
       const blob = await pdf(<CoverLetterPdfDocument data={data} letterText={data.motivationLetter || ''} />).toBlob();
       saveAs(blob, `${fileNameBase}.pdf`);
     } catch (err) {

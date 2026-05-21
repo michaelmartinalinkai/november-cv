@@ -204,7 +204,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const footerRef = useRef<HTMLDivElement>(null);
   const pageHeightRef = useRef<HTMLDivElement>(null);        // hidden 297mm reference
   const [spacerHeight, setSpacerHeight] = useState(0);
-  const [regeneratingIdx, setRegeneratingIdx] = useState<number | null>(null);
+  const [regeneratingIndices, setRegeneratingIndices] = useState<Set<number>>(new Set());
+  // Ref always points to latest data — used inside async handlers to avoid stale-closure bugs
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   // Punt 11 — Page-break overlay in edit mode
   // Bereken het aantal en de pixel-offsets van A4 paginabreuken zodat we een
@@ -254,7 +257,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const handleRegenerateJob = async (expIdx: number) => {
     if (!data?.experience) return;
     const job = data.experience[expIdx];
-    setRegeneratingIdx(expIdx);
+    setRegeneratingIndices(prev => new Set(prev).add(expIdx));
     try {
       const result = await geminiService.regenerateJob({
         period: job.period,
@@ -263,19 +266,28 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         bullets: job.bullets,
       });
       if (result.bullets.length > 0) {
-        const newData = JSON.parse(JSON.stringify(data));
-        newData.experience[expIdx].bullets = result.bullets;
-        onChange(newData);
-        usageService.recordRegenerate(
-          data.personalInfo?.name || 'unknown',
-          data.personalInfo?.name || 'Onbekend',
-          job.role
-        );
+        // Use ref to get LATEST data (user might have made edits during regenerate)
+        const freshData = dataRef.current;
+        const newData = JSON.parse(JSON.stringify(freshData));
+        // Verify the experience still exists (user might have deleted it)
+        if (newData.experience && newData.experience[expIdx]) {
+          newData.experience[expIdx].bullets = result.bullets;
+          onChange?.(newData);
+          usageService.recordRegenerate(
+            freshData.personalInfo?.name || 'unknown',
+            freshData.personalInfo?.name || 'Onbekend',
+            job.role
+          );
+        }
       }
     } catch (e) {
       console.error('Regenerate failed', e);
     } finally {
-      setRegeneratingIdx(null);
+      setRegeneratingIndices(prev => {
+        const next = new Set(prev);
+        next.delete(expIdx);
+        return next;
+      });
     }
   };
 
@@ -849,9 +861,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                       >✕ verwijder functie</button>
                       <button
                         onClick={() => handleRegenerateJob(originalIdx)}
-                        disabled={regeneratingIdx === originalIdx}
-                        className={`text-[10px] px-2 py-0.5 rounded font-medium ${regeneratingIdx === originalIdx ? 'bg-orange-200 text-orange-400 cursor-wait' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'}`}
-                      >{regeneratingIdx === originalIdx ? '⟳ herschrijven...' : '↺ herschrijf bullets'}</button>
+                        disabled={regeneratingIndices.has(originalIdx)}
+                        className={`text-[10px] px-2 py-0.5 rounded font-medium ${regeneratingIndices.has(originalIdx) ? 'bg-orange-200 text-orange-400 cursor-wait' : 'bg-orange-100 text-orange-600 hover:bg-orange-200'}`}
+                      >{regeneratingIndices.has(originalIdx) ? '⟳ herschrijven...' : '↺ herschrijf bullets'}</button>
                       <button
                         onClick={() => {
                           if (!onChange) return;
