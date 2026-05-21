@@ -199,7 +199,36 @@ Dit CV is al eerder geformatteerd in Novémber-stijl. Houd de inhoud, wording en
 `;
     }
 
-    let promptText = finalGradePreamble + `JE ENIGE TAAK IS TRANSFORMEREN. ELKE BULLET OPNIEUW SCHRIJVEN.
+    let promptText: string;
+    if (input.finalGradeMode) {
+      // FINAL-GRADE MODE: minimal-touch prompt. NO "rewrite every bullet" instruction.
+      promptText = finalGradePreamble + `JE TAAK: Lichte cleanup van een al-eerder geconverteerd CV.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WAT JE WEL DOET:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Bullets, functies, opleidingen en cursussen exact overnemen zoals ze zijn.
+- Alleen evidente spelfouten en typo's corrigeren.
+- Ontbrekende velden invullen als die in de bron staan (school, plaats, periode).
+- Datums normaliseren (MM/JJJJ format).
+- Nieuwe werkervaring of cursussen toevoegen als die in de bron staan en in de output ontbreken.
+- Systems en talen overnemen.
+- De 5 tags ("WAAR DEZE PROFESSIONAL STERK IN IS") opnieuw genereren op basis van de inhoud.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WAT JE NOOIT DOET:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- GEEN bullets herformuleren of herschrijven.
+- GEEN bullets samenvoegen of opsplitsen.
+- GEEN bullets verwijderen.
+- GEEN volgorde van bullets veranderen.
+- GEEN nieuwe taken verzinnen of toevoegen.
+- GEEN extra context-woorden toevoegen aan bullets die al goed zijn.
+
+`;
+    } else {
+      // STANDARD MODE: full rewrite to November style.
+      promptText = `JE ENIGE TAAK IS TRANSFORMEREN. ELKE BULLET OPNIEUW SCHRIJVEN.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WERKWIJZE — VERPLICHT VOOR ELKE BULLET AFZONDERLIJK
@@ -270,6 +299,7 @@ OVERIGE VELDEN aanpassen conform stijlregels: naam, tags, titels, beschikbaarhei
 Het "school" veld in education MOET altijd worden overgenomen uit de input.
 Als input school: "Hogeschool InHolland" heeft, moet output dat ook hebben. Nooit weglaten.
 Als er geen school in de input staat, gebruik dan een lege string "".`;
+    }
 
     if (input.text) {
       promptText += `\n\n--- HUIDIGE DATA ---\n${input.text}`;
