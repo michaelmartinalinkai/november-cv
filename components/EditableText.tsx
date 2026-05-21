@@ -48,7 +48,11 @@ export const EditableText: React.FC<EditableTextProps> = ({
     const handlePaste = (e: React.ClipboardEvent) => {
         if (!isEditing) return;
         e.preventDefault();
-        const text = e.clipboardData.getData('text/plain') || '';
+        let text = e.clipboardData.getData('text/plain') || '';
+        // For single-line fields, strip ALL newlines (replace with spaces) — prevents weird wrapping
+        if (!multiline) {
+            text = text.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+        }
         // document.execCommand is deprecated but the most reliable cross-browser way to insert text
         // inside a contentEditable while preserving cursor position
         try {
