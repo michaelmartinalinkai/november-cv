@@ -63,6 +63,7 @@ const App: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   // Punt 9 — profielfocus die de tag-generatie stuurt wanneer er geen vacature is.
   const [profileFocus, setProfileFocus] = useState<string>('');
+  const [vacancyText, setVacancyText] = useState<string>('');
   // Punt 13 — final-grade mode: minimale rewrites bij re-upload van al-Novémber-stijl CV's.
   const [finalGradeMode, setFinalGradeMode] = useState<boolean>(false);
   const undoStackRef = useRef<Map<string, ParsedCV[]>>(new Map());
@@ -206,6 +207,7 @@ const App: React.FC = () => {
       const finalResult = await geminiService.parseCV({
         text: JSON.stringify(result),
         profileFocus: profileFocus || undefined,
+        vacancyText: vacancyText || undefined,
         finalGradeMode: looksFinalGrade,
       });
 
@@ -497,6 +499,21 @@ const App: React.FC = () => {
                   />
                   <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
                     Stuurt de 5 sterke-punten-tags. Leeg laten = automatische focus op kernkwaliteiten + expertise + terugkerende sterke punten uit werkervaring.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-2">
+                    Vacaturetekst (optioneel) — Punt 7
+                  </label>
+                  <textarea
+                    value={vacancyText}
+                    onChange={(e) => setVacancyText(e.target.value)}
+                    placeholder="Plak hier de volledige vacaturetekst. De AI past dan tags + bullets aan om de match met deze vacature te tonen."
+                    rows={4}
+                    className="w-full px-3 py-2 text-sm border border-neutral-200 focus:outline-none focus:border-[#EE8D70] transition-colors font-mono leading-relaxed"
+                  />
+                  <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
+                    Met vacaturetekst: bullets gebruiken terminologie uit de vacature waar relevant, en de 5 tags worden afgestemd op de vacaturevereisten. Inhoud blijft feitelijk juist — alleen woordkeuze wordt aangepast.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

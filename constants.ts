@@ -766,6 +766,17 @@ export const CV_SCHEMA: Schema = {
         },
         tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "EXACT 5 TAGS VOOR NIEUWE STIJL" },
         summary: { type: Type.STRING },
+        vacancyMatches: {
+          type: Type.ARRAY,
+          description: "Alleen invullen als vacaturetekst is meegegeven. Match-score (0-100) van de kandidaat met de vacature, opgesplitst per onderdeel.",
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING, description: "Naam van het match-onderdeel (bv. 'Algehele match', 'Werkervaring relevantie', 'Sectorkennis')" },
+              score: { type: Type.NUMBER, description: "Score 0-100" }
+            }
+          }
+        }
       },
     }
   },
