@@ -34,6 +34,9 @@ export interface ParsedCV {
     title?: string; // mevrouw/de heer
     roepnaam?: string;
     hours?: string;
+    placeOfResidence?: string; // Punt 2 — Maria
+    gender?: string;           // Punt 2 — Maria
+    holidaySchedule?: string;  // Punt 2 — Maria
   };
   education: Array<{
     period: string;

@@ -312,6 +312,9 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             <div className="flex flex-col gap-1 items-start mt-2">
               <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Uren:</span> <EditableText value={data.personalInfo?.hours || ''} onChange={(v) => handleEdit(['personalInfo', 'hours'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Woonplaats:</span> <EditableText value={data.personalInfo?.placeOfResidence || ''} onChange={(v) => handleEdit(['personalInfo', 'placeOfResidence'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Geslacht:</span> <EditableText value={data.personalInfo?.gender || ''} onChange={(v) => handleEdit(['personalInfo', 'gender'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Vakantieschema:</span> <EditableText value={data.personalInfo?.holidaySchedule || ''} onChange={(v) => handleEdit(['personalInfo', 'holidaySchedule'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Nummer:</span> <EditableText value={data.personalInfo?.skj || ''} onChange={(v) => handleEdit(['personalInfo', 'skj'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Afgegeven:</span> <EditableText value={data.personalInfo?.skjDate || ''} onChange={(v) => handleEdit(['personalInfo', 'skjDate'], v)} isEditing={true} /></div>
             </div>
@@ -333,6 +336,15 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               if (isValid(data.personalInfo?.hours)) {
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
+              }
+              if (isValid(data.personalInfo?.placeOfResidence)) {
+                parts.push(data.personalInfo!.placeOfResidence!);
+              }
+              if (isValid(data.personalInfo?.gender)) {
+                parts.push(data.personalInfo!.gender!);
+              }
+              if (isValid(data.personalInfo?.holidaySchedule)) {
+                parts.push(`Vakantieschema: ${data.personalInfo!.holidaySchedule}`);
               }
               if (isValid(data.personalInfo?.skj)) {
                 const skj = data.personalInfo!.skj!;
