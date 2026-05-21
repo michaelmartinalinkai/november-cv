@@ -1,6 +1,17 @@
 import React from 'react';
-import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, View, Text, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { ParsedCV } from '../types';
+
+// ─── FONT REGISTRATION (idempotent — safe to call even if CVPdfDocument also registers) ──
+const FONT_BASE = (typeof window !== 'undefined' ? window.location.origin : '') + '/fonts/';
+Font.register({
+  family: 'Garet',
+  fonts: [
+    { src: FONT_BASE + 'Garet-Book.ttf', fontWeight: 'normal' },
+    { src: FONT_BASE + 'Garet-Bold.ttf', fontWeight: 'bold' },
+  ],
+});
+Font.registerHyphenationCallback(word => [word]);
 
 // ─── COLORS ──────────────────────────────────────────────────────────────────
 const COLOR_DARK_GREEN = '#284d32';
