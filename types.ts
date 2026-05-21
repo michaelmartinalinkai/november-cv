@@ -66,6 +66,7 @@ export interface ParsedCV {
   }>;
   hideSeparators?: boolean[];
   analysis?: CVAnalysis;
+  motivationLetter?: string; // Punt 1 — cover letter (downloaded as separate PDF)
 }
 
 export enum AppState {

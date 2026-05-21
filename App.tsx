@@ -10,6 +10,7 @@ import { geminiService, CVInput } from './services/geminiService';
 import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
 import { CVPdfDocument } from './components/CVPdfDocument';
+import { CoverLetterPdfDocument } from './components/CoverLetterPdfDocument';
 import { pdf } from '@react-pdf/renderer';
 import { BatchItem, ParsedCV } from './types';
 import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
@@ -294,6 +295,17 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDownloadCoverLetter = async (data: ParsedCV) => {
+    try {
+      const fileNameBase = `Motivatiebrief_${(data.personalInfo?.name || "Kandidaat").replace(/\s+/g, '_')}_NOVEMBER`;
+      const blob = await pdf(<CoverLetterPdfDocument data={data} letterText={data.motivationLetter || ''} />).toBlob();
+      saveAs(blob, `${fileNameBase}.pdf`);
+    } catch (err) {
+      console.error("Cover letter download error:", err);
+      alert("Fout bij genereren motivatiebrief PDF.");
+    }
+  };
+
   const handlePreviewEdit = (newData: ParsedCV) => {
     if (!selectedResultId) return;
     // Push current state to undo stack before applying change
@@ -389,11 +401,41 @@ const App: React.FC = () => {
                 >
                   Download PDF
                 </button>
+                {selectedItem.result?.motivationLetter && selectedItem.result.motivationLetter.trim() && (
+                  <button
+                    onClick={() => handleDownloadCoverLetter(selectedItem.result!)}
+                    title="Download motivatiebrief als losse PDF"
+                    className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 flex items-center justify-center bg-[#1E3A35] text-white hover:bg-[#2A4A40] border border-transparent shadow-lg h-10 px-6"
+                  >
+                    📝 Motivatiebrief
+                  </button>
+                )}
               </div>
               <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
               </span>
 
+              {/* Motivatiebrief textarea — Punt 1 Maria Achterberg */}
+              {selectedItem.result && (
+                <div className="no-print mt-4 max-w-3xl">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-2">
+                    Motivatiebrief (optioneel) — wordt als losse PDF gedownload met dezelfde stijl als het CV
+                  </label>
+                  <textarea
+                    value={selectedItem.result.motivationLetter || ''}
+                    onChange={(e) => {
+                      const newData = { ...selectedItem.result!, motivationLetter: e.target.value };
+                      handlePreviewEdit(newData);
+                    }}
+                    placeholder="Geachte heer/mevrouw,&#10;&#10;Met veel enthousiasme reageer ik op de vacature..."
+                    rows={6}
+                    className="w-full px-3 py-2 text-sm border border-neutral-200 focus:outline-none focus:border-[#EE8D70] transition-colors font-mono leading-relaxed"
+                  />
+                  <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
+                    Een lege regel = nieuwe paragraaf. De brief krijgt dezelfde header (naam + logo) en footer als het CV.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <ScaleToCVFit
