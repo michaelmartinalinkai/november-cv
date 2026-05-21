@@ -417,6 +417,32 @@ const App: React.FC = () => {
                 Total CVs Converted: {totalCount}
               </span>
 
+              {/* Vacancy match scores (Punt 7) — only shows when vacancy was provided */}
+              {selectedItem.result?.analysis?.vacancyMatches && selectedItem.result.analysis.vacancyMatches.length > 0 && (
+                <div className="no-print mt-4 max-w-3xl bg-white border border-neutral-200 p-4 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-3">
+                    Match met vacature
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedItem.result.analysis.vacancyMatches.map((match, i) => {
+                      const score = match.score || 0;
+                      const color = score >= 75 ? '#16A34A' : score >= 50 ? '#EAB308' : '#DC2626';
+                      return (
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200">
+                          <span className="text-[11px] font-semibold text-neutral-700">{match.title}</span>
+                          <span
+                            className="text-[12px] font-bold text-white px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: color }}
+                          >
+                            {Math.round(score)}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Motivatiebrief textarea — Punt 1 Maria Achterberg */}
               {selectedItem.result && (
                 <div className="no-print mt-4 max-w-3xl">
@@ -426,8 +452,14 @@ const App: React.FC = () => {
                   <textarea
                     value={selectedItem.result.motivationLetter || ''}
                     onChange={(e) => {
+                      // Update result directly without pushing every keystroke to undo stack
+                      // (undo stack is reserved for CV content edits)
                       const newData = { ...selectedItem.result!, motivationLetter: e.target.value };
-                      handlePreviewEdit(newData);
+                      setQueue(prev => prev.map(item =>
+                        item.id === selectedResultId
+                          ? { ...item, result: newData }
+                          : item
+                      ));
                     }}
                     placeholder="Geachte heer/mevrouw,&#10;&#10;Met veel enthousiasme reageer ik op de vacature..."
                     rows={6}

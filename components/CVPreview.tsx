@@ -776,8 +776,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 // Replace current bullet with the first line, then insert remaining lines after
                                 newData.experience[originalIdx].bullets.splice(bi, 1, ...lines);
                                 onChange(newData);
+                              } else if (lines.length === 1) {
+                                // Single line — use the cleaned line (strips trailing newlines/whitespace)
+                                handleEdit(['experience', originalIdx, 'bullets', bi], lines[0]);
                               } else {
-                                handleEdit(['experience', originalIdx, 'bullets', bi], v);
+                                // All whitespace — preserve as empty string (lets user clear bullet)
+                                handleEdit(['experience', originalIdx, 'bullets', bi], '');
                               }
                             }}
                             isEditing={!!isEditing}
