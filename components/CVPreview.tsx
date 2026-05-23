@@ -269,8 +269,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         // Use ref to get LATEST data (user might have made edits during regenerate)
         const freshData = dataRef.current;
         const newData = JSON.parse(JSON.stringify(freshData));
-        // Verify the experience still exists (user might have deleted it)
-        if (newData.experience && newData.experience[expIdx]) {
+        // Verify the experience at expIdx is still THE SAME job (user might have deleted/reordered).
+        // Match on employer + period as a fingerprint.
+        const currentJob = newData.experience?.[expIdx];
+        const stillSameJob = currentJob
+          && currentJob.employer === job.employer
+          && currentJob.period === job.period;
+        if (stillSameJob) {
           newData.experience[expIdx].bullets = result.bullets;
           onChange?.(newData);
           usageService.recordRegenerate(
@@ -278,6 +283,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             freshData.personalInfo?.name || 'Onbekend',
             job.role
           );
+        } else {
+          console.warn('[Regenerate] Job at index changed during API call — discarding result to avoid corruption.');
         }
       }
     } catch (e) {
