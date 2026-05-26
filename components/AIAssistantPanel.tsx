@@ -38,6 +38,8 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   const [isThinking, setIsThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenUsage, setTokenUsage] = useState<{ input: number; output: number; cached: number }>({ input: 0, output: 0, cached: 0 });
+  // Safety: hard cap per session to prevent runaway costs. ~€0.50 of usage.
+  const MAX_SESSION_COST_USD = 0.50;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,6 +64,11 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || isThinking) return;
+
+    if (isOverLimit) {
+      setError(`Sessie-limiet bereikt (~$${estimatedCost} gebruikt). Wis het gesprek of start een nieuw.`);
+      return;
+    }
 
     setError(null);
     setInput('');
@@ -241,11 +248,12 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   };
 
   // Estimated cost (Sonnet 4.6: $3/M input, $15/M output, cached input 10% = $0.30/M)
-  const estimatedCost = (
+  const estimatedCostNum =
     (tokenUsage.input - tokenUsage.cached) * 3 / 1_000_000
     + tokenUsage.cached * 0.3 / 1_000_000
-    + tokenUsage.output * 15 / 1_000_000
-  ).toFixed(4);
+    + tokenUsage.output * 15 / 1_000_000;
+  const estimatedCost = estimatedCostNum.toFixed(4);
+  const isOverLimit = estimatedCostNum >= MAX_SESSION_COST_USD;
 
   if (!isOpen) return null;
 
@@ -323,9 +331,13 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
 
       {/* Token usage footer */}
       {(tokenUsage.input > 0 || tokenUsage.output > 0) && (
-        <div className="px-5 py-1.5 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between text-[9px] text-neutral-500 font-mono">
+        <div className={`px-5 py-1.5 border-t flex items-center justify-between text-[9px] font-mono ${
+          isOverLimit ? 'bg-red-50 border-red-200 text-red-700' :
+          estimatedCostNum > MAX_SESSION_COST_USD * 0.7 ? 'bg-amber-50 border-amber-200 text-amber-700' :
+          'bg-neutral-50 border-neutral-100 text-neutral-500'
+        }`}>
           <span>📊 In: {tokenUsage.input.toLocaleString()} (cache: {tokenUsage.cached.toLocaleString()}) · Out: {tokenUsage.output.toLocaleString()}</span>
-          <span>~${estimatedCost}</span>
+          <span>~${estimatedCost} / ${MAX_SESSION_COST_USD.toFixed(2)}{isOverLimit ? ' ⚠️' : ''}</span>
         </div>
       )}
 
