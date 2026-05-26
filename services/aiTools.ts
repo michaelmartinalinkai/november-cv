@@ -395,6 +395,65 @@ GEBRUIK WANNEER de gebruiker een functie aan bovenaan wil vasthouden, zoals:
   },
 };
 
+// ─── DELETION TOOLS ──────────────────────────────────────────────────────────
+export const TOOL_DELETE_BULLET: ToolDefinition = {
+  name: 'delete_bullet',
+  description: `Verwijder één specifieke bullet uit een functie.
+
+GEBRUIK WANNEER de gebruiker een bullet wil verwijderen, zoals:
+- "Verwijder de derde bullet van de laatste functie"
+- "Haal de laatste bullet weg uit de Jeugdbegeleider-rol"
+- "Verwijder die ene bullet over administratie"
+
+GEDRAG:
+- Verwijdert ALLEEN de aangewezen bullet
+- Andere bullets blijven onveranderd
+- Vraag om verduidelijking als je niet zeker weet welke bullet de gebruiker bedoelt`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie',
+      },
+      bullet_index: {
+        type: 'number',
+        description: 'Index van de bullet die verwijderd moet worden (0 = eerste)',
+      },
+    },
+    required: ['job_index', 'bullet_index'],
+  },
+};
+
+export const TOOL_DELETE_ROLE: ToolDefinition = {
+  name: 'delete_role',
+  description: `Verwijder een hele werkervaring uit het CV.
+
+GEBRUIK WANNEER de gebruiker een functie helemaal wil weghalen, zoals:
+- "Verwijder die korte opdracht bij X"
+- "Haal de Jeugdbegeleider-functie weg"
+- "Die 6-maand klus mag eruit"
+
+GEDRAG:
+- VRAAG ALTIJD EERST OM BEVESTIGING door de functietitel + werkgever te noemen voordat je verwijdert
+- Bijvoorbeeld: "Ik ga 'Jeugdbegeleider bij Stichting X (2022-2023)' verwijderen. Klopt dat?"
+- Pas verwijderen NA gebruikersbevestiging`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie die verwijderd moet worden',
+      },
+      confirmed: {
+        type: 'boolean',
+        description: 'Of de gebruiker expliciet heeft bevestigd dat deze functie verwijderd mag worden. MOET true zijn — anders weigert de tool.',
+      },
+    },
+    required: ['job_index', 'confirmed'],
+  },
+};
+
 // Export array of all currently-active tools
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -409,4 +468,6 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REWRITE_JOB_BULLETS,
   TOOL_ADVISE_RELEVANCE,
   TOOL_SET_PINNED,
+  TOOL_DELETE_BULLET,
+  TOOL_DELETE_ROLE,
 ];

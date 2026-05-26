@@ -692,6 +692,55 @@ async function executeSetPinned(
   };
 }
 
+// ─── DELETION TOOLS ──────────────────────────────────────────────────────────
+async function executeDeleteBullet(
+  input: { job_index: number; bullet_index: number },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { job_index, bullet_index } = input;
+
+  if (!cv.experience || job_index < 0 || job_index >= cv.experience.length) {
+    return { result: `Fout: functie-index ${job_index} bestaat niet.` };
+  }
+  const job = cv.experience[job_index];
+  if (!job.bullets || bullet_index < 0 || bullet_index >= job.bullets.length) {
+    return { result: `Fout: bullet-index ${bullet_index} bestaat niet in functie "${job.role}" (er zijn ${job.bullets?.length || 0} bullets).` };
+  }
+
+  const deletedBullet = job.bullets[bullet_index];
+  const updatedCv = cloneCv(cv);
+  updatedCv.experience![job_index].bullets.splice(bullet_index, 1);
+
+  return {
+    result: `Bullet verwijderd uit "${job.role}": "${deletedBullet.slice(0, 80)}${deletedBullet.length > 80 ? '...' : ''}". Resterend: ${updatedCv.experience![job_index].bullets.length} bullets.`,
+    updatedCv,
+  };
+}
+
+async function executeDeleteRole(
+  input: { job_index: number; confirmed: boolean },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { job_index, confirmed } = input;
+
+  if (!confirmed) {
+    return { result: 'Verwijdering geweigerd: confirmed moet true zijn. Vraag eerst de gebruiker om expliciete bevestiging.' };
+  }
+
+  if (!cv.experience || job_index < 0 || job_index >= cv.experience.length) {
+    return { result: `Fout: functie-index ${job_index} bestaat niet.` };
+  }
+
+  const job = cv.experience[job_index];
+  const updatedCv = cloneCv(cv);
+  updatedCv.experience!.splice(job_index, 1);
+
+  return {
+    result: `Functie verwijderd: "${job.role}" bij ${job.employer} (${job.period}). Resterende functies: ${updatedCv.experience!.length}.`,
+    updatedCv,
+  };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -722,6 +771,10 @@ export async function executeTool(
       return executeAdviseRelevance(input as any, cv);
     case 'set_pinned':
       return executeSetPinned(input as any, cv);
+    case 'delete_bullet':
+      return executeDeleteBullet(input as any, cv);
+    case 'delete_role':
+      return executeDeleteRole(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }
