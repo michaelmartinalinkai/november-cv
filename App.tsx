@@ -11,6 +11,9 @@ import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
 import { CVPdfDocument } from './components/CVPdfDocument';
 import { CoverLetterPdfDocument } from './components/CoverLetterPdfDocument';
+import { AIAssistantPanel } from './components/AIAssistantPanel';
+import { ALL_TOOLS } from './services/aiTools';
+import { executeTool } from './services/aiToolExecutor';
 import { pdf } from '@react-pdf/renderer';
 import { BatchItem, ParsedCV } from './types';
 import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
@@ -55,13 +58,15 @@ const App: React.FC = () => {
   const [queue, setQueue] = useState<BatchItem[]>([]);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+  // Top-level computed selectedItem so AI panel (rendered outside renderContent) can access current CV
+  const selectedItemTop = queue.find(i => i.id === selectedResultId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [usageCount, setUsageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  // Punt 9 — profielfocus die de tag-generatie stuurt wanneer er geen vacature is.
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false); // Punt — AI assistant chat panel  // Punt 9 — profielfocus die de tag-generatie stuurt wanneer er geen vacature is.
   const [profileFocus, setProfileFocus] = useState<string>('');
   const [vacancyText, setVacancyText] = useState<string>('');
   // Punt 13 — final-grade mode: minimale rewrites bij re-upload van al-Novémber-stijl CV's.
@@ -381,6 +386,14 @@ const App: React.FC = () => {
             </div>
             <div className="relative flex flex-col items-end gap-1">
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsAIPanelOpen(true)}
+                  title="Open AI Assistent — bewerk dit CV via een gesprek"
+                  className="h-10 px-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest bg-gradient-to-r from-[#1E3A35] to-[#2A5048] text-white hover:from-[#2A5048] hover:to-[#1E3A35] transition-all shadow-sm"
+                >
+                  <span className="text-[14px]">✨</span>
+                  AI Assistent
+                </button>
                 <Button
                   onClick={() => setIsEditing(!isEditing)}
                   variant={isEditing ? "primary" : "secondary"}
@@ -517,6 +530,16 @@ const App: React.FC = () => {
       {!isAuthenticated ? <LoginScreen onLogin={handleLogin} /> : (
         <>
           <UsageModal isOpen={isUsageModalOpen} onClose={() => setIsUsageModalOpen(false)} />
+          {selectedItemTop?.result && (
+            <AIAssistantPanel
+              cv={selectedItemTop.result}
+              onCvChange={handlePreviewEdit}
+              isOpen={isAIPanelOpen}
+              onClose={() => setIsAIPanelOpen(false)}
+              tools={ALL_TOOLS}
+              executeTool={executeTool}
+            />
+          )}
           <main className="container mx-auto px-4 mt-12 max-w-6xl">
             {/* Punt 9 + 13 — Recruiter-controls vóór upload: focus voor keywords + final-grade toggle */}
             <div className="mb-6 no-print max-w-3xl mx-auto bg-white border border-neutral-200 p-5 shadow-sm">
