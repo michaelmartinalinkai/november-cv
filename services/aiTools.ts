@@ -177,6 +177,39 @@ Dit is een ADVIES-tool — verandert het CV NIET. Het antwoord komt terug als te
   },
 };
 
+// ─── PUNT 7 — VACANCY OPTIMIZATION ───────────────────────────────────────────
+export const TOOL_OPTIMIZE_FOR_VACANCY: ToolDefinition = {
+  name: 'optimize_for_vacancy',
+  description: `Optimaliseer het volledige CV voor een specifieke vacature.
+
+GEBRUIK WANNEER de gebruiker een CV wil afstemmen op een vacature, zoals:
+- "Optimaliseer dit CV voor een rol als Jeugdbeleidsadviseur"
+- "Stem dit CV af op de vacature [tekst]"
+- "Maak dit CV vacature-gericht voor de Municipality of Rotterdam"
+
+GEDRAG:
+- Tags worden afgestemd op de vacaturevereisten
+- Bullets worden herschreven om vacature-terminologie te gebruiken WAAR FEITELIJK CORRECT
+- Match-scores worden gegenereerd (Algehele match, Werkervaring relevantie, Sectorkennis)
+- VERZIN NIETS — geen nieuwe vaardigheden of taken die niet in het origineel staan
+- Originele inhoud blijft behouden, alleen formulering wordt afgestemd`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      vacancy_text: {
+        type: 'string',
+        description: 'De volledige vacaturetekst waarop het CV moet worden afgestemd. Als de gebruiker alleen een rol noemt zonder tekst, gebruik dan de rol als beschrijving.',
+      },
+      scope: {
+        type: 'string',
+        enum: ['tags_and_bullets', 'tags_only', 'bullets_only', 'score_only'],
+        description: 'Welke onderdelen worden geoptimaliseerd. Default: tags_and_bullets',
+      },
+    },
+    required: ['vacancy_text'],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -184,4 +217,5 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_COMPLETE_BULLETS,
   TOOL_REGENERATE_KEYWORDS,
   TOOL_SUGGEST_KEYWORDS,
+  TOOL_OPTIMIZE_FOR_VACANCY,
 ];

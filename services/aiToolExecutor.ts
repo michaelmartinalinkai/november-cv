@@ -345,6 +345,70 @@ KEYWORD — uitleg`;
   }
 }
 
+// ─── PUNT 7 — VACANCY OPTIMIZATION ───────────────────────────────────────────
+async function executeOptimizeForVacancy(
+  input: { vacancy_text: string; scope?: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { vacancy_text, scope = 'tags_and_bullets' } = input;
+
+  if (!vacancy_text || vacancy_text.trim().length < 20) {
+    return { result: 'Fout: vacaturetekst is te kort. Geef de volledige vacature of een gedetailleerde rolbeschrijving.' };
+  }
+
+  // Reuse the existing parseCV pipeline with vacancyText — this triggers the full optimization
+  // that's already proven in production
+  const { geminiService } = await import('./geminiService');
+
+  try {
+    // Pass the current CV as JSON text and let parseCV re-process it with vacancy context
+    const result = await geminiService.parseCV({
+      text: JSON.stringify(cv),
+      vacancyText: vacancy_text,
+      finalGradeMode: scope === 'tags_only' || scope === 'score_only', // light touch mode for these scopes
+    });
+
+    // Merge: keep certain fields from original, take optimization from result
+    const updatedCv = cloneCv(cv);
+
+    if (scope === 'tags_and_bullets' || scope === 'bullets_only') {
+      // Update experience bullets
+      if (result.experience && updatedCv.experience) {
+        result.experience.forEach((newExp, i) => {
+          if (updatedCv.experience![i] && newExp.bullets) {
+            updatedCv.experience![i].bullets = newExp.bullets;
+          }
+        });
+      }
+    }
+
+    if (scope === 'tags_and_bullets' || scope === 'tags_only') {
+      // Update tags
+      if (result.analysis?.tags) {
+        if (!updatedCv.analysis) updatedCv.analysis = { scores: { overall: 0 }, tags: [], strengths: [], weaknesses: [], summary: '' } as any;
+        updatedCv.analysis!.tags = result.analysis.tags;
+      }
+    }
+
+    // Always include match scores when vacancy provided
+    if (result.analysis?.vacancyMatches) {
+      if (!updatedCv.analysis) updatedCv.analysis = { scores: { overall: 0 }, tags: [], strengths: [], weaknesses: [], summary: '' } as any;
+      updatedCv.analysis!.vacancyMatches = result.analysis.vacancyMatches;
+    }
+
+    const scoreSummary = result.analysis?.vacancyMatches
+      ? result.analysis.vacancyMatches.map(m => `${m.title}: ${Math.round(m.score)}%`).join(', ')
+      : 'geen scores beschikbaar';
+
+    return {
+      result: `CV geoptimaliseerd voor de vacature (scope: ${scope}). Match-scores: ${scoreSummary}`,
+      updatedCv,
+    };
+  } catch (e: any) {
+    return { result: `Fout bij vacature-optimalisatie: ${e?.message || String(e)}` };
+  }
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -361,6 +425,8 @@ export async function executeTool(
       return executeRegenerateKeywords(input as any, cv);
     case 'suggest_keywords':
       return executeSuggestKeywords(input as any, cv);
+    case 'optimize_for_vacancy':
+      return executeOptimizeForVacancy(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }
