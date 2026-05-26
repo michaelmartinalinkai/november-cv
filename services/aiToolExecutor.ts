@@ -102,7 +102,76 @@ HERSCHREVEN BULLET:`;
   }
 }
 
-// ─── MAIN EXECUTOR ────────────────────────────────────────────────────────────
+// ─── PUNT 3 — TEXT TO BULLETS ────────────────────────────────────────────────
+async function executeBulletsFromText(
+  input: { job_index: number; source_text: string; target_count?: number; replace_existing?: boolean },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { job_index, source_text, target_count, replace_existing = false } = input;
+
+  if (!cv.experience || job_index < 0 || job_index >= cv.experience.length) {
+    return { result: `Fout: functie-index ${job_index} bestaat niet.` };
+  }
+  if (!source_text || source_text.trim().length < 10) {
+    return { result: 'Fout: bron-tekst is leeg of te kort.' };
+  }
+
+  const job = cv.experience[job_index];
+  const count = target_count && target_count > 0 ? target_count : 0; // 0 = let AI choose
+
+  const prompt = `Je zet een blok lopende tekst om naar professionele CV-bullets in Novêmber-stijl.
+
+CONTEXT — Functie: ${job.role} bij ${job.employer}
+
+BRON-TEKST:
+${source_text}
+
+OPDRACHT:
+- Zet de bron-tekst om naar ${count > 0 ? `EXACT ${count}` : '4 tot 7'} korte professionele bullets
+- Stijl: actieve werkwoorden, zakelijk, geen jargon, geen voorvoegsel-bullet-markers
+- Behoud ALLE feitelijke inhoud uit de bron-tekst
+- Verzin GEEN nieuwe taken die niet in de bron staan
+- Schrijf in het Nederlands
+- Lever de bullets als een genummerde lijst (1., 2., 3., ...) zonder extra uitleg
+
+BULLETS:`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.4, maxOutputTokens: 1500 },
+    });
+    const raw = (response.text || '').trim();
+
+    // Parse numbered list — strip "1. ", "2. " etc and trim
+    const newBullets = raw
+      .split('\n')
+      .map(line => line.replace(/^\s*\d+[.)]\s*/, '').replace(/^[-•*]\s*/, '').trim())
+      .filter(line => line.length > 3);
+
+    if (newBullets.length === 0) {
+      return { result: 'AI gaf geen bruikbare bullets terug.' };
+    }
+
+    const updatedCv = cloneCv(cv);
+    if (!updatedCv.experience![job_index].bullets) {
+      updatedCv.experience![job_index].bullets = [];
+    }
+    if (replace_existing) {
+      updatedCv.experience![job_index].bullets = newBullets;
+    } else {
+      updatedCv.experience![job_index].bullets = [...updatedCv.experience![job_index].bullets, ...newBullets];
+    }
+
+    return {
+      result: `${newBullets.length} bullet${newBullets.length > 1 ? 's' : ''} ${replace_existing ? 'vervangen' : 'toegevoegd'} bij "${job.role}".`,
+      updatedCv,
+    };
+  } catch (e: any) {
+    return { result: `Fout bij omzetten naar bullets: ${e?.message || String(e)}` };
+  }
+}
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -111,6 +180,8 @@ export async function executeTool(
   switch (name) {
     case 'rephrase_bullet':
       return executeRephraseBullet(input as any, cv);
+    case 'bullets_from_text':
+      return executeBulletsFromText(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }

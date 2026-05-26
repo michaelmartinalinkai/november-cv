@@ -55,7 +55,48 @@ VERZIN NOOIT nieuwe taken, vaardigheden of verantwoordelijkheden.`,
   },
 };
 
+// ─── PUNT 3 — TEXT TO BULLETS ────────────────────────────────────────────────
+export const TOOL_BULLETS_FROM_TEXT: ToolDefinition = {
+  name: 'bullets_from_text',
+  description: `Zet een blok lopende tekst om naar Novêmber-stijl bullets en voeg ze toe aan een functie.
+
+GEBRUIK WANNEER de gebruiker tekst geeft die in bullets moet, zoals:
+- "Maak dit 6 korte professionele bullets" + tekst
+- "Voeg deze taken toe aan de rol Jeugdhulpverlener"
+- "Zet deze paragraaf om in bullets en voeg toe aan de laatste functie"
+- "Structureer deze Word-tekst voor de eerste functie"
+
+GEDRAG:
+- Tekst → korte professionele bullets in Novêmber-stijl (actieve werkwoorden, geen jargon)
+- Target_count bepaalt hoeveel bullets — als niet opgegeven, kies een natuurlijk aantal (meestal 4-7)
+- Bullets worden TOEGEVOEGD aan de bestaande bullets van de functie (niet vervangen)
+- VERZIN GEEN content die niet in de bron-tekst staat — herformuleer alleen wat er staat`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie waar de nieuwe bullets aan worden toegevoegd',
+      },
+      source_text: {
+        type: 'string',
+        description: 'De lopende tekst die omgezet moet worden naar bullets',
+      },
+      target_count: {
+        type: 'number',
+        description: 'Gewenst aantal bullets (optioneel — als niet opgegeven kiest de tool een natuurlijk aantal van 4-7)',
+      },
+      replace_existing: {
+        type: 'boolean',
+        description: 'Of bestaande bullets vervangen moeten worden (default: false — bullets worden toegevoegd)',
+      },
+    },
+    required: ['job_index', 'source_text'],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
+  TOOL_BULLETS_FROM_TEXT,
 ];
