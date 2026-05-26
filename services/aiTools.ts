@@ -127,9 +127,61 @@ GEDRAG (HEEL BELANGRIJK):
   },
 };
 
+// ─── PUNT 9 — STRONGER KEYWORDS ──────────────────────────────────────────────
+export const TOOL_REGENERATE_KEYWORDS: ToolDefinition = {
+  name: 'regenerate_keywords',
+  description: `Genereer nieuwe sterke-punten-tags (de 5 keywords bovenaan het CV) op basis van een focus of de huidige werkervaring.
+
+GEBRUIK WANNEER de gebruiker tags wil aanpassen, zoals:
+- "Focus meer op change management en stakeholder management"
+- "Maak de tags sterker"
+- "Vervang de tags door iets meer recruitment-gericht"
+- "Genereer nieuwe keywords"
+
+REGELS:
+- Lever ALTIJD exact 5 tags
+- Tags moeten sector/rol-specifiek zijn (bv. "CASUÏSTIEKREGIE", "JEUGDZORG", "STAKEHOLDERMANAGEMENT")
+- VERMIJD vage tags zoals "Professional", "Gedreven", "Resultaatgericht"
+- Tags worden UPPERCASE getoond in het CV
+- Baseer op de werkervaring in het CV, niet op verzonnen informatie`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      focus: {
+        type: 'string',
+        description: 'Optionele focus-instructie van de gebruiker (bv. "change management" of "voor secondment bij gemeenten"). Leeg laten voor automatische keuze.',
+      },
+    },
+    required: [],
+  },
+};
+
+export const TOOL_SUGGEST_KEYWORDS: ToolDefinition = {
+  name: 'suggest_keywords',
+  description: `Stel keywords voor zonder het CV te wijzigen — alleen advies.
+
+GEBRUIK WANNEER de gebruiker advies wil over keywords, zoals:
+- "Welke keywords passen bij deze kandidaat voor een HR Business Partner rol?"
+- "Welke woorden zou je sterker maken voor deze functie?"
+
+Dit is een ADVIES-tool — verandert het CV NIET. Het antwoord komt terug als tekst.`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      role: {
+        type: 'string',
+        description: 'De rol waarvoor keywords gesuggereerd worden (bv. "HR Business Partner")',
+      },
+    },
+    required: ['role'],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
   TOOL_BULLETS_FROM_TEXT,
   TOOL_COMPLETE_BULLETS,
+  TOOL_REGENERATE_KEYWORDS,
+  TOOL_SUGGEST_KEYWORDS,
 ];

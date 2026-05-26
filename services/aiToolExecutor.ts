@@ -248,6 +248,103 @@ NIEUWE BULLETS:`;
   }
 }
 
+// ─── PUNT 9 — STRONGER KEYWORDS ──────────────────────────────────────────────
+async function executeRegenerateKeywords(
+  input: { focus?: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { focus } = input;
+
+  // Build a summary of the candidate's experience for context
+  const expSummary = (cv.experience || []).slice(0, 5).map(e =>
+    `- ${e.role} bij ${e.employer}: ${(e.bullets || []).slice(0, 3).join(' | ')}`
+  ).join('\n');
+
+  const prompt = `Genereer EXACT 5 sterke-punten-tags voor het CV bovenaan in Novêmber-stijl.
+
+WERKERVARING-CONTEXT:
+${expSummary || '(geen werkervaring opgegeven)'}
+
+${focus ? `FOCUS VAN GEBRUIKER: ${focus}\nDeze focus is leidend — kies tags die hierop aansluiten.` : 'FOCUS: automatisch — kies de 5 sterkste, meest sector-specifieke tags op basis van de werkervaring.'}
+
+HARDE REGELS:
+- EXACT 5 tags
+- Sector/rol-specifiek (bv. CASUÏSTIEKREGIE, JEUGDZORG, STAKEHOLDERMANAGEMENT, BELEIDSADVIES)
+- ❌ VERMIJD: "Professional", "Gedreven", "Resultaatgericht", "Communicatief", "Teamspeler" — te vaag
+- ✅ VOORKEUR: specifieke domeintermen, methodologie-namen, sectortermen
+- Tags worden in UPPERCASE getoond — schrijf ze in UPPERCASE
+- Geen punten of komma's in tags zelf
+
+LEVER alleen de 5 tags als genummerde lijst (1., 2., 3., 4., 5.) zonder uitleg.
+
+TAGS:`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.5, maxOutputTokens: 300 },
+    });
+    const raw = (response.text || '').trim();
+
+    const newTags = raw
+      .split('\n')
+      .map(line => line.replace(/^\s*\d+[.)]\s*/, '').replace(/^[-•*]\s*/, '').trim().toUpperCase())
+      .filter(line => line.length > 1 && line.length < 50)
+      .slice(0, 5);
+
+    if (newTags.length < 3) {
+      return { result: `AI gaf maar ${newTags.length} bruikbare tags terug. Probeer opnieuw met een duidelijkere focus.` };
+    }
+
+    const updatedCv = cloneCv(cv);
+    if (!updatedCv.analysis) updatedCv.analysis = { scores: { overall: 0 }, tags: [], strengths: [], weaknesses: [], summary: '' } as any;
+    updatedCv.analysis!.tags = newTags;
+
+    return {
+      result: `5 nieuwe tags gegenereerd: ${newTags.join(' | ')}`,
+      updatedCv,
+    };
+  } catch (e: any) {
+    return { result: `Fout bij keyword-generatie: ${e?.message || String(e)}` };
+  }
+}
+
+async function executeSuggestKeywords(
+  input: { role: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { role } = input;
+  const expSummary = (cv.experience || []).slice(0, 5).map(e =>
+    `- ${e.role} bij ${e.employer}`
+  ).join('\n');
+
+  const prompt = `Adviseer welke 5-10 keywords passen bij deze kandidaat voor de rol: "${role}".
+
+KANDIDAAT-WERKERVARING:
+${expSummary}
+
+LEVER:
+- 5-10 sector-specifieke keywords (UPPERCASE)
+- Korte uitleg per keyword waarom het past
+- In het Nederlands
+
+Format: 
+KEYWORD — uitleg`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.4, maxOutputTokens: 600 },
+    });
+    const advice = (response.text || '').trim();
+    return { result: advice || 'Geen advies gegenereerd.' };
+  } catch (e: any) {
+    return { result: `Fout bij keyword-advies: ${e?.message || String(e)}` };
+  }
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -260,6 +357,10 @@ export async function executeTool(
       return executeBulletsFromText(input as any, cv);
     case 'complete_bullets':
       return executeCompleteBullets(input as any, cv);
+    case 'regenerate_keywords':
+      return executeRegenerateKeywords(input as any, cv);
+    case 'suggest_keywords':
+      return executeSuggestKeywords(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }
