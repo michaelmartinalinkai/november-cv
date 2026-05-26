@@ -261,19 +261,20 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
 
   return (
     <div
-      className="fixed top-0 right-0 h-screen w-full sm:w-[420px] bg-white shadow-2xl z-50 flex flex-col border-l border-neutral-200"
+      className="fixed top-0 right-0 h-[100dvh] w-full sm:w-[420px] bg-white shadow-2xl z-50 flex flex-col border-l border-neutral-200"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Header */}
-      <div className="bg-[#1E3A35] text-white px-5 py-4 flex justify-between items-center">
-        <div>
+      <div className="bg-[#1E3A35] text-white px-5 py-4 flex justify-between items-center flex-shrink-0">
+        <div className="min-w-0 flex-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#e3fd01]">AI Assistent</div>
-          <div className="text-sm font-semibold mt-0.5">CV-bewerking via gesprek</div>
+          <div className="text-sm font-semibold mt-0.5 truncate">CV-bewerking via gesprek</div>
         </div>
         <button
           onClick={onClose}
-          className="text-white/70 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center"
+          className="text-white/70 hover:text-white text-3xl leading-none w-11 h-11 flex items-center justify-center flex-shrink-0 -mr-2"
           title="Sluiten"
+          aria-label="Sluiten"
         >×</button>
       </div>
 
@@ -313,7 +314,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
       )}
 
       {/* Message thread */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3" style={{ WebkitOverflowScrolling: 'touch' as any }}>
         {messages.map((msg) => (
           <MessageBubble key={msg.id} msg={msg} />
         ))}
@@ -356,7 +357,10 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
       )}
 
       {/* Input area */}
-      <div className="border-t border-neutral-200 p-3 bg-neutral-50">
+      <div
+        className="border-t border-neutral-200 p-3 bg-neutral-50 flex-shrink-0"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
         <textarea
           ref={inputRef}
           value={input}
@@ -364,13 +368,15 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           onKeyDown={handleKeyDown}
           placeholder="Typ een bericht… (Enter om te versturen, Shift+Enter voor nieuwe regel)"
           rows={2}
-          className="w-full px-3 py-2 text-[12px] border border-neutral-200 rounded resize-none focus:outline-none focus:border-[#EE8D70] transition-colors leading-relaxed"
+          className="w-full px-3 py-2 text-[13px] sm:text-[12px] border border-neutral-200 rounded resize-none focus:outline-none focus:border-[#EE8D70] transition-colors leading-relaxed"
           disabled={isThinking}
+          inputMode="text"
+          autoComplete="off"
         />
         <div className="flex justify-between items-center mt-2">
           <button
             onClick={handleClear}
-            className="text-[10px] text-neutral-400 hover:text-neutral-600 uppercase tracking-wider"
+            className="text-[10px] text-neutral-400 hover:text-neutral-600 uppercase tracking-wider min-h-[36px] px-2"
             disabled={messages.length === 0}
           >
             Gesprek wissen
@@ -378,7 +384,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           <button
             onClick={handleSend}
             disabled={!input.trim() || isThinking}
-            className="px-4 py-1.5 bg-[#EE8D70] text-white text-[11px] font-bold uppercase tracking-widest hover:bg-[#E07C60] disabled:opacity-40 disabled:cursor-not-allowed transition-colors rounded"
+            className="px-5 py-2.5 bg-[#EE8D70] text-white text-[11px] font-bold uppercase tracking-widest hover:bg-[#E07C60] disabled:opacity-40 disabled:cursor-not-allowed transition-colors rounded min-h-[40px]"
           >
             {isThinking ? '...' : 'Verstuur'}
           </button>
