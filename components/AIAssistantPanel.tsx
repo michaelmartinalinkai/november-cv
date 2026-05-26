@@ -278,8 +278,13 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
       {/* Welcome / empty state */}
       {messages.length === 0 && (
         <div className="px-5 py-6 text-[12px] text-neutral-600 leading-relaxed border-b border-neutral-100">
-          <p className="font-semibold text-neutral-800 mb-2">Hoe kan ik je helpen?</p>
-          <p className="mb-3">Voorbeelden van wat je kunt vragen:</p>
+          <p className="font-semibold text-neutral-800 mb-1">Hoe kan ik je helpen?</p>
+          {cv.personalInfo?.name && (
+            <p className="text-[11px] text-neutral-500 mb-3">
+              Werkend aan het CV van <span className="font-medium text-neutral-700">{cv.personalInfo.name}</span>
+            </p>
+          )}
+          <p className="mb-3 text-[11px]">Voorbeelden van wat je kunt vragen:</p>
           <div className="space-y-1.5 text-[11px]">
             {[
               'Optimaliseer dit CV voor een rol als Jeugdbeleidsadviseur',
