@@ -70,6 +70,7 @@ export interface ParsedCV {
   hideSeparators?: boolean[];
   analysis?: CVAnalysis;
   motivationLetter?: string; // Punt 1 — cover letter (downloaded as separate PDF)
+  manualOrder?: boolean;     // Punt 5 — when true, experience array is rendered in array order (not date-sorted)
 }
 
 export enum AppState {

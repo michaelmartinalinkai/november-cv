@@ -4,6 +4,40 @@ import { LOGO_URL, WHITE_ARROW_URL } from '../assets';
 import { EditableText } from './EditableText';
 import { geminiService } from '../services/geminiService';
 import { usageService } from '../services/usageService';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// ─── SORTABLE WRAPPER ────────────────────────────────────────────────────────
+// Wraps each experience block to make it draggable. Drag handle is in the children.
+const SortableExpItem: React.FC<{ id: string; isEditing: boolean; children: (handleProps: any) => React.ReactNode }> = ({ id, isEditing, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !isEditing });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+};
 
 interface CVPreviewProps {
   data: ParsedCV;
@@ -253,6 +287,32 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
   const rawTags = data.analysis?.tags || [];
   const displaySkills = [...rawTags.slice(0, 5)];
   while (displaySkills.length < 5) displaySkills.push("Professional");
+
+  // ─── Drag-and-drop sensors (Punt 5) ─────────────────────────────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), // 8px movement before drag starts
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleExpDragEnd = (event: DragEndEvent) => {
+    if (!onChange) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const activeIdx = parseInt((active.id as string).replace('exp-', ''));
+    const overIdx = parseInt((over.id as string).replace('exp-', ''));
+    if (isNaN(activeIdx) || isNaN(overIdx)) return;
+    const newData = JSON.parse(JSON.stringify(data));
+    newData.experience = arrayMove(newData.experience, activeIdx, overIdx);
+    newData.manualOrder = true; // mark CV as manually ordered → render uses array order
+    onChange(newData);
+  };
+
+  const handleResetOrder = () => {
+    if (!onChange) return;
+    const newData = JSON.parse(JSON.stringify(data));
+    newData.manualOrder = false;
+    onChange(newData);
+  };
 
   const handleRegenerateJob = async (expIdx: number) => {
     if (!data?.experience) return;
@@ -663,10 +723,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
         <div className="space-y-5">
           {(() => {
             // Tag each item with its original index BEFORE sorting to avoid findIndex collisions.
-            // In edit mode: keep array order so reorder arrows visually work.
-            // In view/print mode: pinned items first, then sort by most-recent date.
+            // In edit mode: keep array order so reorder arrows/drag-and-drop visually work.
+            // In view/print mode:
+            //   - If manualOrder flag is set (drag-and-drop was used), respect array order
+            //   - Otherwise: pinned items first, then sort by most-recent date
             const tagged = (data.experience || []).map((exp, idx) => ({ ...exp, __origIdx: idx }));
-            const sorted = isEditing
+            const sorted = (isEditing || data.manualOrder)
               ? tagged
               : [...tagged].sort((a, b) => {
                   // Pinned items always come first
@@ -675,10 +737,26 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   // Within same pin status, sort by start date (most recent first)
                   return parsePeriodStart(b.period) - parsePeriodStart(a.period);
                 });
-            return sorted.map((exp, si) => {
+            const expIds = sorted.map(e => `exp-${e.__origIdx}`);
+            return (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExpDragEnd}>
+                <SortableContext items={expIds} strategy={verticalListSortingStrategy}>
+                  {sorted.map((exp, si) => {
               const originalIdx = exp.__origIdx;
               return (
-                <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-5' : ''}`} style={{ fontFamily: 'Garet, sans-serif' }}>
+                <SortableExpItem id={`exp-${originalIdx}`} key={`exp-${originalIdx}`} isEditing={!!isEditing}>{(dragHandle) => (
+                <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-9' : ''}`} style={{ fontFamily: 'Garet, sans-serif' }}>
+                  {/* Drag handle (Punt 5) — only in edit mode */}
+                  {isEditing && (
+                    <button
+                      {...dragHandle}
+                      className="print:hidden absolute -left-1 top-0 cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-600 transition-colors p-1 select-none touch-none"
+                      title="Sleep om te verplaatsen"
+                      style={{ touchAction: 'none' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="3" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="10" cy="11" r="1.2"/></svg>
+                    </button>
+                  )}
                   {/* Page break ruler (edit mode only) */}
                   {exp.pageBreakBefore && isEditing && (
                     <PageBreakRuler onRemove={() => {
@@ -884,8 +962,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     </div>
                   )}
                 </div>
+                )}</SortableExpItem>
               );
-            });
+            })}
+                </SortableContext>
+              </DndContext>
+            );
           })()}
         </div>
         {isEditing && (
@@ -899,6 +981,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               onChange(newData);
             }}
           >+ werkervaring toevoegen</button>
+        )}
+        {isEditing && data.manualOrder && (
+          <button
+            onClick={handleResetOrder}
+            className="print:hidden mt-3 ml-3 text-[10px] text-orange-600 hover:text-orange-800 font-medium"
+            title="Verwijder handmatige volgorde en sorteer weer op datum (pin-to-top blijft actief)"
+          >🔄 reset naar chronologische volgorde</button>
+        )}
+        {isEditing && data.manualOrder && (
+          <div className="print:hidden mt-2 text-[10px] text-orange-600 italic">
+            ℹ️ Handmatige volgorde actief — werkervaring wordt weergegeven in de volgorde hieronder, niet op datum.
+          </div>
         )}
       </section>
       {((data.systems && data.systems.length > 0) || (data.languages && data.languages.length > 0) || isEditing) && (

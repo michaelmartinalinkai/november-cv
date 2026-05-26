@@ -439,11 +439,14 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       ]
     }),
 
-    ...[...(data.experience || [])].sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-      return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-    }).flatMap(exp => [
+    ...(data.manualOrder
+      ? [...(data.experience || [])]
+      : [...(data.experience || [])].sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return parsePeriodStart(b.period) - parsePeriodStart(a.period);
+        })
+    ).flatMap(exp => [
       // Period
       new Paragraph({
         spacing: { before: 240 },
