@@ -822,6 +822,165 @@ async function executeUpdatePersonalInfo(
   };
 }
 
+// ─── SIDE-SECTION EXECUTORS ──────────────────────────────────────────────────
+async function executeManageLanguages(
+  input: { action: 'add' | 'remove' | 'replace_all'; language?: string; languages?: string[] },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const updatedCv = cloneCv(cv);
+  updatedCv.languages = updatedCv.languages || [];
+
+  if (input.action === 'replace_all') {
+    if (!Array.isArray(input.languages)) return { result: 'Fout: languages array vereist voor replace_all.' };
+    updatedCv.languages = [...input.languages];
+    return { result: `Talenlijst vervangen door ${input.languages.length} taal/talen: ${input.languages.join(', ')}`, updatedCv };
+  }
+
+  if (!input.language) return { result: `Fout: language vereist voor ${input.action}.` };
+
+  if (input.action === 'add') {
+    if (updatedCv.languages.some(l => l.toLowerCase() === input.language!.toLowerCase())) {
+      return { result: `"${input.language}" staat al in de talenlijst — niets toegevoegd.` };
+    }
+    updatedCv.languages.push(input.language);
+    return { result: `Taal toegevoegd: "${input.language}". Totaal: ${updatedCv.languages.length}.`, updatedCv };
+  }
+
+  if (input.action === 'remove') {
+    const before = updatedCv.languages.length;
+    updatedCv.languages = updatedCv.languages.filter(l => !l.toLowerCase().includes(input.language!.toLowerCase()));
+    if (updatedCv.languages.length === before) {
+      return { result: `Geen taal gevonden die overeenkomt met "${input.language}".` };
+    }
+    return { result: `Taal verwijderd. Resterend: ${updatedCv.languages.length}.`, updatedCv };
+  }
+
+  return { result: `Onbekende action: ${input.action}` };
+}
+
+async function executeManageSystems(
+  input: { action: 'add' | 'remove' | 'replace_all'; system?: string; systems?: string[] },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const updatedCv = cloneCv(cv);
+  updatedCv.systems = updatedCv.systems || [];
+
+  if (input.action === 'replace_all') {
+    if (!Array.isArray(input.systems)) return { result: 'Fout: systems array vereist voor replace_all.' };
+    updatedCv.systems = [...input.systems];
+    return { result: `Systemen-lijst vervangen door ${input.systems.length} item(s): ${input.systems.join(', ')}`, updatedCv };
+  }
+
+  if (!input.system) return { result: `Fout: system vereist voor ${input.action}.` };
+
+  if (input.action === 'add') {
+    if (updatedCv.systems.some(s => s.toLowerCase() === input.system!.toLowerCase())) {
+      return { result: `"${input.system}" staat al in de systemenlijst — niets toegevoegd.` };
+    }
+    updatedCv.systems.push(input.system);
+    return { result: `Systeem toegevoegd: "${input.system}". Totaal: ${updatedCv.systems.length}.`, updatedCv };
+  }
+
+  if (input.action === 'remove') {
+    const before = updatedCv.systems.length;
+    updatedCv.systems = updatedCv.systems.filter(s => !s.toLowerCase().includes(input.system!.toLowerCase()));
+    if (updatedCv.systems.length === before) {
+      return { result: `Geen systeem gevonden dat overeenkomt met "${input.system}".` };
+    }
+    return { result: `Systeem verwijderd. Resterend: ${updatedCv.systems.length}.`, updatedCv };
+  }
+
+  return { result: `Onbekende action: ${input.action}` };
+}
+
+async function executeManageCourses(
+  input: { action: 'add' | 'delete' | 'update'; index?: number; period?: string; title?: string; institute?: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const updatedCv = cloneCv(cv);
+  updatedCv.courses = updatedCv.courses || [];
+
+  if (input.action === 'add') {
+    if (!input.title) return { result: 'Fout: title vereist voor add.' };
+    updatedCv.courses.push({
+      period: input.period || '',
+      title: input.title,
+      institute: input.institute,
+    });
+    return { result: `Cursus toegevoegd: "${input.title}" (${input.period || 'geen periode'}). Totaal: ${updatedCv.courses.length}.`, updatedCv };
+  }
+
+  if (input.action === 'delete') {
+    if (input.index === undefined || input.index < 0 || input.index >= updatedCv.courses.length) {
+      return { result: `Fout: ongeldige index ${input.index} (er zijn ${updatedCv.courses.length} cursussen).` };
+    }
+    const removed = updatedCv.courses[input.index];
+    updatedCv.courses.splice(input.index, 1);
+    return { result: `Cursus verwijderd: "${removed.title}". Resterend: ${updatedCv.courses.length}.`, updatedCv };
+  }
+
+  if (input.action === 'update') {
+    if (input.index === undefined || input.index < 0 || input.index >= updatedCv.courses.length) {
+      return { result: `Fout: ongeldige index ${input.index}.` };
+    }
+    const current = updatedCv.courses[input.index];
+    const changes: string[] = [];
+    if (input.period !== undefined) { changes.push(`period: "${current.period}" → "${input.period}"`); current.period = input.period; }
+    if (input.title !== undefined) { changes.push(`title: "${current.title}" → "${input.title}"`); current.title = input.title; }
+    if (input.institute !== undefined) { changes.push(`institute: "${current.institute || ''}" → "${input.institute}"`); current.institute = input.institute; }
+    if (changes.length === 0) return { result: 'Geen velden om te updaten — niets veranderd.' };
+    return { result: `Cursus bijgewerkt:\n${changes.join('\n')}`, updatedCv };
+  }
+
+  return { result: `Onbekende action: ${input.action}` };
+}
+
+async function executeManageEducation(
+  input: { action: 'add' | 'delete' | 'update'; index?: number; period?: string; degree?: string; status?: string; school?: string; plaats?: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const updatedCv = cloneCv(cv);
+  updatedCv.education = updatedCv.education || [];
+
+  if (input.action === 'add') {
+    if (!input.degree) return { result: 'Fout: degree vereist voor add.' };
+    updatedCv.education.push({
+      period: input.period || '',
+      degree: input.degree,
+      status: input.status || 'Diploma behaald',
+      school: input.school,
+      plaats: input.plaats,
+    });
+    return { result: `Opleiding toegevoegd: "${input.degree}" (${input.period || 'geen periode'}). Totaal: ${updatedCv.education.length}.`, updatedCv };
+  }
+
+  if (input.action === 'delete') {
+    if (input.index === undefined || input.index < 0 || input.index >= updatedCv.education.length) {
+      return { result: `Fout: ongeldige index ${input.index} (er zijn ${updatedCv.education.length} opleidingen).` };
+    }
+    const removed = updatedCv.education[input.index];
+    updatedCv.education.splice(input.index, 1);
+    return { result: `Opleiding verwijderd: "${removed.degree}". Resterend: ${updatedCv.education.length}.`, updatedCv };
+  }
+
+  if (input.action === 'update') {
+    if (input.index === undefined || input.index < 0 || input.index >= updatedCv.education.length) {
+      return { result: `Fout: ongeldige index ${input.index}.` };
+    }
+    const current = updatedCv.education[input.index];
+    const changes: string[] = [];
+    const fields: Array<keyof typeof current> = ['period', 'degree', 'status', 'school', 'plaats'];
+    for (const f of fields) {
+      const v = (input as any)[f];
+      if (v !== undefined) { changes.push(`${f}: "${current[f] || ''}" → "${v}"`); (current as any)[f] = v; }
+    }
+    if (changes.length === 0) return { result: 'Geen velden om te updaten — niets veranderd.' };
+    return { result: `Opleiding bijgewerkt:\n${changes.join('\n')}`, updatedCv };
+  }
+
+  return { result: `Onbekende action: ${input.action}` };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -860,6 +1019,14 @@ export async function executeTool(
       return executeReorderExperience(input as any, cv);
     case 'update_personal_info':
       return executeUpdatePersonalInfo(input as any, cv);
+    case 'manage_languages':
+      return executeManageLanguages(input as any, cv);
+    case 'manage_systems':
+      return executeManageSystems(input as any, cv);
+    case 'manage_courses':
+      return executeManageCourses(input as any, cv);
+    case 'manage_education':
+      return executeManageEducation(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }

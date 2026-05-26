@@ -512,6 +512,98 @@ GEDRAG:
   },
 };
 
+// ─── SIDE-SECTION TOOLS (languages, systems, courses, education) ────────────
+export const TOOL_MANAGE_LANGUAGES: ToolDefinition = {
+  name: 'manage_languages',
+  description: `Beheer de talen-lijst van de kandidaat.
+
+GEBRUIK WANNEER de gebruiker talen wil aanpassen, zoals:
+- "Voeg Duits toe op B2-niveau"
+- "Verwijder Frans"
+- "Vervang de hele talenlijst met: Nederlands C2, Engels B2"
+
+GEDRAG:
+- 'add' → voegt één taal toe (geen duplicaten)
+- 'remove' → verwijdert één taal (matcht op kleine letters, substring)
+- 'replace_all' → vervangt de hele lijst`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      action: { type: 'string', enum: ['add', 'remove', 'replace_all'] },
+      language: { type: 'string', description: 'Te toevoegen of te verwijderen taal (bv. "Engels (C1)"). Bij add/remove verplicht.' },
+      languages: { type: 'array', items: { type: 'string' }, description: 'Volledige lijst voor replace_all.' },
+    },
+    required: ['action'],
+  },
+};
+
+export const TOOL_MANAGE_SYSTEMS: ToolDefinition = {
+  name: 'manage_systems',
+  description: `Beheer de systemen/tools-lijst van de kandidaat (bv. Microsoft 365, SAP, Salesforce, branchespecifieke software).
+
+GEBRUIK WANNEER de gebruiker systeem-kennis wil aanpassen, zoals:
+- "Voeg Workday toe"
+- "Verwijder Excel apart, staat al in Microsoft 365"
+- "Vervang de hele lijst"`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      action: { type: 'string', enum: ['add', 'remove', 'replace_all'] },
+      system: { type: 'string', description: 'Te toevoegen of te verwijderen systeem.' },
+      systems: { type: 'array', items: { type: 'string' }, description: 'Volledige lijst voor replace_all.' },
+    },
+    required: ['action'],
+  },
+};
+
+export const TOOL_MANAGE_COURSES: ToolDefinition = {
+  name: 'manage_courses',
+  description: `Beheer cursussen / certificaten van de kandidaat.
+
+GEBRUIK WANNEER de gebruiker cursussen wil aanpassen, zoals:
+- "Voeg toe: 2024 Cursus Agile Werken bij Scrum Academy"
+- "Verwijder de SKJ-cursus uit 2019"
+
+GEDRAG:
+- 'add' → voegt cursus toe aan de lijst
+- 'delete' → verwijdert cursus op index
+- 'update' → wijzigt bestaande cursus op index`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      action: { type: 'string', enum: ['add', 'delete', 'update'] },
+      index: { type: 'number', description: 'Index voor delete/update' },
+      period: { type: 'string', description: 'Jaar/periode (bv. "2023" of "2022-2024")' },
+      title: { type: 'string', description: 'Cursus-titel' },
+      institute: { type: 'string', description: 'Instituut (optioneel)' },
+    },
+    required: ['action'],
+  },
+};
+
+export const TOOL_MANAGE_EDUCATION: ToolDefinition = {
+  name: 'manage_education',
+  description: `Beheer opleidingen van de kandidaat (HBO/WO/MBO-niveau).
+
+GEBRUIK WANNEER de gebruiker opleidingen wil aanpassen, zoals:
+- "Voeg toe: 2018-2022 HBO Social Work, Hogeschool Utrecht, diploma behaald"
+- "Verwijder de opleiding op index 1"
+- "Wijzig de status van de Master naar 'in afronding'"`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      action: { type: 'string', enum: ['add', 'delete', 'update'] },
+      index: { type: 'number', description: 'Index voor delete/update' },
+      period: { type: 'string' },
+      degree: { type: 'string', description: 'Bijv. "HBO Social Work" of "WO Bestuurskunde"' },
+      status: { type: 'string', description: 'Bijv. "Diploma behaald", "In afronding", "Niet afgerond"' },
+      school: { type: 'string' },
+      plaats: { type: 'string' },
+    },
+    required: ['action'],
+  },
+};
+
 // Export array of all currently-active tools
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -530,4 +622,8 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_DELETE_ROLE,
   TOOL_REORDER_EXPERIENCE,
   TOOL_UPDATE_PERSONAL_INFO,
+  TOOL_MANAGE_LANGUAGES,
+  TOOL_MANAGE_SYSTEMS,
+  TOOL_MANAGE_COURSES,
+  TOOL_MANAGE_EDUCATION,
 ];
