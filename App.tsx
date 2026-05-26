@@ -12,6 +12,7 @@ import { generateDocxBlob } from './services/docxGenerator';
 import { CVPdfDocument } from './components/CVPdfDocument';
 import { CoverLetterPdfDocument } from './components/CoverLetterPdfDocument';
 import { AIAssistantPanel } from './components/AIAssistantPanel';
+import { AIOnboardingTour } from './components/AIOnboardingTour';
 import { ALL_TOOLS } from './services/aiTools';
 import { executeTool } from './services/aiToolExecutor';
 import { pdf } from '@react-pdf/renderer';
@@ -531,17 +532,20 @@ const App: React.FC = () => {
         <>
           <UsageModal isOpen={isUsageModalOpen} onClose={() => setIsUsageModalOpen(false)} />
           {selectedItemTop?.result && (
-            <AIAssistantPanel
-              key={selectedItemTop.id}
-              cv={selectedItemTop.result}
-              cvId={selectedItemTop.id}
-              onCvChange={handlePreviewEdit}
-              isOpen={isAIPanelOpen}
-              onClose={() => setIsAIPanelOpen(false)}
-              isEditing={isEditing}
-              tools={ALL_TOOLS}
-              executeTool={executeTool}
-            />
+            <>
+              <AIOnboardingTour onTry={() => setIsAIPanelOpen(true)} />
+              <AIAssistantPanel
+                key={selectedItemTop.id}
+                cv={selectedItemTop.result}
+                cvId={selectedItemTop.id}
+                onCvChange={handlePreviewEdit}
+                isOpen={isAIPanelOpen}
+                onClose={() => setIsAIPanelOpen(false)}
+                isEditing={isEditing}
+                tools={ALL_TOOLS}
+                executeTool={executeTool}
+              />
+            </>
           )}
           <main className="container mx-auto px-4 mt-12 max-w-6xl">
             {/* Punt 9 + 13 — Recruiter-controls vóór upload: focus voor keywords + final-grade toggle */}
