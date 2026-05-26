@@ -4,6 +4,7 @@ import { chatService, ChatMessage, ContentBlock, ToolDefinition } from '../servi
 
 interface AIAssistantPanelProps {
   cv: ParsedCV;
+  cvId: string; // Used to detect CV switches and reset chat
   onCvChange: (newCv: ParsedCV) => void;
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +24,7 @@ interface DisplayMessage {
 
 export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   cv,
+  cvId,
   onCvChange,
   isOpen,
   onClose,

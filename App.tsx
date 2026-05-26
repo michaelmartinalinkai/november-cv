@@ -532,7 +532,9 @@ const App: React.FC = () => {
           <UsageModal isOpen={isUsageModalOpen} onClose={() => setIsUsageModalOpen(false)} />
           {selectedItemTop?.result && (
             <AIAssistantPanel
+              key={selectedItemTop.id}
               cv={selectedItemTop.result}
+              cvId={selectedItemTop.id}
               onCvChange={handlePreviewEdit}
               isOpen={isAIPanelOpen}
               onClose={() => setIsAIPanelOpen(false)}
