@@ -121,6 +121,8 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   const [isThinking, setIsThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenUsage, setTokenUsage] = useState<{ input: number; output: number; cached: number }>({ input: 0, output: 0, cached: 0 });
+  // Toggle for help overlay
+  const [showHelp, setShowHelp] = useState(false);
   // Safety: hard cap per session to prevent runaway costs. ~€0.50 of usage.
   const MAX_SESSION_COST_USD = 0.50;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -386,12 +388,73 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           <div className="text-sm font-semibold mt-0.5 truncate">CV-bewerking via gesprek</div>
         </div>
         <button
+          onClick={() => setShowHelp(v => !v)}
+          className="text-white/70 hover:text-white text-lg leading-none w-9 h-9 flex items-center justify-center flex-shrink-0 mr-1 rounded hover:bg-white/10"
+          title="Wat kan deze assistent?"
+          aria-label="Help"
+        >?</button>
+        <button
           onClick={onClose}
           className="text-white/70 hover:text-white text-3xl leading-none w-11 h-11 flex items-center justify-center flex-shrink-0 -mr-2"
           title="Sluiten"
           aria-label="Sluiten"
         >×</button>
       </div>
+
+      {/* Help panel */}
+      {showHelp && (
+        <div className="bg-neutral-900 text-white px-5 py-4 text-[11px] leading-relaxed border-b border-neutral-700 flex-shrink-0 max-h-[50vh] overflow-y-auto">
+          <div className="font-bold text-[#e3fd01] mb-2">📚 Wat kan deze assistent?</div>
+          <div className="space-y-2.5">
+            <div>
+              <div className="font-semibold text-white/90">✏️ Bullets herschrijven</div>
+              <div className="text-white/60">"Maak de eerste bullet van de laatste functie korter, behoud de inhoud"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">➕ Functie aanvullen</div>
+              <div className="text-white/60">"Vul deze functie aan tot 5 bullets zonder de bestaande te veranderen"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">🎯 Voor vacature optimaliseren</div>
+              <div className="text-white/60">"Optimaliseer dit CV voor een rol als Jeugdbeleidsadviseur"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">📝 Motivatiebrief schrijven</div>
+              <div className="text-white/60">"Schrijf een korte motivatiebrief voor de gemeente Rotterdam, professionele toon"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">🏷️ Tags aanpassen</div>
+              <div className="text-white/60">"Genereer nieuwe sterke-punten-tags, focus op leiderschap"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">🔄 Functies herordenen</div>
+              <div className="text-white/60">"Zet de beleidsadviseur-functie bovenaan"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">🗑️ Bullets/functies verwijderen</div>
+              <div className="text-white/60">"Verwijder de derde bullet uit de laatste functie"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">📋 Header velden bijwerken</div>
+              <div className="text-white/60">"Zet beschikbaarheid op 1 oktober, 32 uur per week"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">🌍 Talen / systemen / cursussen / opleidingen</div>
+              <div className="text-white/60">"Voeg Duits B2 toe", "Voeg Workday toe aan systemen"</div>
+            </div>
+            <div>
+              <div className="font-semibold text-white/90">💡 Analyse & advies</div>
+              <div className="text-white/60">"Wat zijn de zwakke punten van dit CV?" of "Welke werkervaring past best?"</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowHelp(false)}
+            className="mt-3 text-[10px] uppercase tracking-wider text-white/60 hover:text-white"
+          >
+            Sluiten ↑
+          </button>
+        </div>
+      )}
 
       {/* Edit-mode warning */}
       {isEditing && (
