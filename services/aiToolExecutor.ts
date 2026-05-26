@@ -741,6 +741,47 @@ async function executeDeleteRole(
   };
 }
 
+// ─── REORDER EXPERIENCE ──────────────────────────────────────────────────────
+async function executeReorderExperience(
+  input: { new_order: number[] },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { new_order } = input;
+
+  if (!cv.experience || cv.experience.length === 0) {
+    return { result: 'Geen werkervaring om te herordenen.' };
+  }
+  if (!Array.isArray(new_order)) {
+    return { result: 'Fout: new_order moet een array van indices zijn.' };
+  }
+  if (new_order.length !== cv.experience.length) {
+    return { result: `Fout: new_order moet exact ${cv.experience.length} indices bevatten (kreeg er ${new_order.length}).` };
+  }
+  // Validate all indices are unique and within range
+  const seen = new Set<number>();
+  for (const idx of new_order) {
+    if (typeof idx !== 'number' || idx < 0 || idx >= cv.experience.length) {
+      return { result: `Fout: ongeldige index ${idx} in new_order.` };
+    }
+    if (seen.has(idx)) {
+      return { result: `Fout: index ${idx} komt meerdere keren voor in new_order.` };
+    }
+    seen.add(idx);
+  }
+
+  const updatedCv = cloneCv(cv);
+  updatedCv.experience = new_order.map(i => cv.experience![i]);
+  updatedCv.manualOrder = true; // activate manual ordering mode
+
+  const beforeOrder = cv.experience.map(e => e.role).join(', ');
+  const afterOrder = updatedCv.experience.map(e => e.role).join(', ');
+
+  return {
+    result: `Werkervaringen herordend.\nVoor: ${beforeOrder}\nNa: ${afterOrder}\nHandmatige volgorde is nu actief (datum-sortering uitgeschakeld).`,
+    updatedCv,
+  };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -775,6 +816,8 @@ export async function executeTool(
       return executeDeleteBullet(input as any, cv);
     case 'delete_role':
       return executeDeleteRole(input as any, cv);
+    case 'reorder_experience':
+      return executeReorderExperience(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }

@@ -454,6 +454,33 @@ GEDRAG:
   },
 };
 
+// ─── REORDER EXPERIENCE (via AI) ─────────────────────────────────────────────
+export const TOOL_REORDER_EXPERIENCE: ToolDefinition = {
+  name: 'reorder_experience',
+  description: `Verander de volgorde van werkervaringen in het CV.
+
+GEBRUIK WANNEER de gebruiker werkervaring wil herordenen, zoals:
+- "Zet de beleidsadviseur-functie bovenaan"
+- "Verplaats de tweede functie naar onderaan"
+- "Zet de Jeugdzorg-rollen samen"
+
+GEDRAG:
+- Activeert "handmatige volgorde" — daarna respecteert het CV de array-volgorde in plaats van datum-sortering
+- new_order moet ALLE bestaande job-indices bevatten (gewoon herschikt)
+- Voorbeeld: als er 4 functies zijn (indices 0-3) en de gebruiker wil index 2 bovenaan, dan new_order = [2, 0, 1, 3]`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      new_order: {
+        type: 'array',
+        items: { type: 'number' },
+        description: 'Nieuwe volgorde van indices. Moet ALLE bestaande indices precies één keer bevatten.',
+      },
+    },
+    required: ['new_order'],
+  },
+};
+
 // Export array of all currently-active tools
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -470,4 +497,5 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_SET_PINNED,
   TOOL_DELETE_BULLET,
   TOOL_DELETE_ROLE,
+  TOOL_REORDER_EXPERIENCE,
 ];
