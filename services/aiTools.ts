@@ -95,8 +95,41 @@ GEDRAG:
   },
 };
 
+// ─── PUNT 8 — SMART BULLET COMPLETION ────────────────────────────────────────
+export const TOOL_COMPLETE_BULLETS: ToolDefinition = {
+  name: 'complete_bullets',
+  description: `Vul bullets aan tot een minimumaantal zonder bestaande bullets te veranderen.
+
+GEBRUIK WANNEER de gebruiker bullets wil aanvullen, zoals:
+- "Vul deze functie aan tot minimaal 5 bullets"
+- "Voeg bullets toe waar nodig" (kies dan target_count=5)
+- "Maak deze taken compleet zonder de bestaande te veranderen"
+
+GEDRAG (HEEL BELANGRIJK):
+- Bestaande bullets blijven EXACT zoals ze zijn — niet aangeraakt
+- Alleen nieuwe bullets worden TOEGEVOEGD om tot target_count te komen
+- Nieuwe bullets passen bij de functie (rol + werkgever) maar VERZIN GEEN concrete handelingen die niet plausibel zijn
+- Als er al genoeg bullets zijn (>= target_count), niets doen
+- Dit lost Maria's grootste frustratie op: dat de converter "zelf dingen verzint"`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie waar bullets aangevuld moeten worden',
+      },
+      target_count: {
+        type: 'number',
+        description: 'Minimumaantal bullets dat de functie moet hebben (meestal 5)',
+      },
+    },
+    required: ['job_index', 'target_count'],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
   TOOL_BULLETS_FROM_TEXT,
+  TOOL_COMPLETE_BULLETS,
 ];
