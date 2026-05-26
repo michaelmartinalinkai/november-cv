@@ -23,6 +23,87 @@ interface DisplayMessage {
   timestamp: number;
 }
 
+// ─── SUGGESTION CHIPS ────────────────────────────────────────────────────────
+// Returns 2-3 contextual follow-up prompts based on the last AI action.
+// Keeps the user moving without having to think of what to ask next.
+function getSuggestionsFor(lastMsg: DisplayMessage | undefined, cv: ParsedCV): string[] {
+  if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.toolUses || lastMsg.toolUses.length === 0) {
+    return [];
+  }
+  const lastTool = lastMsg.toolUses[lastMsg.toolUses.length - 1].name;
+
+  switch (lastTool) {
+    case 'rephrase_bullet':
+      return [
+        'Doe hetzelfde voor de andere bullets',
+        'Maak deze nog korter',
+        'Ongedaan maken graag, terug naar origineel',
+      ];
+    case 'bullets_from_text':
+      return [
+        'Vul aan tot 5 bullets minimaal',
+        'Maak de laatste bullet professioneler',
+        'Genereer nieuwe sterke-punten-tags',
+      ];
+    case 'complete_bullets':
+      return [
+        'Optimaliseer dit CV voor een specifieke vacature',
+        'Pas de tags aan op de nieuwe inhoud',
+        'Herschrijf de bullets korter',
+      ];
+    case 'regenerate_keywords':
+    case 'suggest_keywords':
+      return [
+        'Maak ze nog sector-specifieker',
+        'Focus meer op leiderschap',
+        'Schrijf een motivatiebrief op basis hiervan',
+      ];
+    case 'optimize_for_vacancy':
+      return [
+        'Schrijf nu ook een motivatiebrief voor deze vacature',
+        'Welke werkervaring zou je bovenaan zetten?',
+        'Pas alleen de tags nog wat aan',
+      ];
+    case 'generate_cover_letter':
+      return [
+        'Maak de brief iets korter',
+        'Verander de toon naar enthousiast',
+        'Optimaliseer ook het CV voor deze vacature',
+      ];
+    case 'adjust_role':
+    case 'rewrite_job_bullets':
+      return [
+        'Doe hetzelfde voor de vorige functie',
+        'Vul deze functie aan tot 5 bullets',
+        'Genereer nieuwe tags op basis van de wijzigingen',
+      ];
+    case 'add_new_role':
+      return [
+        'Vul de net toegevoegde functie aan met meer bullets',
+        'Pin deze nieuwe functie bovenaan',
+        'Pas de tags aan op de nieuwe ervaring',
+      ];
+    case 'advise_relevance':
+      return [
+        'Pin de top-functie bovenaan',
+        'Optimaliseer dit CV voor die vacature',
+        'Schrijf een motivatiebrief gericht op die rol',
+      ];
+    case 'set_pinned':
+      return [
+        'Optimaliseer het CV voor een specifieke vacature',
+        'Schrijf een motivatiebrief',
+        'Pas de tags aan',
+      ];
+    default:
+      return [
+        'Optimaliseer dit CV voor een vacature',
+        'Schrijf een motivatiebrief',
+        'Genereer nieuwe sterke-punten-tags',
+      ];
+  }
+}
+
 export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   cv,
   cvId,
@@ -325,6 +406,28 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             </div>
           </div>
         )}
+        {/* Suggestion chips — shown after last assistant message completes */}
+        {!isThinking && !error && messages.length > 0 && (() => {
+          const lastMsg = messages[messages.length - 1];
+          const suggestions = getSuggestionsFor(lastMsg, cv);
+          if (suggestions.length === 0) return null;
+          return (
+            <div className="pt-1">
+              <div className="text-[9px] uppercase tracking-wider text-neutral-400 mb-1.5">Vervolgvragen</div>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                    className="text-[10px] px-2.5 py-1 bg-white border border-neutral-200 hover:border-[#EE8D70] hover:bg-orange-50 text-neutral-700 rounded-full transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-[11px]">
             <div className="flex items-start gap-2">
