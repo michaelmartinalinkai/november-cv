@@ -782,6 +782,46 @@ async function executeReorderExperience(
   };
 }
 
+// ─── UPDATE PERSONAL INFO ────────────────────────────────────────────────────
+async function executeUpdatePersonalInfo(
+  input: {
+    availability?: string;
+    hours?: string;
+    placeOfResidence?: string;
+    gender?: string;
+    holidaySchedule?: string;
+    skj?: string;
+    skjDate?: string;
+  },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const updatedCv = cloneCv(cv);
+  if (!updatedCv.personalInfo) {
+    return { result: 'Fout: CV heeft geen personalInfo object.' };
+  }
+
+  const changes: string[] = [];
+  const fields = ['availability', 'hours', 'placeOfResidence', 'gender', 'holidaySchedule', 'skj', 'skjDate'] as const;
+
+  for (const field of fields) {
+    if (input[field] !== undefined) {
+      const oldVal = (updatedCv.personalInfo as any)[field] || '(leeg)';
+      const newVal = input[field] || '';
+      (updatedCv.personalInfo as any)[field] = newVal;
+      changes.push(`${field}: "${oldVal}" → "${newVal || '(gewist)'}"`);
+    }
+  }
+
+  if (changes.length === 0) {
+    return { result: 'Geen velden om te updaten — niets veranderd.' };
+  }
+
+  return {
+    result: `Header bijgewerkt:\n${changes.join('\n')}`,
+    updatedCv,
+  };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -818,6 +858,8 @@ export async function executeTool(
       return executeDeleteRole(input as any, cv);
     case 'reorder_experience':
       return executeReorderExperience(input as any, cv);
+    case 'update_personal_info':
+      return executeUpdatePersonalInfo(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }

@@ -481,6 +481,37 @@ GEDRAG:
   },
 };
 
+// ─── HEADER / PERSONAL INFO UPDATES ──────────────────────────────────────────
+export const TOOL_UPDATE_PERSONAL_INFO: ToolDefinition = {
+  name: 'update_personal_info',
+  description: `Update één of meerdere header-velden van de kandidaat (beschikbaarheid, uren, woonplaats, geslacht, vakantieschema, SKJ-registratie).
+
+GEBRUIK WANNEER de gebruiker header-info wil aanpassen, zoals:
+- "Zet beschikbaarheid op 1 oktober"
+- "Verander uren naar 32 per week"
+- "Voeg toe: woonplaats Utrecht, vakantieschema 5-19 juli"
+- "Wijzig SKJ-nummer naar 123456"
+
+GEDRAG:
+- Update alleen velden die je expliciet opgeeft — andere blijven onveranderd
+- Leeg veld = wist het veld
+- Voor "beschikbaar per direct" → availability = "direct"
+- Voor "32 uur per week" → hours = "32"`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      availability: { type: 'string', description: 'Beschikbaarheid (bv. "direct", "1 oktober", "in overleg")' },
+      hours: { type: 'string', description: 'Uren per week (bv. "32", "40")' },
+      placeOfResidence: { type: 'string', description: 'Woonplaats' },
+      gender: { type: 'string', description: 'Geslacht (Man / Vrouw / Anders)' },
+      holidaySchedule: { type: 'string', description: 'Vakantieschema (bv. "5-19 juli")' },
+      skj: { type: 'string', description: 'SKJ-registratienummer' },
+      skjDate: { type: 'string', description: 'Datum SKJ afgegeven (bv. "01-03-2023")' },
+    },
+    required: [],
+  },
+};
+
 // Export array of all currently-active tools
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -498,4 +529,5 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_DELETE_BULLET,
   TOOL_DELETE_ROLE,
   TOOL_REORDER_EXPERIENCE,
+  TOOL_UPDATE_PERSONAL_INFO,
 ];
