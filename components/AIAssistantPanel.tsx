@@ -81,6 +81,19 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
     }
   };
 
+  const handleRetry = async () => {
+    setError(null);
+    setIsThinking(true);
+    try {
+      await runAgentLoop();
+    } catch (e: any) {
+      console.error('[AIAssistant] Retry error:', e);
+      setError(e?.message || 'Onbekende fout');
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
   /**
    * Agent loop: send messages → if response has tool_use, execute tools, send results back, repeat.
    * Stops when the model returns stop_reason: 'end_turn' (i.e. it's done).
@@ -291,7 +304,19 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
         )}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-[11px]">
-            ⚠️ {error}
+            <div className="flex items-start gap-2">
+              <span>⚠️</span>
+              <div className="flex-1">
+                <div>{error}</div>
+                <button
+                  onClick={handleRetry}
+                  disabled={isThinking}
+                  className="mt-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  ↻ Opnieuw proberen
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
