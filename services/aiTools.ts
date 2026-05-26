@@ -252,6 +252,102 @@ GEDRAG:
   },
 };
 
+// ─── PUNT 13 — EXISTING CV EDITING ───────────────────────────────────────────
+export const TOOL_ADJUST_ROLE: ToolDefinition = {
+  name: 'adjust_role',
+  description: `Pas één specifieke werkervaring aan op basis van een instructie.
+
+GEBRUIK WANNEER de gebruiker een specifieke functie wil aanpassen, zoals:
+- "Pas alleen de laatste werkervaring aan"
+- "Voeg deze taken toe aan de rol van Jeugdbegeleider"
+- "Maak deze functie meer geschikt voor secondment bij gemeenten"
+
+GEDRAG:
+- Wijzigt ALLEEN de aangewezen functie — andere functies blijven onaangeraakt
+- Volgt de instructie (uitbreiden, herformuleren, focus aanpassen)
+- VERZIN GEEN nieuwe ervaring die niet plausibel is voor de rol`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie die aangepast moet worden',
+      },
+      instruction: {
+        type: 'string',
+        description: 'Specifieke instructie wat aangepast moet worden (bv. "maak meer secondment-gericht", "voeg ketenpartner-samenwerking toe als die er was")',
+      },
+    },
+    required: ['job_index', 'instruction'],
+  },
+};
+
+export const TOOL_ADD_NEW_ROLE: ToolDefinition = {
+  name: 'add_new_role',
+  description: `Voeg een nieuwe werkervaring toe aan het CV.
+
+GEBRUIK WANNEER de gebruiker een nieuwe functie wil toevoegen, zoals:
+- "Voeg deze nieuwe opdracht toe in dezelfde stijl als de rest"
+- "Voeg toe: Beleidsadviseur bij Gemeente Amsterdam, jan 2024 - heden"
+
+GEDRAG:
+- Nieuwe functie wordt aan het BEGIN van de experience array gezet (meest recent)
+- Bullets worden gegenereerd in dezelfde stijl als bestaande bullets — als ze niet zijn opgegeven
+- VERZIN GEEN ervaring — als bullets niet zijn opgegeven, vraag om verduidelijking of laat ze leeg`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      period: {
+        type: 'string',
+        description: 'Periode (bv. "jan 2024 - heden" of "2020 - 2023")',
+      },
+      employer: {
+        type: 'string',
+        description: 'Werkgever / organisatie',
+      },
+      role: {
+        type: 'string',
+        description: 'Functietitel',
+      },
+      bullets: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Taken/verantwoordelijkheden. Als leeg gelaten, worden bullets gegenereerd op basis van rol+werkgever.',
+      },
+    },
+    required: ['period', 'employer', 'role'],
+  },
+};
+
+export const TOOL_REWRITE_JOB_BULLETS: ToolDefinition = {
+  name: 'rewrite_job_bullets',
+  description: `Herschrijf alle bullets van één functie tegelijk.
+
+GEBRUIK WANNEER de gebruiker een complete herschrijving van een functie wil, zoals:
+- "Herschrijf alle bullets van de laatste functie meer beleids-gericht"
+- "Maak alle taken van Jeugdbegeleider professioneler"
+
+GEDRAG:
+- Alle bullets van de aangewezen functie worden herschreven
+- Aantal blijft hetzelfde tenzij anders aangegeven
+- VERZIN GEEN nieuwe content — alleen herformuleren
+- Behoud feitelijke inhoud`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie',
+      },
+      instruction: {
+        type: 'string',
+        description: 'Instructie voor de herschrijving (bv. "meer beleids-gericht", "professioneler", "korter en krachtiger")',
+      },
+    },
+    required: ['job_index', 'instruction'],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -261,4 +357,7 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_SUGGEST_KEYWORDS,
   TOOL_OPTIMIZE_FOR_VACANCY,
   TOOL_GENERATE_COVER_LETTER,
+  TOOL_ADJUST_ROLE,
+  TOOL_ADD_NEW_ROLE,
+  TOOL_REWRITE_JOB_BULLETS,
 ];

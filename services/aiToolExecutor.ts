@@ -494,6 +494,137 @@ MOTIVATIEBRIEF:`;
   }
 }
 
+// ─── PUNT 13 — EXISTING CV EDITING ───────────────────────────────────────────
+async function executeAdjustRole(
+  input: { job_index: number; instruction: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { job_index, instruction } = input;
+
+  if (!cv.experience || job_index < 0 || job_index >= cv.experience.length) {
+    return { result: `Fout: functie-index ${job_index} bestaat niet.` };
+  }
+
+  const job = cv.experience[job_index];
+  const currentBullets = (job.bullets || []).map((b, i) => `${i + 1}. ${b}`).join('\n');
+
+  const prompt = `Pas één werkervaring aan op basis van een specifieke instructie.
+
+FUNCTIE: ${job.role} bij ${job.employer} (${job.period})
+
+HUIDIGE BULLETS:
+${currentBullets || '(geen bullets)'}
+
+INSTRUCTIE VAN GEBRUIKER:
+${instruction}
+
+OPDRACHT:
+- Pas de bullets aan zodat ze voldoen aan de instructie
+- VERZIN GEEN nieuwe ervaring die niet plausibel is voor deze rol
+- Behoud feitelijke inhoud — alleen formulering of focus mag schuiven
+- Aantal bullets blijft ongeveer hetzelfde (kleine afwijking OK)
+- Stijl: Novêmber — actief, zakelijk, geen jargon
+
+LEVER alleen de nieuwe bullets als genummerde lijst zonder uitleg.
+
+NIEUWE BULLETS:`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.4, maxOutputTokens: 1200 },
+    });
+    const raw = (response.text || '').trim();
+    const newBullets = raw
+      .split('\n')
+      .map(line => line.replace(/^\s*\d+[.)]\s*/, '').replace(/^[-•*]\s*/, '').trim())
+      .filter(line => line.length > 3);
+
+    if (newBullets.length === 0) {
+      return { result: 'AI gaf geen bruikbare bullets terug.' };
+    }
+
+    const updatedCv = cloneCv(cv);
+    updatedCv.experience![job_index].bullets = newBullets;
+
+    return {
+      result: `Functie "${job.role}" aangepast op basis van instructie. ${newBullets.length} bullets nu actief.`,
+      updatedCv,
+    };
+  } catch (e: any) {
+    return { result: `Fout bij aanpassen functie: ${e?.message || String(e)}` };
+  }
+}
+
+async function executeAddNewRole(
+  input: { period: string; employer: string; role: string; bullets?: string[] },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { period, employer, role, bullets } = input;
+
+  if (!period || !employer || !role) {
+    return { result: 'Fout: periode, werkgever en functietitel zijn verplicht.' };
+  }
+
+  let finalBullets: string[] = [];
+  if (bullets && bullets.length > 0) {
+    // Use provided bullets, apply Novêmber style
+    finalBullets = bullets.map(b => b.trim()).filter(b => b.length > 3);
+  } else {
+    // Generate bullets matching existing CV style
+    const styleExample = (cv.experience || []).slice(0, 2).flatMap(e => (e.bullets || []).slice(0, 2)).join('\n- ');
+
+    const prompt = `Genereer 4-6 bullets voor een nieuwe werkervaring in Novêmber-stijl.
+
+NIEUWE FUNCTIE: ${role} bij ${employer} (${period})
+
+STIJL-VOORBEELDEN UIT HUIDIG CV:
+- ${styleExample || '(geen voorbeelden beschikbaar)'}
+
+OPDRACHT:
+- 4-6 plausibele bullets passend bij ${role}
+- Volg de stijl van de voorbeelden hierboven
+- VERZIN GEEN SPECIFIEKE feiten (geen aantallen, geen specifieke programma's)
+- Stijl: actieve werkwoorden, zakelijk
+
+Lever alleen genummerde lijst (1., 2., ...) zonder uitleg.`;
+
+    try {
+      const response = await getGemini().models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: { temperature: 0.5, maxOutputTokens: 800 },
+      });
+      const raw = (response.text || '').trim();
+      finalBullets = raw
+        .split('\n')
+        .map(line => line.replace(/^\s*\d+[.)]\s*/, '').replace(/^[-•*]\s*/, '').trim())
+        .filter(line => line.length > 3);
+    } catch (e: any) {
+      return { result: `Fout bij bullet-generatie: ${e?.message || String(e)}` };
+    }
+  }
+
+  const updatedCv = cloneCv(cv);
+  if (!updatedCv.experience) updatedCv.experience = [];
+  // Insert at start (most recent first)
+  updatedCv.experience.unshift({ period, employer, role, bullets: finalBullets });
+
+  return {
+    result: `Nieuwe functie toegevoegd: "${role}" bij ${employer} (${period}) met ${finalBullets.length} bullets.`,
+    updatedCv,
+  };
+}
+
+async function executeRewriteJobBullets(
+  input: { job_index: number; instruction: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  // Same as adjust_role but with focus on COMPLETE rewrite vs adjustment
+  return executeAdjustRole({ job_index: input.job_index, instruction: input.instruction }, cv);
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -514,6 +645,12 @@ export async function executeTool(
       return executeOptimizeForVacancy(input as any, cv);
     case 'generate_cover_letter':
       return executeGenerateCoverLetter(input as any, cv);
+    case 'adjust_role':
+      return executeAdjustRole(input as any, cv);
+    case 'add_new_role':
+      return executeAddNewRole(input as any, cv);
+    case 'rewrite_job_bullets':
+      return executeRewriteJobBullets(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }
