@@ -125,6 +125,10 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   const MAX_SESSION_COST_USD = 0.50;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // AbortController for canceling in-progress AI calls
+  const abortRef = useRef<AbortController | null>(null);
+  // Flag to skip the "max iterations" warning if user aborted intentionally
+  const userAbortedRef = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -160,26 +164,48 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
     addDisplayMessage({ role: 'user', text: trimmed });
     apiMessagesRef.current.push({ role: 'user', content: trimmed });
 
+    // Fresh abort controller for this turn
+    abortRef.current = new AbortController();
+    userAbortedRef.current = false;
+
     setIsThinking(true);
     try {
       await runAgentLoop();
     } catch (e: any) {
-      console.error('[AIAssistant] Error:', e);
-      setError(e?.message || 'Onbekende fout');
+      // Abort errors are expected when user clicks Stop — don't show as error
+      if (userAbortedRef.current || e?.name === 'AbortError' || String(e?.message || '').includes('abort')) {
+        // Silently swallow
+      } else {
+        console.error('[AIAssistant] Error:', e);
+        setError(e?.message || 'Onbekende fout');
+      }
     } finally {
+      abortRef.current = null;
       setIsThinking(false);
     }
   };
 
+  const handleStop = () => {
+    userAbortedRef.current = true;
+    abortRef.current?.abort();
+  };
+
   const handleRetry = async () => {
     setError(null);
+    abortRef.current = new AbortController();
+    userAbortedRef.current = false;
     setIsThinking(true);
     try {
       await runAgentLoop();
     } catch (e: any) {
-      console.error('[AIAssistant] Retry error:', e);
-      setError(e?.message || 'Onbekende fout');
+      if (userAbortedRef.current || e?.name === 'AbortError' || String(e?.message || '').includes('abort')) {
+        // Silently swallow
+      } else {
+        console.error('[AIAssistant] Retry error:', e);
+        setError(e?.message || 'Onbekende fout');
+      }
     } finally {
+      abortRef.current = null;
       setIsThinking(false);
     }
   };
@@ -230,8 +256,16 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           },
           onComplete: (res) => resolve(res),
           onError: (e) => reject(e),
-        });
+        }, abortRef.current?.signal);
       });
+
+      // If user aborted, stop the loop cleanly
+      if (userAbortedRef.current) {
+        setMessages(prev => prev.map(m =>
+          m.id === streamingMsgId ? { ...m, text: (streamingText || '') + '\n\n_(gesprek gestopt)_' } : m
+        ));
+        return;
+      }
 
       // Track token usage
       if (response.usage) {
@@ -401,8 +435,15 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
         ))}
         {isThinking && (
           <div className="flex items-start gap-2 text-neutral-500">
-            <div className="bg-neutral-100 px-3 py-2 rounded-lg text-[12px]">
-              <span className="inline-block animate-pulse">⏳</span> AI denkt na…
+            <div className="bg-neutral-100 px-3 py-2 rounded-lg text-[12px] flex items-center gap-3">
+              <span><span className="inline-block animate-pulse">⏳</span> AI denkt na…</span>
+              <button
+                onClick={handleStop}
+                className="text-[10px] font-bold uppercase tracking-wider text-red-600 hover:text-red-800 px-2 py-1 rounded border border-red-200 hover:bg-red-50 transition-colors"
+                title="Stop het gesprek"
+              >
+                ⏹ Stop
+              </button>
             </div>
           </div>
         )}

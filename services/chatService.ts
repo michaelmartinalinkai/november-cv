@@ -80,13 +80,15 @@ class ChatService {
       onToolUseStart?: (toolUse: { id: string; name: string }) => void;
       onComplete: (response: ChatResponse) => void;
       onError?: (err: Error) => void;
-    }
+    },
+    abortSignal?: AbortSignal
   ): Promise<void> {
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, stream: true }),
+        signal: abortSignal,
       });
 
       if (!response.ok) {
