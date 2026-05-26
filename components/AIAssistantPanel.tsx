@@ -497,6 +497,46 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   );
 };
 
+// ─── TOOL RESULT LINE (expandable) ──────────────────────────────────────────
+const ToolResultLine: React.FC<{
+  tu: { name: string; input: Record<string, any>; result?: string; error?: boolean };
+  isUser: boolean;
+}> = ({ tu, isUser }) => {
+  const [expanded, setExpanded] = useState(false);
+  const truncateThreshold = 80;
+  const isLong = tu.result && tu.result.length > truncateThreshold;
+  const colorClass = isUser ? 'text-white/70' : 'text-neutral-500';
+  const hoverClass = isUser ? 'hover:text-white/90' : 'hover:text-neutral-800';
+
+  return (
+    <div className={`text-[10px] font-mono ${colorClass}`}>
+      <div className="flex items-start gap-1">
+        <span className="flex-shrink-0">{tu.error ? '⚠️' : tu.result ? '✓' : '⚙️'}</span>
+        <div className="flex-1 min-w-0">
+          <span className="font-bold">{tu.name}</span>
+          {tu.result && (
+            <>
+              {expanded || !isLong ? (
+                <span className="ml-1 opacity-75 whitespace-pre-wrap break-words">— {tu.result}</span>
+              ) : (
+                <span className="ml-1 opacity-75">— {tu.result.slice(0, truncateThreshold)}…</span>
+              )}
+              {isLong && (
+                <button
+                  onClick={() => setExpanded(v => !v)}
+                  className={`ml-1 underline ${hoverClass} font-semibold`}
+                >
+                  {expanded ? 'minder' : 'meer'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── MESSAGE BUBBLE ─────────────────────────────────────────────────────────
 const MessageBubble: React.FC<{ msg: DisplayMessage }> = ({ msg }) => {
   if (msg.role === 'system-info') {
@@ -518,10 +558,7 @@ const MessageBubble: React.FC<{ msg: DisplayMessage }> = ({ msg }) => {
         {msg.toolUses && msg.toolUses.length > 0 && (
           <div className={`mt-2 space-y-1 ${msg.text ? 'pt-2 border-t' : ''} ${isUser ? 'border-white/20' : 'border-neutral-200'}`}>
             {msg.toolUses.map((tu, i) => (
-              <div key={i} className={`text-[10px] font-mono ${isUser ? 'text-white/70' : 'text-neutral-500'}`}>
-                {tu.error ? '⚠️' : tu.result ? '✓' : '⚙️'} <span className="font-bold">{tu.name}</span>
-                {tu.result && <span className="ml-1 opacity-75">— {tu.result.slice(0, 80)}{tu.result.length > 80 ? '…' : ''}</span>}
-              </div>
+              <ToolResultLine key={i} tu={tu} isUser={isUser} />
             ))}
           </div>
         )}
