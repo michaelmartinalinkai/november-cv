@@ -625,6 +625,73 @@ async function executeRewriteJobBullets(
   return executeAdjustRole({ job_index: input.job_index, instruction: input.instruction }, cv);
 }
 
+// ─── PUNT 4 — RELEVANCE ADVISORY ─────────────────────────────────────────────
+async function executeAdviseRelevance(
+  input: { target_role_or_vacancy: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { target_role_or_vacancy } = input;
+
+  if (!cv.experience || cv.experience.length === 0) {
+    return { result: 'Geen werkervaring in het CV om te adviseren.' };
+  }
+
+  const expSummary = cv.experience.map((e, i) =>
+    `[${i}] ${e.role} bij ${e.employer} (${e.period}): ${(e.bullets || []).slice(0, 3).join(' | ')}`
+  ).join('\n');
+
+  const prompt = `Adviseer welke werkervaringen het meest relevant zijn voor de volgende rol/vacature:
+
+DOEL: ${target_role_or_vacancy}
+
+WERKERVARINGEN VAN KANDIDAAT:
+${expSummary}
+
+LEVER:
+- Top 3-5 meest relevante functies in volgorde van relevantie
+- Per functie: index ([0], [1], etc.) + korte uitleg waarom het relevant is
+- Concreet advies welke functie de recruiter zou kunnen pinnen of bovenaan slepen
+- In het Nederlands
+
+Format:
+1. [INDEX] Functie — uitleg waarom relevant
+2. ...
+
+Eind met een korte aanbeveling welke functie zeker bovenaan zou moeten staan.`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.3, maxOutputTokens: 800 },
+    });
+    const advice = (response.text || '').trim();
+    return { result: advice || 'Geen advies gegenereerd.' };
+  } catch (e: any) {
+    return { result: `Fout bij relevantie-advies: ${e?.message || String(e)}` };
+  }
+}
+
+async function executeSetPinned(
+  input: { job_index: number; pinned: boolean },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { job_index, pinned } = input;
+
+  if (!cv.experience || job_index < 0 || job_index >= cv.experience.length) {
+    return { result: `Fout: functie-index ${job_index} bestaat niet.` };
+  }
+
+  const job = cv.experience[job_index];
+  const updatedCv = cloneCv(cv);
+  updatedCv.experience![job_index].pinned = pinned;
+
+  return {
+    result: `Functie "${job.role}" bij ${job.employer} is ${pinned ? 'GEPIND naar boven' : 'losgemaakt'}.`,
+    updatedCv,
+  };
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -651,6 +718,10 @@ export async function executeTool(
       return executeAddNewRole(input as any, cv);
     case 'rewrite_job_bullets':
       return executeRewriteJobBullets(input as any, cv);
+    case 'advise_relevance':
+      return executeAdviseRelevance(input as any, cv);
+    case 'set_pinned':
+      return executeSetPinned(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }

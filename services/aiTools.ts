@@ -348,7 +348,54 @@ GEDRAG:
   },
 };
 
-// Export array of all currently-active tools (each chunk will add more)
+// ─── PUNT 4 — RELEVANCE ADVISORY ─────────────────────────────────────────────
+export const TOOL_ADVISE_RELEVANCE: ToolDefinition = {
+  name: 'advise_relevance',
+  description: `Geef advies over welke werkervaring het meest relevant is voor een specifieke rol of vacature.
+
+GEBRUIK WANNEER de gebruiker advies wil over werkervaring-prioritering, zoals:
+- "Welke werkervaring zou je bovenaan zetten voor deze vacature?"
+- "Welke 3 functies zijn het meest relevant voor een rol als Jeugdbeleidsadviseur?"
+- "Help me kiezen welke ervaring te benadrukken"
+
+Dit is een ADVIES-tool — verandert het CV NIET (geen herordening, geen pin). 
+Het antwoord komt als tekst terug, de recruiter beslist daarna zelf om te pinnen of slepen.`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      target_role_or_vacancy: {
+        type: 'string',
+        description: 'De rol of vacature waarvoor relevantie geadviseerd moet worden',
+      },
+    },
+    required: ['target_role_or_vacancy'],
+  },
+};
+
+export const TOOL_SET_PINNED: ToolDefinition = {
+  name: 'set_pinned',
+  description: `Pin of unpin een specifieke werkervaring zodat die altijd bovenaan blijft (ongeacht datum).
+
+GEBRUIK WANNEER de gebruiker een functie aan bovenaan wil vasthouden, zoals:
+- "Pin de Beleidsadviseur-functie naar boven"
+- "Maak de pin op de eerste functie los"`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      job_index: {
+        type: 'number',
+        description: 'Index van de functie',
+      },
+      pinned: {
+        type: 'boolean',
+        description: 'true om te pinnen, false om los te maken',
+      },
+    },
+    required: ['job_index', 'pinned'],
+  },
+};
+
+// Export array of all currently-active tools
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
   TOOL_BULLETS_FROM_TEXT,
@@ -360,4 +407,6 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_ADJUST_ROLE,
   TOOL_ADD_NEW_ROLE,
   TOOL_REWRITE_JOB_BULLETS,
+  TOOL_ADVISE_RELEVANCE,
+  TOOL_SET_PINNED,
 ];
