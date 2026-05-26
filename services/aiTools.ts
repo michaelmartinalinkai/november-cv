@@ -210,6 +210,48 @@ GEDRAG:
   },
 };
 
+// ─── PUNT 1 — COVER LETTER GENERATION ────────────────────────────────────────
+export const TOOL_GENERATE_COVER_LETTER: ToolDefinition = {
+  name: 'generate_cover_letter',
+  description: `Genereer een motivatiebrief op basis van het CV en (optioneel) een vacature.
+
+GEBRUIK WANNEER de gebruiker een motivatiebrief wil, zoals:
+- "Schrijf een motivatiebrief voor deze kandidaat voor de gemeente Rotterdam"
+- "Maak een motivatiebrief op basis van de vacature [tekst]"
+- "Genereer een motivatiebrief in zakelijke toon"
+
+GEDRAG:
+- Brief wordt opgeslagen in CV's motivationLetter veld
+- Recruiter kan brief daarna downloaden als losse PDF (matching Novêmber stijl)
+- Stijl en toon worden aangepast op basis van tone parameter
+- Refereert naar feitelijke ervaring uit het CV
+- VERZIN GEEN ervaringen of vaardigheden die niet in het CV staan`,
+  input_schema: {
+    type: 'object',
+    properties: {
+      vacancy_text: {
+        type: 'string',
+        description: 'Vacaturetekst om de brief op af te stemmen (optioneel — als niet opgegeven, generieke brief op basis van CV)',
+      },
+      target_company: {
+        type: 'string',
+        description: 'Naam van het bedrijf/de organisatie waarop gericht (bv. "Gemeente Rotterdam")',
+      },
+      tone: {
+        type: 'string',
+        enum: ['professional', 'enthusiastic', 'formal', 'conversational'],
+        description: 'Toon van de brief. Default: professional',
+      },
+      length: {
+        type: 'string',
+        enum: ['short', 'medium', 'long'],
+        description: 'Lengte: short (~150 woorden, 2 paragrafen), medium (~300 woorden, 3-4 paragrafen), long (~500 woorden, 4-5 paragrafen). Default: medium',
+      },
+    },
+    required: [],
+  },
+};
+
 // Export array of all currently-active tools (each chunk will add more)
 export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REPHRASE_BULLET,
@@ -218,4 +260,5 @@ export const ALL_TOOLS: ToolDefinition[] = [
   TOOL_REGENERATE_KEYWORDS,
   TOOL_SUGGEST_KEYWORDS,
   TOOL_OPTIMIZE_FOR_VACANCY,
+  TOOL_GENERATE_COVER_LETTER,
 ];

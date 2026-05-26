@@ -409,6 +409,91 @@ async function executeOptimizeForVacancy(
   }
 }
 
+// ─── PUNT 1 — COVER LETTER GENERATION ────────────────────────────────────────
+async function executeGenerateCoverLetter(
+  input: { vacancy_text?: string; target_company?: string; tone?: string; length?: string },
+  cv: ParsedCV
+): Promise<{ result: string; updatedCv?: ParsedCV }> {
+  const { vacancy_text, target_company, tone = 'professional', length = 'medium' } = input;
+
+  // Build CV summary for prompt
+  const name = cv.personalInfo?.name || 'Kandidaat';
+  const expSummary = (cv.experience || []).slice(0, 5).map(e =>
+    `- ${e.role} bij ${e.employer} (${e.period}): ${(e.bullets || []).slice(0, 3).join(' | ')}`
+  ).join('\n');
+  const eduSummary = (cv.education || []).slice(0, 3).map(e =>
+    `- ${e.degree} ${e.school ? `aan ${e.school}` : ''} (${e.period})`
+  ).join('\n');
+  const tags = cv.analysis?.tags?.join(', ') || '';
+
+  const toneInstructions: Record<string, string> = {
+    professional: 'Zakelijk en professioneel. Helder, direct, geen overdreven enthousiasme.',
+    enthusiastic: 'Enthousiast en gemotiveerd. Toon passie voor de rol en het vakgebied.',
+    formal: 'Zeer formeel. Geschikt voor traditionele organisaties zoals overheid of advocatuur.',
+    conversational: 'Persoonlijk en toegankelijk. Iets minder formeel, vlot leesbaar.',
+  };
+  const toneInstruction = toneInstructions[tone] || toneInstructions.professional;
+
+  const lengthInstructions: Record<string, string> = {
+    short: '~150 woorden, 2 paragrafen',
+    medium: '~300 woorden, 3-4 paragrafen',
+    long: '~500 woorden, 4-5 paragrafen',
+  };
+  const lengthInstruction = lengthInstructions[length] || lengthInstructions.medium;
+
+  const prompt = `Schrijf een motivatiebrief voor de volgende kandidaat.
+
+KANDIDAAT: ${name}
+
+${target_company ? `GERICHT AAN: ${target_company}\n` : ''}
+${vacancy_text ? `VACATURETEKST:\n${vacancy_text}\n` : ''}
+
+WERKERVARING:
+${expSummary || '(geen werkervaring opgegeven)'}
+
+OPLEIDING:
+${eduSummary || '(geen opleiding opgegeven)'}
+
+STERKE PUNTEN: ${tags}
+
+OPDRACHT:
+- Schrijf een motivatiebrief in het Nederlands
+- Lengte: ${lengthInstruction}
+- Toon: ${toneInstruction}
+- Begin met "Geachte heer/mevrouw," (tenzij target_company anders aangeeft)
+- Eindig met "Met vriendelijke groet," gevolgd door de naam op de volgende regel
+- Refereer aan SPECIFIEKE ervaring uit het CV — niet generieke fluff
+- VERZIN GEEN ervaring of vaardigheden die niet in het CV staan
+- Gebruik lege regels tussen paragrafen (dit wordt later geparseerd voor PDF-rendering)
+
+LEVER alleen de brief — geen voorwoord, geen uitleg, geen extra tekst voor of na.
+
+MOTIVATIEBRIEF:`;
+
+  try {
+    const response = await getGemini().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: { temperature: 0.6, maxOutputTokens: 2000 },
+    });
+    const letterText = (response.text || '').trim();
+
+    if (!letterText || letterText.length < 50) {
+      return { result: 'AI gaf een lege of te korte motivatiebrief terug.' };
+    }
+
+    const updatedCv = cloneCv(cv);
+    updatedCv.motivationLetter = letterText;
+
+    return {
+      result: `Motivatiebrief gegenereerd (${letterText.split(/\s+/).length} woorden, toon: ${tone}). De recruiter kan nu op "📝 Motivatiebrief" klikken om de PDF te downloaden.`,
+      updatedCv,
+    };
+  } catch (e: any) {
+    return { result: `Fout bij motivatiebrief-generatie: ${e?.message || String(e)}` };
+  }
+}
+
 export async function executeTool(
   name: string,
   input: Record<string, any>,
@@ -427,6 +512,8 @@ export async function executeTool(
       return executeSuggestKeywords(input as any, cv);
     case 'optimize_for_vacancy':
       return executeOptimizeForVacancy(input as any, cv);
+    case 'generate_cover_letter':
+      return executeGenerateCoverLetter(input as any, cv);
     default:
       return { result: `Onbekende tool: ${name}` };
   }
