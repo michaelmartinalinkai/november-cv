@@ -85,16 +85,49 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
    * Agent loop: send messages → if response has tool_use, execute tools, send results back, repeat.
    * Stops when the model returns stop_reason: 'end_turn' (i.e. it's done).
    * Safety: max 10 iterations to prevent infinite loops.
+   *
+   * Streams text responses live for snappier UX.
    */
   const runAgentLoop = async () => {
     const MAX_ITERATIONS = 10;
     let workingCv: ParsedCV = cv;
 
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
-      const response = await chatService.sendMessage({
-        messages: apiMessagesRef.current,
-        cv_context: workingCv,
-        tools: tools && tools.length > 0 ? tools : undefined,
+      // Push an empty assistant message that we'll fill with streaming deltas
+      const streamingMsgId = `msg-${Date.now()}-${Math.random()}`;
+      let streamingText = '';
+      const streamingToolUses: Array<{ name: string; input: Record<string, any>; result?: string; error?: boolean }> = [];
+
+      setMessages(prev => [...prev, {
+        id: streamingMsgId,
+        role: 'assistant',
+        text: '',
+        toolUses: [],
+        timestamp: Date.now(),
+      }]);
+
+      // Wait for streaming completion via a Promise
+      const response = await new Promise<typeof chatService extends { sendMessage: (...args: any[]) => Promise<infer R> } ? R : any>((resolve, reject) => {
+        chatService.streamMessage({
+          messages: apiMessagesRef.current,
+          cv_context: workingCv,
+          tools: tools && tools.length > 0 ? tools : undefined,
+        }, {
+          onTextDelta: (delta) => {
+            streamingText += delta;
+            setMessages(prev => prev.map(m =>
+              m.id === streamingMsgId ? { ...m, text: streamingText } : m
+            ));
+          },
+          onToolUseStart: (toolUse) => {
+            streamingToolUses.push({ name: toolUse.name, input: {} });
+            setMessages(prev => prev.map(m =>
+              m.id === streamingMsgId ? { ...m, toolUses: [...streamingToolUses] } : m
+            ));
+          },
+          onComplete: (res) => resolve(res),
+          onError: (e) => reject(e),
+        });
       });
 
       // Track token usage
@@ -109,27 +142,23 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
       // Add the assistant's full response to API history (text + tool_use blocks)
       apiMessagesRef.current.push({ role: 'assistant', content: response.content });
 
-      // Extract text for display
-      const text = chatService.extractText(response);
       const toolUses = chatService.extractToolUses(response);
 
-      // Display assistant message
-      if (text || toolUses.length > 0) {
-        addDisplayMessage({
-          role: 'assistant',
-          text: text || (toolUses.length > 0 ? `_(${toolUses.length} bewerking${toolUses.length > 1 ? 'en' : ''} uitgevoerd)_` : ''),
-          toolUses: toolUses.map(t => ({ name: t.name, input: t.input })),
-        });
-      }
-
-      // If no tools were used, the model is done
+      // If no tools were used, the model is done — and our streaming message has the text already
       if (toolUses.length === 0 || response.stop_reason !== 'tool_use') {
+        // If the response had no text (only tool calls), show a placeholder
+        if (!streamingText && toolUses.length === 0) {
+          setMessages(prev => prev.map(m =>
+            m.id === streamingMsgId ? { ...m, text: '_(geen antwoord)_' } : m
+          ));
+        }
         return;
       }
 
       // Execute each tool and gather results
       const toolResults: ContentBlock[] = [];
-      for (const tu of toolUses) {
+      for (let i = 0; i < toolUses.length; i++) {
+        const tu = toolUses[i];
         if (!executeTool) {
           toolResults.push({
             type: 'tool_result',
@@ -150,18 +179,13 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             tool_use_id: tu.id,
             content: result,
           });
-          // Update last display message with the tool result
-          setMessages(prev => {
-            const next = [...prev];
-            const last = next[next.length - 1];
-            if (last && last.toolUses) {
-              const tuIdx = last.toolUses.findIndex(t => t.name === tu.name);
-              if (tuIdx >= 0) {
-                last.toolUses[tuIdx] = { ...last.toolUses[tuIdx], result };
-              }
-            }
-            return next;
-          });
+          // Update display: attach result to corresponding tool use
+          setMessages(prev => prev.map(m => {
+            if (m.id !== streamingMsgId || !m.toolUses) return m;
+            const newToolUses = [...m.toolUses];
+            if (newToolUses[i]) newToolUses[i] = { ...newToolUses[i], result };
+            return { ...m, toolUses: newToolUses };
+          }));
         } catch (e: any) {
           toolResults.push({
             type: 'tool_result',
@@ -169,17 +193,12 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             content: `Tool-fout: ${e?.message || String(e)}`,
             is_error: true,
           });
-          setMessages(prev => {
-            const next = [...prev];
-            const last = next[next.length - 1];
-            if (last && last.toolUses) {
-              const tuIdx = last.toolUses.findIndex(t => t.name === tu.name);
-              if (tuIdx >= 0) {
-                last.toolUses[tuIdx] = { ...last.toolUses[tuIdx], result: e?.message || 'Fout', error: true };
-              }
-            }
-            return next;
-          });
+          setMessages(prev => prev.map(m => {
+            if (m.id !== streamingMsgId || !m.toolUses) return m;
+            const newToolUses = [...m.toolUses];
+            if (newToolUses[i]) newToolUses[i] = { ...newToolUses[i], result: e?.message || 'Fout', error: true };
+            return { ...m, toolUses: newToolUses };
+          }));
         }
       }
 

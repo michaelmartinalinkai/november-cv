@@ -1,5 +1,6 @@
 // Vercel Edge Function — proxies chat requests to Anthropic API.
 // Keeps ANTHROPIC_API_KEY server-side, never exposed to browser.
+// Supports both standard JSON responses and Server-Sent Events (SSE) streaming.
 //
 // ENV VAR REQUIRED on Vercel: ANTHROPIC_API_KEY
 // Set via: Vercel Dashboard → Project Settings → Environment Variables
@@ -15,6 +16,7 @@ interface ChatRequest {
   model?: string;
   max_tokens?: number;
   cv_context?: unknown; // The current CV state — gets injected into system prompt
+  stream?: boolean;     // If true, response is SSE stream
 }
 
 const DEFAULT_MODEL = 'claude-sonnet-4-5'; // Sonnet 4.6 family — best for instruction-following
@@ -57,7 +59,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  const { messages, system, tools, model = DEFAULT_MODEL, max_tokens = 4096, cv_context } = body;
+  const { messages, system, tools, model = DEFAULT_MODEL, max_tokens = 4096, cv_context, stream = false } = body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return new Response(JSON.stringify({ error: 'messages array required' }), {
@@ -95,13 +97,13 @@ export default async function handler(req: Request): Promise<Response> {
         max_tokens,
         system: systemBlocks,
         messages,
+        stream,
         ...(tools && tools.length > 0 ? { tools } : {}),
       }),
     });
 
-    const data = await anthropicResponse.json();
-
     if (!anthropicResponse.ok) {
+      const data = await anthropicResponse.json().catch(() => ({ error: { message: 'Unknown error' } }));
       console.error('[chat-edge] Anthropic API error:', data);
       return new Response(JSON.stringify({ error: data.error?.message || 'Anthropic API error', detail: data }), {
         status: anthropicResponse.status,
@@ -112,6 +114,22 @@ export default async function handler(req: Request): Promise<Response> {
       });
     }
 
+    // STREAMING branch: pipe Anthropic's SSE stream straight through
+    if (stream && anthropicResponse.body) {
+      return new Response(anthropicResponse.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+          'X-Accel-Buffering': 'no', // disable nginx buffering if any
+        },
+      });
+    }
+
+    // STANDARD branch
+    const data = await anthropicResponse.json();
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {
