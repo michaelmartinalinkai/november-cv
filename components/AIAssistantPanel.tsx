@@ -8,6 +8,7 @@ interface AIAssistantPanelProps {
   onCvChange: (newCv: ParsedCV) => void;
   isOpen: boolean;
   onClose: () => void;
+  isEditing?: boolean; // Show warning if true — manual edits may not be saved yet
   // Tools registered by the parent that the AI can use to modify the CV
   tools?: ToolDefinition[];
   // Tool executor — called when AI invokes a tool. Returns a string result (or throws on error).
@@ -28,6 +29,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   onCvChange,
   isOpen,
   onClose,
+  isEditing,
   tools,
   executeTool,
 }) => {
@@ -274,6 +276,13 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           title="Sluiten"
         >×</button>
       </div>
+
+      {/* Edit-mode warning */}
+      {isEditing && (
+        <div className="bg-amber-50 border-b border-amber-200 px-5 py-2 text-[10px] text-amber-800 leading-snug">
+          ⚠️ <span className="font-semibold">Bewerk-modus actief.</span> Klik buiten een veld om je handmatige wijzigingen op te slaan voordat je de AI vraagt iets te doen.
+        </div>
+      )}
 
       {/* Welcome / empty state */}
       {messages.length === 0 && (

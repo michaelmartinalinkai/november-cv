@@ -538,6 +538,7 @@ const App: React.FC = () => {
               onCvChange={handlePreviewEdit}
               isOpen={isAIPanelOpen}
               onClose={() => setIsAIPanelOpen(false)}
+              isEditing={isEditing}
               tools={ALL_TOOLS}
               executeTool={executeTool}
             />
