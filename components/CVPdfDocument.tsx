@@ -127,11 +127,12 @@ const buildHeaderSubtitle = (data: ParsedCV): string[] => {
     const h = data.personalInfo!.hours!;
     parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
   }
-  if (isValid(data.personalInfo?.placeOfResidence)) {
-    parts.push(data.personalInfo!.placeOfResidence!);
-  }
+  // Punt 2 — Maria June 9: gender BEFORE woonplaats, woonplaats gets a "Woonplaats:" label
   if (isValid(data.personalInfo?.gender)) {
     parts.push(data.personalInfo!.gender!);
+  }
+  if (isValid(data.personalInfo?.placeOfResidence)) {
+    parts.push(`Woonplaats: ${data.personalInfo!.placeOfResidence!}`);
   }
   if (isValid(data.personalInfo?.holidaySchedule)) {
     parts.push(`Vakantieschema: ${data.personalInfo!.holidaySchedule}`);

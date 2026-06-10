@@ -425,8 +425,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             <div className="flex flex-col gap-1 items-start mt-2">
               <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Uren:</span> <EditableText value={data.personalInfo?.hours || ''} onChange={(v) => handleEdit(['personalInfo', 'hours'], v)} isEditing={true} /></div>
-              <div className="flex items-center gap-2"><span className="opacity-50">Woonplaats:</span> <EditableText value={data.personalInfo?.placeOfResidence || ''} onChange={(v) => handleEdit(['personalInfo', 'placeOfResidence'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Geslacht:</span> <EditableText value={data.personalInfo?.gender || ''} onChange={(v) => handleEdit(['personalInfo', 'gender'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Woonplaats:</span> <EditableText value={data.personalInfo?.placeOfResidence || ''} onChange={(v) => handleEdit(['personalInfo', 'placeOfResidence'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Vakantieschema:</span> <EditableText value={data.personalInfo?.holidaySchedule || ''} onChange={(v) => handleEdit(['personalInfo', 'holidaySchedule'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Nummer:</span> <EditableText value={data.personalInfo?.skj || ''} onChange={(v) => handleEdit(['personalInfo', 'skj'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Afgegeven:</span> <EditableText value={data.personalInfo?.skjDate || ''} onChange={(v) => handleEdit(['personalInfo', 'skjDate'], v)} isEditing={true} /></div>
@@ -450,11 +450,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
               }
-              if (isValid(data.personalInfo?.placeOfResidence)) {
-                parts.push(data.personalInfo!.placeOfResidence!);
-              }
+              // Punt 2 — Maria June 9: gender comes BEFORE woonplaats, and woonplaats gets a "Woonplaats:" label
               if (isValid(data.personalInfo?.gender)) {
                 parts.push(data.personalInfo!.gender!);
+              }
+              if (isValid(data.personalInfo?.placeOfResidence)) {
+                parts.push(`Woonplaats: ${data.personalInfo!.placeOfResidence!}`);
               }
               if (isValid(data.personalInfo?.holidaySchedule)) {
                 parts.push(`Vakantieschema: ${data.personalInfo!.holidaySchedule}`);
@@ -825,15 +826,23 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               return (
                 <SortableExpItem id={`exp-${originalIdx}`} key={`exp-${originalIdx}`} isEditing={!!isEditing}>{(dragHandle) => (
                 <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-9' : ''}`} style={{ fontFamily: 'Garet, sans-serif' }}>
-                  {/* Drag handle (Punt 5) — only in edit mode */}
+                  {/* Drag handle (Punt 5) — only in edit mode. Made more visible per Maria June 9 Punt 4. */}
                   {isEditing && (
                     <button
                       {...dragHandle}
-                      className="print:hidden absolute -left-1 top-0 cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-600 transition-colors p-1 select-none touch-none"
+                      className="print:hidden absolute -left-2 top-0 cursor-grab active:cursor-grabbing text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded transition-colors p-1.5 select-none touch-none"
                       title="Sleep om te verplaatsen"
+                      aria-label="Verplaats deze functie"
                       style={{ touchAction: 'none' }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="3" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="10" cy="11" r="1.2"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                        <circle cx="4" cy="3" r="1.5"/>
+                        <circle cx="4" cy="7" r="1.5"/>
+                        <circle cx="4" cy="11" r="1.5"/>
+                        <circle cx="10" cy="3" r="1.5"/>
+                        <circle cx="10" cy="7" r="1.5"/>
+                        <circle cx="10" cy="11" r="1.5"/>
+                      </svg>
                     </button>
                   )}
                   {/* Page break ruler (edit mode only) */}
@@ -847,38 +856,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   )}
                   {exp.pageBreakBefore && <PrintPageBreak />}
 
-                  {/* Reorder arrows */}
-                  {isEditing && (
-                    <div className="print:hidden absolute left-0 top-0 flex flex-col">
-                      <button
-                        disabled={si === 0}
-                        onClick={() => {
-                          if (!onChange) return;
-                          const newData = JSON.parse(JSON.stringify(data));
-                          // Use pre-tagged __origIdx from sorted array for safe swapping
-                          const aIdx = sorted[si].__origIdx;
-                          const bIdx = sorted[si - 1].__origIdx;
-                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
-                          onChange(newData);
-                        }}
-                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
-                        title="Omhoog"
-                      >▲</button>
-                      <button
-                        disabled={si === sorted.length - 1}
-                        onClick={() => {
-                          if (!onChange) return;
-                          const newData = JSON.parse(JSON.stringify(data));
-                          const aIdx = sorted[si].__origIdx;
-                          const bIdx = sorted[si + 1].__origIdx;
-                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
-                          onChange(newData);
-                        }}
-                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
-                        title="Omlaag"
-                      >▼</button>
-                    </div>
-                  )}
+                  {/* Reorder arrows removed per Maria June 9 Punt 4 — drag-and-drop replaces them */}
 
                   <div className="mb-2" style={{ breakInside: 'avoid', pageBreakInside: 'avoid', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
                     {exp.pinned && (
