@@ -439,14 +439,17 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       ]
     }),
 
-    ...(data.manualOrder
-      ? [...(data.experience || [])]
-      : [...(data.experience || [])].sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-        })
-    ).flatMap(exp => [
+    ...((() => {
+      // Punt 5 + Maria June 9 — pinned items ALWAYS come first.
+      // Within pinned/unpinned: manualOrder respects array order, else date-sort.
+      const all = data.experience || [];
+      const pinned = all.filter(e => e.pinned);
+      const unpinned = all.filter(e => !e.pinned);
+      if (data.manualOrder) return [...pinned, ...unpinned];
+      const byDate = (a: typeof all[number], b: typeof all[number]) =>
+        parsePeriodStart(b.period) - parsePeriodStart(a.period);
+      return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+    })()).flatMap(exp => [
       // Period
       new Paragraph({
         spacing: { before: 240 },

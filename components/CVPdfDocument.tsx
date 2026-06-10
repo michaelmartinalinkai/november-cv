@@ -405,14 +405,19 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
   const sortedEducation = [...(data.education || [])].sort(
     (a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period)
   );
-  // Punt 5 — if manualOrder is set (drag-and-drop was used), respect array order
-  const sortedExperience = data.manualOrder
-    ? [...(data.experience || [])]
-    : [...(data.experience || [])].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-      });
+  // Punt 5 + Maria June 9 — pinned items ALWAYS come first.
+  // Within pinned/unpinned: manualOrder respects array order, else date-sort.
+  const sortedExperience = (() => {
+    const all = data.experience || [];
+    const pinned = all.filter(e => e.pinned);
+    const unpinned = all.filter(e => !e.pinned);
+    if (data.manualOrder) {
+      return [...pinned, ...unpinned];
+    }
+    const byDate = (a: typeof all[number], b: typeof all[number]) =>
+      parsePeriodStart(b.period) - parsePeriodStart(a.period);
+    return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+  })();
 
   const hideSep = data.hideSeparators || [];
 

@@ -725,18 +725,22 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             // Tag each item with its original index BEFORE sorting to avoid findIndex collisions.
             // In edit mode: keep array order so reorder arrows/drag-and-drop visually work.
             // In view/print mode:
-            //   - If manualOrder flag is set (drag-and-drop was used), respect array order
-            //   - Otherwise: pinned items first, then sort by most-recent date
+            //   - Pinned items ALWAYS come first (Maria June 9: pin must override even after drag-drop)
+            //   - Within pinned/unpinned groups: respect manualOrder if set, else date-sort
             const tagged = (data.experience || []).map((exp, idx) => ({ ...exp, __origIdx: idx }));
-            const sorted = (isEditing || data.manualOrder)
+            const sorted = isEditing
               ? tagged
-              : [...tagged].sort((a, b) => {
-                  // Pinned items always come first
-                  if (a.pinned && !b.pinned) return -1;
-                  if (!a.pinned && b.pinned) return 1;
-                  // Within same pin status, sort by start date (most recent first)
-                  return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-                });
+              : (() => {
+                  const pinned = tagged.filter(e => e.pinned);
+                  const unpinned = tagged.filter(e => !e.pinned);
+                  if (data.manualOrder) {
+                    // Both halves keep their existing array order
+                    return [...pinned, ...unpinned];
+                  }
+                  const byDate = (a: typeof tagged[number], b: typeof tagged[number]) =>
+                    parsePeriodStart(b.period) - parsePeriodStart(a.period);
+                  return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+                })();
             const expIds = sorted.map(e => `exp-${e.__origIdx}`);
             return (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExpDragEnd}>
