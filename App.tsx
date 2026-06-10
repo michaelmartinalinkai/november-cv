@@ -276,6 +276,23 @@ const App: React.FC = () => {
     setIsProcessingBatch(false);
   };
 
+  // ─── Preview PDF in new tab (no download) — Punt 11 Maria June 9 ─────────────
+  // Maria's complaint: they had to download 5x to see the final result. Now they can
+  // open the PDF inline before deciding to keep it.
+  const handlePreviewPdf = async (data: ParsedCV) => {
+    try {
+      const blob = await pdf(<CVPdfDocument data={data} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // Revoke after a short delay so the new tab has time to load.
+      // 60s is generous — typical render is under 2s.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      console.error('PDF preview error:', err);
+      alert('Fout bij genereren preview. Probeer opnieuw of gebruik Download.');
+    }
+  };
+
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
@@ -417,6 +434,13 @@ const App: React.FC = () => {
                     Ongedaan
                   </button>
                 )}
+                <button
+                  onClick={() => handlePreviewPdf(selectedItem.result!)}
+                  title="Bekijk PDF in nieuw tabblad zonder downloaden"
+                  className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 flex items-center justify-center bg-white text-[#1E3A35] hover:bg-neutral-100 border border-[#1E3A35] h-10 px-6"
+                >
+                  👁 Preview
+                </button>
                 <button
                   onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.id)}
                   className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#EE8D70] text-white hover:bg-[#E07C60] border border-transparent shadow-lg h-10 px-8"
