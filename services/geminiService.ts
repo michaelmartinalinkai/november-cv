@@ -440,13 +440,28 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
             return union > 0 ? intersect / union : 0;
           };
 
+          // Match originals to parsed jobs by employer (fuzzy), falling back to index.
+          // Same matching style as the bullet-preservation step above — protects against
+          // accidental reordering by Gemini despite the "don't reorder" instruction.
+          const normEmpl = (s: string) =>
+            (s || '').toLowerCase().trim().replace(/[.,;:!?'"`()\[\]{}]/g, '').replace(/\s+/g, ' ');
+
           let revertedCount = 0;
           parsed.experience.forEach((parsedExp: any, i: number) => {
-            const orig = originalExperience[i];
+            // Find the matching original by employer; fall back to index
+            const parsedEmpl = normEmpl(parsedExp?.employer || '');
+            let orig = originalExperience.find(o => normEmpl(o.employer) === parsedEmpl);
+            if (!orig) {
+              orig = originalExperience.find(o => {
+                const n = normEmpl(o.employer);
+                return parsedEmpl.length > 0 && (n.startsWith(parsedEmpl) || parsedEmpl.startsWith(n) || n.includes(parsedEmpl) || parsedEmpl.includes(n));
+              });
+            }
+            if (!orig) orig = originalExperience[i];
             if (!orig || !Array.isArray(parsedExp?.bullets)) return;
 
             parsedExp.bullets = parsedExp.bullets.map((newBullet: string, bi: number) => {
-              const origBullet = orig.bullets[bi];
+              const origBullet = orig!.bullets[bi];
               if (!origBullet) return newBullet; // new bullet, no original to compare — keep
 
               const sim = similarity(newBullet, origBullet);
@@ -458,7 +473,7 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
               if (sim < 0.75 || lenRatio > 0.35) {
                 revertedCount++;
                 console.warn(
-                  `[Final-grade verify] Reverting bullet ${i}.${bi} — similarity=${sim.toFixed(2)}, lenRatio=${lenRatio.toFixed(2)}.\n  Before: "${origBullet}"\n  After:  "${newBullet}"`
+                  `[Final-grade verify] Reverting bullet "${orig!.employer}" #${bi} — similarity=${sim.toFixed(2)}, lenRatio=${lenRatio.toFixed(2)}.\n  Before: "${origBullet}"\n  After:  "${newBullet}"`
                 );
                 return origBullet; // revert to original
               }

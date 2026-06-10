@@ -10,7 +10,6 @@ import { geminiService, CVInput } from './services/geminiService';
 import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
 import { CVPdfDocument } from './components/CVPdfDocument';
-import { CoverLetterPdfDocument } from './components/CoverLetterPdfDocument';
 import { pdf } from '@react-pdf/renderer';
 import { BatchItem, ParsedCV } from './types';
 import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
@@ -289,7 +288,10 @@ const App: React.FC = () => {
   // ─── Preview PDF in new tab (no download) — Punt 11 Maria June 9 ─────────────
   // Maria's complaint: they had to download 5x to see the final result. Now they can
   // open the PDF inline before deciding to keep it.
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const handlePreviewPdf = async (data: ParsedCV) => {
+    if (isGeneratingPreview) return; // prevent double-clicks during slow renders
+    setIsGeneratingPreview(true);
     try {
       const blob = await pdf(
         <CVPdfDocument data={data} letterText={data.motivationLetter} />
@@ -302,6 +304,8 @@ const App: React.FC = () => {
     } catch (err) {
       console.error('PDF preview error:', err);
       alert('Fout bij genereren preview. Probeer opnieuw of gebruik Download.');
+    } finally {
+      setIsGeneratingPreview(false);
     }
   };
 
@@ -337,18 +341,6 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Download error:", err);
       alert("Fout bij genereren download.");
-    }
-  };
-
-  const handleDownloadCoverLetter = async (data: ParsedCV) => {
-    try {
-      const sanitize = (s: string) => s.replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      const fileNameBase = `Motivatiebrief_${sanitize(data.personalInfo?.name || "Kandidaat")}_NOVEMBER`;
-      const blob = await pdf(<CoverLetterPdfDocument data={data} letterText={data.motivationLetter || ''} />).toBlob();
-      saveAs(blob, `${fileNameBase}.pdf`);
-    } catch (err) {
-      console.error("Cover letter download error:", err);
-      alert("Fout bij genereren motivatiebrief PDF.");
     }
   };
 
@@ -450,10 +442,11 @@ const App: React.FC = () => {
                 )}
                 <button
                   onClick={() => handlePreviewPdf(selectedItem.result!)}
+                  disabled={isGeneratingPreview}
                   title="Bekijk PDF in nieuw tabblad zonder downloaden"
-                  className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 flex items-center justify-center bg-white text-[#1E3A35] hover:bg-neutral-100 border border-[#1E3A35] h-10 px-6"
+                  className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center justify-center bg-white text-[#1E3A35] hover:bg-neutral-100 border border-[#1E3A35] h-10 px-6"
                 >
-                  👁 Preview
+                  {isGeneratingPreview ? '⏳ Bezig…' : '👁 Preview'}
                 </button>
                 <button
                   onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.id)}

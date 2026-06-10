@@ -900,6 +900,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 const bullets = newData.experience[originalIdx].bullets;
                                 [bullets[bi - 1], bullets[bi]] = [bullets[bi], bullets[bi - 1]];
+                                // Punt 12 — keep originalBullets reordered alongside so rewrite input stays aligned
+                                const orig = newData.experience[originalIdx].originalBullets;
+                                if (Array.isArray(orig) && orig.length > bi) {
+                                  [orig[bi - 1], orig[bi]] = [orig[bi], orig[bi - 1]];
+                                }
                                 onChange(newData);
                               }}
                               className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
@@ -911,6 +916,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 const bullets = newData.experience[originalIdx].bullets;
                                 [bullets[bi], bullets[bi + 1]] = [bullets[bi + 1], bullets[bi]];
+                                // Punt 12 — keep originalBullets reordered alongside so rewrite input stays aligned
+                                const orig = newData.experience[originalIdx].originalBullets;
+                                if (Array.isArray(orig) && orig.length > bi + 1) {
+                                  [orig[bi], orig[bi + 1]] = [orig[bi + 1], orig[bi]];
+                                }
                                 onChange(newData);
                               }}
                               className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
@@ -929,6 +939,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 // Replace current bullet with the first line, then insert remaining lines after
                                 newData.experience[originalIdx].bullets.splice(bi, 1, ...lines);
+                                // Punt 12 — keep originalBullets aligned so future rewrites match the new layout
+                                if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                                  newData.experience[originalIdx].originalBullets.splice(bi, 1, ...lines);
+                                }
                                 onChange(newData);
                               } else if (lines.length === 1) {
                                 // Single line — use the cleaned line (strips trailing newlines/whitespace)
@@ -950,6 +964,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                               if (!onChange) return;
                               const newData = JSON.parse(JSON.stringify(data));
                               newData.experience[originalIdx].bullets.splice(bi, 1);
+                              // Punt 12 — keep originalBullets in sync so future rewrites don't resurrect the deleted bullet
+                              if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                                newData.experience[originalIdx].originalBullets.splice(bi, 1);
+                              }
                               onChange(newData);
                             }}
                             title="Verwijder bullet"
@@ -967,6 +985,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                           const newData = JSON.parse(JSON.stringify(data));
                           if (!newData.experience[originalIdx].bullets) newData.experience[originalIdx].bullets = [];
                           newData.experience[originalIdx].bullets.push('');
+                          // Punt 12 — keep originalBullets aligned with bullets when a new one is added
+                          if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                            newData.experience[originalIdx].originalBullets.push('');
+                          }
                           onChange(newData);
                         }}
                         className="text-[10px] text-green-600 hover:text-green-800 font-medium"
