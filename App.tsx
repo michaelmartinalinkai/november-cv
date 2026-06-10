@@ -65,7 +65,14 @@ const App: React.FC = () => {
   const [profileFocus, setProfileFocus] = useState<string>('');
   const [vacancyText, setVacancyText] = useState<string>('');
   // Punt 13 — final-grade mode: minimale rewrites bij re-upload van al-Novémber-stijl CV's.
-  const [finalGradeMode, setFinalGradeMode] = useState<boolean>(false);
+  const [finalGradeMode, setFinalGradeMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('novcv_finalgrade_mode') === '1'; } catch { return false; }
+  });
+  // Persist final-grade toggle across page reloads — Maria asked for this implicitly
+  // ("had to toggle every time" friction)
+  useEffect(() => {
+    try { localStorage.setItem('novcv_finalgrade_mode', finalGradeMode ? '1' : '0'); } catch { /* ignore */ }
+  }, [finalGradeMode]);
   const undoStackRef = useRef<Map<string, ParsedCV[]>>(new Map());
 
   const processingRef = useRef<Set<string>>(new Set());
@@ -210,6 +217,9 @@ const App: React.FC = () => {
         vacancyText: vacancyText || undefined,
         finalGradeMode: looksFinalGrade,
       });
+
+      // Punt 13 — mark CV so UI can show a clear indicator that final-grade was applied
+      (finalResult as any).wasFinalGradeProcessed = looksFinalGrade;
 
       // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
       // Phase 2 sometimes mutates years despite "EXACT kopieer" instructions.
@@ -377,7 +387,14 @@ const App: React.FC = () => {
               <div className="bg-[#4caf50]/10 text-[#4caf50] px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                 <CheckCircle size={12} /> Conversie geslaagd
               </div>
-
+              {selectedItem.result?.wasFinalGradeProcessed && (
+                <div
+                  className="bg-[#1E3A35]/10 text-[#1E3A35] px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2"
+                  title="Dit CV is verwerkt in Final-grade modus — minimale aanpassingen, geen herschrijving van bullets"
+                >
+                  🛡️ Final-grade
+                </div>
+              )}
             </div>
             <div className="relative flex flex-col items-end gap-1">
               <div className="flex items-center gap-3">

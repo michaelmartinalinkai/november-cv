@@ -334,7 +334,9 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
           systemInstruction: instruction,
           responseMimeType: "application/json",
           responseSchema: CV_SCHEMA,
-          temperature: 0.45
+          // Final-grade mode = strict instruction following, no creativity → temperature 0
+          // Otherwise = slight creativity for natural rephrasing (0.45)
+          temperature: input.finalGradeMode ? 0 : 0.45
         },
       });
       console.log("ai.models.generateContent returned.");
@@ -411,6 +413,62 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
               parsedExp.bullets = [...outBullets, ...styledMissing];
             }
           }));
+        }
+
+        // ─── Punt 13 — FINAL-GRADE CONTENT VERIFICATION ─────────────────────────
+        // After phase 2, verify that no bullet has been substantially altered. If
+        // Gemini ignored the "don't rewrite" instruction, programmatically revert.
+        //
+        // Comparison: normalize both, then check char-level similarity (Levenshtein-ish ratio).
+        // If similarity < 0.75 (i.e. >25% changed) OR length changed >35%, revert to original.
+        // Pure spelling/typo fixes leave similarity very high (>0.92).
+        if (input.finalGradeMode && parsed.experience && originalExperience.length > 0) {
+          const normForCompare = (s: string) =>
+            s.toLowerCase().trim().replace(/[.,;:!?'"`()\[\]{}]/g, '').replace(/\s+/g, ' ');
+
+          // Cheap similarity: longest common subsequence length / max length.
+          // Good enough for "is this the same sentence with minor edits" vs "this is a rewrite."
+          const similarity = (a: string, b: string): number => {
+            const x = normForCompare(a), y = normForCompare(b);
+            if (!x || !y) return 0;
+            if (x === y) return 1;
+            // Token-level Jaccard for speed (no n^2 char-level LCS on long bullets)
+            const setA = new Set(x.split(' '));
+            const setB = new Set(y.split(' '));
+            const intersect = [...setA].filter(t => setB.has(t)).length;
+            const union = new Set([...setA, ...setB]).size;
+            return union > 0 ? intersect / union : 0;
+          };
+
+          let revertedCount = 0;
+          parsed.experience.forEach((parsedExp: any, i: number) => {
+            const orig = originalExperience[i];
+            if (!orig || !Array.isArray(parsedExp?.bullets)) return;
+
+            parsedExp.bullets = parsedExp.bullets.map((newBullet: string, bi: number) => {
+              const origBullet = orig.bullets[bi];
+              if (!origBullet) return newBullet; // new bullet, no original to compare — keep
+
+              const sim = similarity(newBullet, origBullet);
+              const lenRatio = origBullet.length > 0
+                ? Math.abs(newBullet.length - origBullet.length) / origBullet.length
+                : 0;
+
+              // Revert if too different: <75% token similarity OR >35% length change
+              if (sim < 0.75 || lenRatio > 0.35) {
+                revertedCount++;
+                console.warn(
+                  `[Final-grade verify] Reverting bullet ${i}.${bi} — similarity=${sim.toFixed(2)}, lenRatio=${lenRatio.toFixed(2)}.\n  Before: "${origBullet}"\n  After:  "${newBullet}"`
+                );
+                return origBullet; // revert to original
+              }
+              return newBullet; // accept (minor edit only)
+            });
+          });
+
+          if (revertedCount > 0) {
+            console.info(`[Final-grade] Reverted ${revertedCount} bullet(s) that exceeded the change threshold.`);
+          }
         }
 
         // Punt 10 — Microsoft 365 altijd vooraan in systems
