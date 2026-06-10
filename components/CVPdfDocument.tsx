@@ -1,6 +1,7 @@
 import React from 'react';
 import { Document, Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { ParsedCV } from '../types';
+import { CoverLetterPage } from './CoverLetterPdfDocument';
 
 // ─── FONT REGISTRATION ───────────────────────────────────────────────────────
 // IMPORTANT: Use .ttf (not .woff) to avoid character-drop bugs in @react-pdf
@@ -393,9 +394,13 @@ const styles = StyleSheet.create({
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
-interface Props { data: ParsedCV; }
+interface Props {
+  data: ParsedCV;
+  /** When provided + non-empty, appends a Motivatiebrief page after the CV. Punt 1 — Maria June 9. */
+  letterText?: string;
+}
 
-export const CVPdfDocument: React.FC<Props> = ({ data }) => {
+export const CVPdfDocument: React.FC<Props> = ({ data, letterText }) => {
   const subtitleParts = buildHeaderSubtitle(data);
   const tags = (data.analysis?.tags || []).slice(0, 5);
   const tagsRow1 = tags.slice(0, 3);
@@ -604,6 +609,11 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
           <View style={styles.footerLimeBarRight} />
         </View>
       </Page>
+
+      {/* Punt 1 — Maria June 9 — merge cover letter into the same PDF as the CV */}
+      {letterText && letterText.trim() && (
+        <CoverLetterPage data={data} letterText={letterText} />
+      )}
     </Document>
   );
 };

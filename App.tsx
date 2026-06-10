@@ -291,7 +291,9 @@ const App: React.FC = () => {
   // open the PDF inline before deciding to keep it.
   const handlePreviewPdf = async (data: ParsedCV) => {
     try {
-      const blob = await pdf(<CVPdfDocument data={data} />).toBlob();
+      const blob = await pdf(
+        <CVPdfDocument data={data} letterText={data.motivationLetter} />
+      ).toBlob();
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank', 'noopener,noreferrer');
       // Revoke after a short delay so the new tab has time to load.
@@ -320,9 +322,11 @@ const App: React.FC = () => {
         // Record conversion for DOCX
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`, data.personalInfo?.name || 'Onbekend');
       } else {
-        // Generate real text-searchable PDF using @react-pdf/renderer
-        // This produces ATS-readable PDFs with selectable text (not rasterized)
-        const blob = await pdf(<CVPdfDocument data={data} />).toBlob();
+        // Generate real text-searchable PDF using @react-pdf/renderer.
+        // Punt 1 — Maria June 9: merge cover letter into the same PDF as the CV.
+        const blob = await pdf(
+          <CVPdfDocument data={data} letterText={data.motivationLetter} />
+        ).toBlob();
         saveAs(blob, `${fileNameBase}.pdf`);
         // Record conversion for PDF
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`, data.personalInfo?.name || 'Onbekend');
@@ -457,16 +461,15 @@ const App: React.FC = () => {
                 >
                   Download PDF
                 </button>
-                {selectedItem.result?.motivationLetter && selectedItem.result.motivationLetter.trim() && (
-                  <button
-                    onClick={() => handleDownloadCoverLetter(selectedItem.result!)}
-                    title="Download motivatiebrief als losse PDF"
-                    className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 flex items-center justify-center bg-[#1E3A35] text-white hover:bg-[#2A4A40] border border-transparent shadow-lg h-10 px-6"
-                  >
-                    📝 Motivatiebrief
-                  </button>
-                )}
               </div>
+              {selectedItem.result?.motivationLetter && selectedItem.result.motivationLetter.trim() && (
+                <span
+                  className="text-[10px] text-[#1E3A35] mt-1 flex items-center gap-1"
+                  title="De motivatiebrief is meegenomen in dezelfde PDF als het CV"
+                >
+                  📝 Motivatiebrief wordt bijgevoegd in de PDF
+                </span>
+              )}
               <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
               </span>
@@ -501,7 +504,7 @@ const App: React.FC = () => {
               {selectedItem.result && (
                 <div className="no-print mt-4 max-w-3xl">
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-2">
-                    Motivatiebrief (optioneel) — wordt als losse PDF gedownload met dezelfde stijl als het CV
+                    Motivatiebrief (optioneel) — wordt automatisch toegevoegd als extra pagina aan de PDF-download
                   </label>
                   <textarea
                     value={selectedItem.result.motivationLetter || ''}
