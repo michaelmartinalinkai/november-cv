@@ -592,6 +592,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                       >▼</button>
                     </span>
                   )}
+                  {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Periode</div>}
                   {isEditing ? (
                     <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', origIdx, 'period'], v)} isEditing={true} />
                   ) : (
@@ -609,14 +610,19 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 </div>
                 <div className="leading-snug flex items-start justify-between gap-2">
                   <div>
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Opleiding</div>}
                     <span className="text-black inline">
                       <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', origIdx, 'degree'], v)} isEditing={!!isEditing} multiline />
                     </span>
-                    {edu.school && (
-                      <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
+                    {(edu.school || isEditing) && (
+                      <>
+                        {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Onderwijsinstelling</div>}
+                        <span className="font-normal opacity-70">{!isEditing && ', '}<EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
+                      </>
                     )}
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Status (diploma behaald / in afronding / niet afgerond)</div>}
                     <span className="font-normal opacity-70 whitespace-nowrap">
-                      {fixedEdu.status ? <>{' '}- <EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <>{' '}- <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /></> : null)}
+                      {fixedEdu.status ? <>{!isEditing && ' - '}<EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /> : null)}
                     </span>
                   </div>
                   {isEditing && (
@@ -673,24 +679,59 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
           {isEditing ? (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {(data.courses || []).map((c, ci) => (
-                <div key={ci} className="print:hidden flex items-center gap-2 group/course pl-1">
-                  <span className="text-gray-300 text-[10px] shrink-0">•</span>
-                  <span className="flex-1 text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
-                    <EditableText
-                      value={stripCoursePrefix(c.title)}
-                      onChange={(v) => {
-                        if (!onChange) return;
-                        const newData = JSON.parse(JSON.stringify(data));
-                        newData.courses[ci].title = v;
-                        onChange(newData);
-                      }}
-                      isEditing={true}
-                    />
-                  </span>
+                <div key={ci} className="print:hidden flex items-start gap-2 group/course pl-1 py-1.5 border-l-2 border-neutral-100 pl-2">
+                  <span className="text-gray-300 text-[10px] shrink-0 mt-2">•</span>
+                  <div className="flex-1 grid grid-cols-12 gap-x-2">
+                    <div className="col-span-3">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Jaar</div>
+                      <span className="text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={c.period || ''}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].period = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                    <div className="col-span-5">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Cursus / certificaat</div>
+                      <span className="text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={stripCoursePrefix(c.title)}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].title = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                    <div className="col-span-4">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Instituut (optioneel)</div>
+                      <span className="text-[10.66px] opacity-70" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={c.institute || ''}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].institute = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                  </div>
                   <button
-                    className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap opacity-0 group-hover/course:opacity-100 transition-opacity mt-3"
                     title="Verplaats naar opleidingen"
                     onClick={() => {
                       if (!onChange) return;
@@ -708,7 +749,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     }}
                   >→ opleiding</button>
                   <button
-                    className="text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    className="text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/course:opacity-100 transition-opacity mt-3"
                     title="Verwijder cursus"
                     onClick={() => {
                       if (!onChange) return;
@@ -725,7 +766,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   if (!onChange) return;
                   const newData = JSON.parse(JSON.stringify(data));
                   if (!newData.courses) newData.courses = [];
-                  newData.courses.push({ period: '', title: '' });
+                  newData.courses.push({ period: '', title: '', institute: '' });
                   onChange(newData);
                 }}
               >+ cursus toevoegen</button>
@@ -1131,17 +1172,46 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
 
             {!data.referencesOnRequest && (
               <div className="space-y-4 pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+                {/* Punt 6 — Maria June 9 — referentie-format header explicit for editors */}
+                {isEditing && (data.references || []).length > 0 && (
+                  <div className="print:hidden text-[9px] text-neutral-500 italic">
+                    Format per referentie: <strong>Naam</strong> | <strong>Organisatie / Functie</strong> | <strong>e-mail of telefoon</strong>
+                  </div>
+                )}
                 {(data.references || []).map((ref, ri) => (
                   <div key={ri} className="relative group/ref">
-                    <div>
-                      <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={!!isEditing} />
-                      {(ref.contact || isEditing) && <span className="opacity-70"> | <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={!!isEditing} /></span>}
-                    </div>
-                    {(ref.role || ref.company || isEditing) && (
-                      <div className="opacity-70">
-                        <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={!!isEditing} />
-                        {(ref.company || isEditing) && <span> | <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={!!isEditing} /></span>}
+                    {isEditing ? (
+                      <div className="grid grid-cols-12 gap-x-2 gap-y-1 pr-7">
+                        <div className="col-span-5">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Naam</div>
+                          <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-7">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">E-mail of telefoon</div>
+                          <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-5">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Functie</div>
+                          <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-7">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Organisatie</div>
+                          <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={true} />
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <div>
+                          <span>{ref.name || ''}</span>
+                          {ref.contact && <span className="opacity-70"> | {ref.contact}</span>}
+                        </div>
+                        {(ref.role || ref.company) && (
+                          <div className="opacity-70">
+                            <span>{ref.role || ''}</span>
+                            {ref.company && <span> | {ref.company}</span>}
+                          </div>
+                        )}
+                      </>
                     )}
                     {isEditing && (
                       <button className="print:hidden absolute right-0 top-0 text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/ref:opacity-100 transition-opacity"
