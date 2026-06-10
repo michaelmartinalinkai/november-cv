@@ -477,15 +477,27 @@ const App: React.FC = () => {
               {/* Vacancy match scores (Punt 7) — only shows when vacancy was provided */}
               {selectedItem.result?.analysis?.vacancyMatches && selectedItem.result.analysis.vacancyMatches.length > 0 && (
                 <div className="no-print mt-4 max-w-3xl bg-white border border-neutral-200 p-4 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-3">
-                    Match met vacature
+                  <div className="flex justify-between items-baseline mb-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A35]">
+                      Match met vacature
+                    </div>
+                    <span className="text-[9px] text-neutral-400 uppercase tracking-wider">
+                      Groen ≥75% · Geel 50–74% · Rood &lt;50%
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {selectedItem.result.analysis.vacancyMatches.map((match, i) => {
                       const score = match.score || 0;
                       const color = score >= 75 ? '#16A34A' : score >= 50 ? '#EAB308' : '#DC2626';
+                      // Punt 7 — explain what each score dimension means
+                      const explanation: Record<string, string> = {
+                        'Algehele match': 'Hoe goed past deze kandidaat in totaal bij deze vacature',
+                        'Werkervaring relevantie': 'Hoe sterk overlapt de werkhistorie met de vacature-eisen',
+                        'Sectorkennis': 'Hoe goed kent de kandidaat de sector / het domein van de vacature',
+                      };
+                      const hint = explanation[match.title] || '';
                       return (
-                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200">
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200" title={hint}>
                           <span className="text-[11px] font-semibold text-neutral-700">{match.title}</span>
                           <span
                             className="text-[12px] font-bold text-white px-2 py-0.5 rounded-full"
@@ -496,6 +508,9 @@ const App: React.FC = () => {
                         </div>
                       );
                     })}
+                  </div>
+                  <div className="text-[10px] text-neutral-500 mt-3 leading-snug">
+                    Deze scores zijn een <strong>indicatie op basis van de huidige CV-tekst</strong>. Het CV is ook aangepast: tags zijn herzien en bullets met overlappende concepten gebruiken nu vacature-terminologie waar feitelijk juist.
                   </div>
                 </div>
               )}
@@ -601,9 +616,26 @@ const App: React.FC = () => {
                     rows={4}
                     className="w-full px-3 py-2 text-sm border border-neutral-200 focus:outline-none focus:border-[#EE8D70] transition-colors font-mono leading-relaxed"
                   />
-                  <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
-                    Met vacaturetekst: bullets gebruiken terminologie uit de vacature waar relevant, en de 5 tags worden afgestemd op de vacaturevereisten. Inhoud blijft feitelijk juist — alleen woordkeuze wordt aangepast.
-                  </p>
+                  {/* Maria Punt 7 — explicit explanation of what vacancy-mode actually changes */}
+                  <div className="mt-2 bg-[#1E3A35]/5 border border-[#1E3A35]/20 p-3 text-[11px] leading-relaxed text-neutral-700">
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-[#1E3A35] mb-1.5">
+                      Wat doet deze functie precies?
+                    </div>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>
+                        <strong>Tags afstemmen</strong> — de 5 sterke-punten-tags krijgen woorden die in de vacature voorkomen (bv. "casuïstiekregie" in plaats van "coördineren").
+                      </li>
+                      <li>
+                        <strong>Bullet-terminologie</strong> — bestaande bullets die hetzelfde concept beschrijven worden hertaald met vacature-woorden. <span className="text-neutral-500">Geen feiten of taken worden verzonnen of toegevoegd.</span>
+                      </li>
+                      <li>
+                        <strong>Match-score</strong> — er verschijnt een blok met 3 scores (algemeen, ervaring, sectorkennis) zodat je in één blik ziet hoe goed deze kandidaat past.
+                      </li>
+                    </ol>
+                    <div className="mt-2 text-neutral-500 text-[10px]">
+                      <strong>Voorbeeld:</strong> vacature noemt "Wmo-consulent"; een bullet "Beoordelen van aanvragen volgens de Wet maatschappelijke ondersteuning" wordt hertaald naar "Beoordelen van Wmo-aanvragen". Dezelfde betekenis, vacature-terminologie.
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
