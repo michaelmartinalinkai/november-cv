@@ -221,6 +221,16 @@ const App: React.FC = () => {
       // Punt 13 — mark CV so UI can show a clear indicator that final-grade was applied
       (finalResult as any).wasFinalGradeProcessed = looksFinalGrade;
 
+      // Punt 12 — snapshot original bullets so future rewrites start from the same baseline
+      // (prevents semantic drift on repeated 'herschrijf bullets' clicks).
+      if (finalResult.experience) {
+        finalResult.experience.forEach((exp: any) => {
+          if (Array.isArray(exp.bullets) && !exp.originalBullets) {
+            exp.originalBullets = [...exp.bullets];
+          }
+        });
+      }
+
       // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
       // Phase 2 sometimes mutates years despite "EXACT kopieer" instructions.
       // Override all period values from phase 2 with phase 1 values — guaranteed accuracy.

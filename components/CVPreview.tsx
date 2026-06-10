@@ -319,11 +319,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
     const job = data.experience[expIdx];
     setRegeneratingIndices(prev => new Set(prev).add(expIdx));
     try {
+      // Punt 12 fix — always rewrite FROM the original bullets (snapshot at first conversion),
+      // not from the current (possibly already-paraphrased) bullets. Prevents semantic drift
+      // across multiple "rewrite" clicks. Fall back to current bullets if no snapshot exists
+      // (e.g. for old CVs from before this feature).
+      const inputBullets = (job.originalBullets && job.originalBullets.length > 0)
+        ? job.originalBullets
+        : job.bullets;
       const result = await geminiService.regenerateJob({
         period: job.period,
         employer: job.employer,
         role: job.role,
-        bullets: job.bullets,
+        bullets: inputBullets,
       });
       if (result.bullets.length > 0) {
         // Use ref to get LATEST data (user might have made edits during regenerate)
@@ -369,6 +376,33 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
       current = current[path[i]];
     }
     current[path[path.length - 1]] = value;
+
+    // Punt 12 — when a bullet is manually edited, sync the originalBullets snapshot.
+    // This way the next "rewrite bullets" call uses the user's manual edit as the baseline
+    // (instead of discarding it by reverting to the pre-edit original).
+    // Path shape: ['experience', expIdx, 'bullets', bulletIdx]
+    if (
+      path.length === 4 &&
+      path[0] === 'experience' &&
+      typeof path[1] === 'number' &&
+      path[2] === 'bullets' &&
+      typeof path[3] === 'number'
+    ) {
+      const expIdx = path[1] as number;
+      const bulletIdx = path[3] as number;
+      const exp = newData.experience?.[expIdx];
+      if (exp) {
+        if (!Array.isArray(exp.originalBullets)) {
+          exp.originalBullets = Array.isArray(exp.bullets) ? [...exp.bullets] : [];
+        }
+        // Ensure the array has enough slots (in case user added new bullets beyond original count)
+        while (exp.originalBullets.length <= bulletIdx) {
+          exp.originalBullets.push('');
+        }
+        exp.originalBullets[bulletIdx] = value;
+      }
+    }
+
     onChange(newData);
   };
 

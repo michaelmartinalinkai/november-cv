@@ -64,6 +64,7 @@ export interface ParsedCV {
     employer: string;
     role: string;
     bullets: string[];
+    originalBullets?: string[]; // Punt 12 — snapshot at first conversion. Used by regenerateJob to avoid semantic drift across multiple rewrites.
     pageBreakBefore?: boolean;
     pinned?: boolean;
   }>;
