@@ -700,7 +700,7 @@ const App: React.FC = () => {
                     {finalGradeMode ? '✓ Final-grade upload-modus' : 'Final-grade upload-modus'}
                   </button>
                   <p className="text-[10px] text-neutral-400 leading-snug flex-1">
-                    Aan = al-geformatteerd CV opnieuw uploaden (alleen kleine edits + extends, geen volledige rewrite). Detectie is ook automatisch op basis van bestandsnaam/inhoud.
+                    Aan = al-geformatteerd CV opnieuw uploaden (alleen kleine edits + extends, geen volledige rewrite). Deze instelling blijft aan over sessies heen, dus zet 'm UIT als je weer een ruwe CV gaat verwerken. Detectie is ook automatisch op basis van bestandsnaam/inhoud.
                   </p>
                 </div>
               </div>
