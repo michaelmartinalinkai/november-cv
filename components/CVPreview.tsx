@@ -868,23 +868,43 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                       <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
                     </span>
-                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Werkgever | Functie</div>}
-                    <div style={{ fontSize: '10.66px' }}>
-                      <span className="text-black">
-                        <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={!!isEditing} multiline />
-                      </span>
-                      <span className="text-black/80 mx-1">|</span>
-                      <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
-                        <EditableText
-                          value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                    {isEditing ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-x-3 print:hidden">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Werkgever</div>
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Functie</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-3" style={{ fontSize: '10.66px' }}>
+                          <div>
+                            <span className="text-black">
+                              <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={true} multiline />
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
+                              <EditableText
+                                value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                                  ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                                  : exp.role}
+                                onChange={(v) => handleEdit(['experience', originalIdx, 'role'], v)}
+                                isEditing={true}
+                                multiline
+                              />
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: '10.66px' }}>
+                        <span className="text-black">{exp.employer || ''}</span>
+                        <span className="text-black/80 mx-1">|</span>
+                        <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
+                          {exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
                             ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
                             : exp.role}
-                          onChange={(v) => handleEdit(['experience', originalIdx, 'role'], v)}
-                          isEditing={!!isEditing}
-                          multiline
-                        />
-                      </span>
-                    </div>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Taken / Verantwoordelijkheden</div>}
