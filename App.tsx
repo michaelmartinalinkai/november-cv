@@ -232,25 +232,81 @@ const App: React.FC = () => {
 
       // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
       // Phase 2 sometimes mutates years despite "EXACT kopieer" instructions.
-      // Override all period values from phase 2 with phase 1 values — guaranteed accuracy.
+      // Match by employer+role (fuzzy), fall back to index — handles the rare case
+      // where Phase 2 drops or reorders a job and a pure index lookup would copy a
+      // period to the wrong job.
+      const norm = (s: any) => (s || '').toString().toLowerCase().trim().replace(/[.,;:!?'"`()\[\]{}]/g, '').replace(/\s+/g, ' ');
+
       if (result.experience && finalResult.experience) {
-        result.experience.forEach((exp: any, i: number) => {
-          if (finalResult.experience[i] && exp.period) {
-            finalResult.experience[i].period = exp.period;
+        const claimed = new Set<number>();
+        finalResult.experience.forEach((finalExp: any, i: number) => {
+          const te = norm(finalExp.employer);
+          const tr = norm(finalExp.role);
+          // 1) Exact employer + role match (handles internal promotions)
+          let idx = result.experience.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.employer) === te && norm(o.role) === tr);
+          // 2) Exact employer alone
+          if (idx === -1 && te) {
+            idx = result.experience.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.employer) === te);
+          }
+          // 3) Fuzzy employer substring
+          if (idx === -1 && te) {
+            idx = result.experience.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.employer);
+              return n.length > 0 && (n.startsWith(te) || te.startsWith(n) || n.includes(te) || te.includes(n));
+            });
+          }
+          // 4) Fall back to positional
+          if (idx === -1) idx = i;
+          const source = result.experience[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalExp.period = source.period;
           }
         });
       }
       if (result.education && finalResult.education) {
-        result.education.forEach((edu: any, i: number) => {
-          if (finalResult.education[i] && edu.period) {
-            finalResult.education[i].period = edu.period;
+        // Education matches on degree+school
+        const claimed = new Set<number>();
+        finalResult.education.forEach((finalEdu: any, i: number) => {
+          const td = norm(finalEdu.degree);
+          const ts = norm(finalEdu.school);
+          let idx = result.education.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.degree) === td && norm(o.school) === ts);
+          if (idx === -1 && td) {
+            idx = result.education.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.degree) === td);
+          }
+          if (idx === -1 && td) {
+            idx = result.education.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.degree);
+              return n.length > 0 && (n.startsWith(td) || td.startsWith(n) || n.includes(td) || td.includes(n));
+            });
+          }
+          if (idx === -1) idx = i;
+          const source = result.education[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalEdu.period = source.period;
           }
         });
       }
       if (result.courses && finalResult.courses) {
-        result.courses.forEach((course: any, i: number) => {
-          if (finalResult.courses[i] && course.period) {
-            finalResult.courses[i].period = course.period;
+        const claimed = new Set<number>();
+        finalResult.courses.forEach((finalCourse: any, i: number) => {
+          const tt = norm(finalCourse.title);
+          let idx = result.courses.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.title) === tt);
+          if (idx === -1 && tt) {
+            idx = result.courses.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.title);
+              return n.length > 0 && (n.startsWith(tt) || tt.startsWith(n) || n.includes(tt) || tt.includes(n));
+            });
+          }
+          if (idx === -1) idx = i;
+          const source = result.courses[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalCourse.period = source.period;
           }
         });
       }

@@ -440,24 +440,43 @@ Als er geen school in de input staat, gebruik dan een lege string "".`;
             return union > 0 ? intersect / union : 0;
           };
 
-          // Match originals to parsed jobs by employer (fuzzy), falling back to index.
-          // Same matching style as the bullet-preservation step above — protects against
-          // accidental reordering by Gemini despite the "don't reorder" instruction.
+          // Match originals to parsed jobs by employer + role (fuzzy). Match on role
+          // distinguishes the case of multiple jobs at the same employer (e.g. promoted
+          // internally). Falls back to employer-only, then to positional index.
           const normEmpl = (s: string) =>
             (s || '').toLowerCase().trim().replace(/[.,;:!?'"`()\[\]{}]/g, '').replace(/\s+/g, ' ');
 
           let revertedCount = 0;
+          // Track which originals have been matched, so two parsed jobs don't both grab the
+          // same original entry by accident.
+          const claimed = new Set<number>();
           parsed.experience.forEach((parsedExp: any, i: number) => {
-            // Find the matching original by employer; fall back to index
             const parsedEmpl = normEmpl(parsedExp?.employer || '');
-            let orig = originalExperience.find(o => normEmpl(o.employer) === parsedEmpl);
-            if (!orig) {
-              orig = originalExperience.find(o => {
+            const parsedRole = normEmpl(parsedExp?.role || '');
+
+            // 1) Exact employer + role match
+            let origIdx = originalExperience.findIndex((o, idx) =>
+              !claimed.has(idx) && normEmpl(o.employer) === parsedEmpl && normEmpl(o.role) === parsedRole
+            );
+            // 2) Exact employer alone (first un-claimed)
+            if (origIdx === -1) {
+              origIdx = originalExperience.findIndex((o, idx) =>
+                !claimed.has(idx) && normEmpl(o.employer) === parsedEmpl
+              );
+            }
+            // 3) Fuzzy employer substring
+            if (origIdx === -1 && parsedEmpl.length > 0) {
+              origIdx = originalExperience.findIndex((o, idx) => {
+                if (claimed.has(idx)) return false;
                 const n = normEmpl(o.employer);
-                return parsedEmpl.length > 0 && (n.startsWith(parsedEmpl) || parsedEmpl.startsWith(n) || n.includes(parsedEmpl) || parsedEmpl.includes(n));
+                return n.length > 0 && (n.startsWith(parsedEmpl) || parsedEmpl.startsWith(n) || n.includes(parsedEmpl) || parsedEmpl.includes(n));
               });
             }
-            if (!orig) orig = originalExperience[i];
+            // 4) Fall back to positional index
+            if (origIdx === -1) origIdx = i;
+
+            const orig = originalExperience[origIdx];
+            if (orig) claimed.add(origIdx);
             if (!orig || !Array.isArray(parsedExp?.bullets)) return;
 
             parsedExp.bullets = parsedExp.bullets.map((newBullet: string, bi: number) => {
