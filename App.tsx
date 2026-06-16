@@ -10,7 +10,6 @@ import { geminiService, CVInput } from './services/geminiService';
 import { usageService } from './services/usageService';
 import { generateDocxBlob } from './services/docxGenerator';
 import { CVPdfDocument } from './components/CVPdfDocument';
-import { CoverLetterPdfDocument } from './components/CoverLetterPdfDocument';
 import { pdf } from '@react-pdf/renderer';
 import { BatchItem, ParsedCV } from './types';
 import { AlertCircle, FileText, CheckCircle, Clock, Loader2, XCircle, LogOut, Layout, FileDown, ChevronDown, Play, RefreshCcw, Settings, X, Undo2 } from 'lucide-react';
@@ -65,7 +64,14 @@ const App: React.FC = () => {
   const [profileFocus, setProfileFocus] = useState<string>('');
   const [vacancyText, setVacancyText] = useState<string>('');
   // Punt 13 — final-grade mode: minimale rewrites bij re-upload van al-Novémber-stijl CV's.
-  const [finalGradeMode, setFinalGradeMode] = useState<boolean>(false);
+  const [finalGradeMode, setFinalGradeMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('novcv_finalgrade_mode') === '1'; } catch { return false; }
+  });
+  // Persist final-grade toggle across page reloads — Maria asked for this implicitly
+  // ("had to toggle every time" friction)
+  useEffect(() => {
+    try { localStorage.setItem('novcv_finalgrade_mode', finalGradeMode ? '1' : '0'); } catch { /* ignore */ }
+  }, [finalGradeMode]);
   const undoStackRef = useRef<Map<string, ParsedCV[]>>(new Map());
 
   const processingRef = useRef<Set<string>>(new Set());
@@ -211,27 +217,96 @@ const App: React.FC = () => {
         finalGradeMode: looksFinalGrade,
       });
 
+      // Punt 13 — mark CV so UI can show a clear indicator that final-grade was applied
+      (finalResult as any).wasFinalGradeProcessed = looksFinalGrade;
+
+      // Punt 12 — snapshot original bullets so future rewrites start from the same baseline
+      // (prevents semantic drift on repeated 'herschrijf bullets' clicks).
+      if (finalResult.experience) {
+        finalResult.experience.forEach((exp: any) => {
+          if (Array.isArray(exp.bullets) && !exp.originalBullets) {
+            exp.originalBullets = [...exp.bullets];
+          }
+        });
+      }
+
       // PERIOD RESTORATION — phase 1 extracted dates at temperature 0.1 (very reliable).
       // Phase 2 sometimes mutates years despite "EXACT kopieer" instructions.
-      // Override all period values from phase 2 with phase 1 values — guaranteed accuracy.
+      // Match by employer+role (fuzzy), fall back to index — handles the rare case
+      // where Phase 2 drops or reorders a job and a pure index lookup would copy a
+      // period to the wrong job.
+      const norm = (s: any) => (s || '').toString().toLowerCase().trim().replace(/[.,;:!?'"`()\[\]{}]/g, '').replace(/\s+/g, ' ');
+
       if (result.experience && finalResult.experience) {
-        result.experience.forEach((exp: any, i: number) => {
-          if (finalResult.experience[i] && exp.period) {
-            finalResult.experience[i].period = exp.period;
+        const claimed = new Set<number>();
+        finalResult.experience.forEach((finalExp: any, i: number) => {
+          const te = norm(finalExp.employer);
+          const tr = norm(finalExp.role);
+          // 1) Exact employer + role match (handles internal promotions)
+          let idx = result.experience.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.employer) === te && norm(o.role) === tr);
+          // 2) Exact employer alone
+          if (idx === -1 && te) {
+            idx = result.experience.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.employer) === te);
+          }
+          // 3) Fuzzy employer substring
+          if (idx === -1 && te) {
+            idx = result.experience.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.employer);
+              return n.length > 0 && (n.startsWith(te) || te.startsWith(n) || n.includes(te) || te.includes(n));
+            });
+          }
+          // 4) Fall back to positional
+          if (idx === -1) idx = i;
+          const source = result.experience[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalExp.period = source.period;
           }
         });
       }
       if (result.education && finalResult.education) {
-        result.education.forEach((edu: any, i: number) => {
-          if (finalResult.education[i] && edu.period) {
-            finalResult.education[i].period = edu.period;
+        // Education matches on degree+school
+        const claimed = new Set<number>();
+        finalResult.education.forEach((finalEdu: any, i: number) => {
+          const td = norm(finalEdu.degree);
+          const ts = norm(finalEdu.school);
+          let idx = result.education.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.degree) === td && norm(o.school) === ts);
+          if (idx === -1 && td) {
+            idx = result.education.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.degree) === td);
+          }
+          if (idx === -1 && td) {
+            idx = result.education.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.degree);
+              return n.length > 0 && (n.startsWith(td) || td.startsWith(n) || n.includes(td) || td.includes(n));
+            });
+          }
+          if (idx === -1) idx = i;
+          const source = result.education[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalEdu.period = source.period;
           }
         });
       }
       if (result.courses && finalResult.courses) {
-        result.courses.forEach((course: any, i: number) => {
-          if (finalResult.courses[i] && course.period) {
-            finalResult.courses[i].period = course.period;
+        const claimed = new Set<number>();
+        finalResult.courses.forEach((finalCourse: any, i: number) => {
+          const tt = norm(finalCourse.title);
+          let idx = result.courses.findIndex((o: any, oi: number) => !claimed.has(oi) && norm(o.title) === tt);
+          if (idx === -1 && tt) {
+            idx = result.courses.findIndex((o: any, oi: number) => {
+              if (claimed.has(oi)) return false;
+              const n = norm(o.title);
+              return n.length > 0 && (n.startsWith(tt) || tt.startsWith(n) || n.includes(tt) || tt.includes(n));
+            });
+          }
+          if (idx === -1) idx = i;
+          const source = result.courses[idx];
+          if (source) {
+            claimed.add(idx);
+            if (source.period) finalCourse.period = source.period;
           }
         });
       }
@@ -266,6 +341,30 @@ const App: React.FC = () => {
     setIsProcessingBatch(false);
   };
 
+  // ─── Preview PDF in new tab (no download) — Punt 11 Maria June 9 ─────────────
+  // Maria's complaint: they had to download 5x to see the final result. Now they can
+  // open the PDF inline before deciding to keep it.
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const handlePreviewPdf = async (data: ParsedCV) => {
+    if (isGeneratingPreview) return; // prevent double-clicks during slow renders
+    setIsGeneratingPreview(true);
+    try {
+      const blob = await pdf(
+        <CVPdfDocument data={data} letterText={data.motivationLetter} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // Revoke after a short delay so the new tab has time to load.
+      // 60s is generous — typical render is under 2s.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      console.error('PDF preview error:', err);
+      alert('Fout bij genereren preview. Probeer opnieuw of gebruik Download.');
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
@@ -283,9 +382,11 @@ const App: React.FC = () => {
         // Record conversion for DOCX
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.docx`, data.personalInfo?.name || 'Onbekend');
       } else {
-        // Generate real text-searchable PDF using @react-pdf/renderer
-        // This produces ATS-readable PDFs with selectable text (not rasterized)
-        const blob = await pdf(<CVPdfDocument data={data} />).toBlob();
+        // Generate real text-searchable PDF using @react-pdf/renderer.
+        // Punt 1 — Maria June 9: merge cover letter into the same PDF as the CV.
+        const blob = await pdf(
+          <CVPdfDocument data={data} letterText={data.motivationLetter} />
+        ).toBlob();
         saveAs(blob, `${fileNameBase}.pdf`);
         // Record conversion for PDF
         usageService.recordConversion(effectiveSourceId, contentHash, `${fileNameBase}.pdf`, data.personalInfo?.name || 'Onbekend');
@@ -296,18 +397,6 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Download error:", err);
       alert("Fout bij genereren download.");
-    }
-  };
-
-  const handleDownloadCoverLetter = async (data: ParsedCV) => {
-    try {
-      const sanitize = (s: string) => s.replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      const fileNameBase = `Motivatiebrief_${sanitize(data.personalInfo?.name || "Kandidaat")}_NOVEMBER`;
-      const blob = await pdf(<CoverLetterPdfDocument data={data} letterText={data.motivationLetter || ''} />).toBlob();
-      saveAs(blob, `${fileNameBase}.pdf`);
-    } catch (err) {
-      console.error("Cover letter download error:", err);
-      alert("Fout bij genereren motivatiebrief PDF.");
     }
   };
 
@@ -377,7 +466,14 @@ const App: React.FC = () => {
               <div className="bg-[#4caf50]/10 text-[#4caf50] px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                 <CheckCircle size={12} /> Conversie geslaagd
               </div>
-
+              {selectedItem.result?.wasFinalGradeProcessed && (
+                <div
+                  className="bg-[#1E3A35]/10 text-[#1E3A35] px-3 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2"
+                  title="Dit CV is verwerkt in Final-grade modus — minimale aanpassingen, geen herschrijving van bullets"
+                >
+                  🛡️ Final-grade
+                </div>
+              )}
             </div>
             <div className="relative flex flex-col items-end gap-1">
               <div className="flex items-center gap-3">
@@ -401,21 +497,28 @@ const App: React.FC = () => {
                   </button>
                 )}
                 <button
+                  onClick={() => handlePreviewPdf(selectedItem.result!)}
+                  disabled={isGeneratingPreview}
+                  title="Bekijk PDF in nieuw tabblad zonder downloaden"
+                  className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center justify-center bg-white text-[#1E3A35] hover:bg-neutral-100 border border-[#1E3A35] h-10 px-6"
+                >
+                  {isGeneratingPreview ? '⏳ Bezig…' : '👁 Preview'}
+                </button>
+                <button
                   onClick={() => handleDownload('pdf', selectedItem.result!, selectedItem.id)}
                   className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-[#EE8D70] text-white hover:bg-[#E07C60] border border-transparent shadow-lg h-10 px-8"
                 >
                   Download PDF
                 </button>
-                {selectedItem.result?.motivationLetter && selectedItem.result.motivationLetter.trim() && (
-                  <button
-                    onClick={() => handleDownloadCoverLetter(selectedItem.result!)}
-                    title="Download motivatiebrief als losse PDF"
-                    className="py-3 text-sm tracking-widest uppercase font-semibold transition-all duration-300 flex items-center justify-center bg-[#1E3A35] text-white hover:bg-[#2A4A40] border border-transparent shadow-lg h-10 px-6"
-                  >
-                    📝 Motivatiebrief
-                  </button>
-                )}
               </div>
+              {selectedItem.result?.motivationLetter && selectedItem.result.motivationLetter.trim() && (
+                <span
+                  className="text-[10px] text-[#1E3A35] mt-1 flex items-center gap-1"
+                  title="De motivatiebrief is meegenomen in dezelfde PDF als het CV"
+                >
+                  📝 Motivatiebrief wordt bijgevoegd in de PDF
+                </span>
+              )}
               <span className="text-[10px] text-gray-500 font-mono mt-1">
                 Total CVs Converted: {totalCount}
               </span>
@@ -423,15 +526,27 @@ const App: React.FC = () => {
               {/* Vacancy match scores (Punt 7) — only shows when vacancy was provided */}
               {selectedItem.result?.analysis?.vacancyMatches && selectedItem.result.analysis.vacancyMatches.length > 0 && (
                 <div className="no-print mt-4 max-w-3xl bg-white border border-neutral-200 p-4 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-3">
-                    Match met vacature
+                  <div className="flex justify-between items-baseline mb-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#1E3A35]">
+                      Match met vacature
+                    </div>
+                    <span className="text-[9px] text-neutral-400 uppercase tracking-wider">
+                      Groen ≥75% · Geel 50–74% · Rood &lt;50%
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {selectedItem.result.analysis.vacancyMatches.map((match, i) => {
                       const score = match.score || 0;
                       const color = score >= 75 ? '#16A34A' : score >= 50 ? '#EAB308' : '#DC2626';
+                      // Punt 7 — explain what each score dimension means
+                      const explanation: Record<string, string> = {
+                        'Algehele match': 'Hoe goed past deze kandidaat in totaal bij deze vacature',
+                        'Werkervaring relevantie': 'Hoe sterk overlapt de werkhistorie met de vacature-eisen',
+                        'Sectorkennis': 'Hoe goed kent de kandidaat de sector / het domein van de vacature',
+                      };
+                      const hint = explanation[match.title] || '';
                       return (
-                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200">
+                        <div key={i} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200" title={hint}>
                           <span className="text-[11px] font-semibold text-neutral-700">{match.title}</span>
                           <span
                             className="text-[12px] font-bold text-white px-2 py-0.5 rounded-full"
@@ -443,6 +558,9 @@ const App: React.FC = () => {
                       );
                     })}
                   </div>
+                  <div className="text-[10px] text-neutral-500 mt-3 leading-snug">
+                    Deze scores zijn een <strong>indicatie op basis van de huidige CV-tekst</strong>. Het CV is ook aangepast: tags zijn herzien en bullets met overlappende concepten gebruiken nu vacature-terminologie waar feitelijk juist.
+                  </div>
                 </div>
               )}
 
@@ -450,7 +568,7 @@ const App: React.FC = () => {
               {selectedItem.result && (
                 <div className="no-print mt-4 max-w-3xl">
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[#1E3A35] mb-2">
-                    Motivatiebrief (optioneel) — wordt als losse PDF gedownload met dezelfde stijl als het CV
+                    Motivatiebrief (optioneel) — wordt automatisch toegevoegd als extra pagina aan de PDF-download
                   </label>
                   <textarea
                     value={selectedItem.result.motivationLetter || ''}
@@ -547,9 +665,26 @@ const App: React.FC = () => {
                     rows={4}
                     className="w-full px-3 py-2 text-sm border border-neutral-200 focus:outline-none focus:border-[#EE8D70] transition-colors font-mono leading-relaxed"
                   />
-                  <p className="text-[10px] text-neutral-400 mt-1.5 leading-snug">
-                    Met vacaturetekst: bullets gebruiken terminologie uit de vacature waar relevant, en de 5 tags worden afgestemd op de vacaturevereisten. Inhoud blijft feitelijk juist — alleen woordkeuze wordt aangepast.
-                  </p>
+                  {/* Maria Punt 7 — explicit explanation of what vacancy-mode actually changes */}
+                  <div className="mt-2 bg-[#1E3A35]/5 border border-[#1E3A35]/20 p-3 text-[11px] leading-relaxed text-neutral-700">
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-[#1E3A35] mb-1.5">
+                      Wat doet deze functie precies?
+                    </div>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>
+                        <strong>Tags afstemmen</strong> — de 5 sterke-punten-tags krijgen woorden die in de vacature voorkomen (bv. "casuïstiekregie" in plaats van "coördineren").
+                      </li>
+                      <li>
+                        <strong>Bullet-terminologie</strong> — bestaande bullets die hetzelfde concept beschrijven worden hertaald met vacature-woorden. <span className="text-neutral-500">Geen feiten of taken worden verzonnen of toegevoegd.</span>
+                      </li>
+                      <li>
+                        <strong>Match-score</strong> — er verschijnt een blok met 3 scores (algemeen, ervaring, sectorkennis) zodat je in één blik ziet hoe goed deze kandidaat past.
+                      </li>
+                    </ol>
+                    <div className="mt-2 text-neutral-500 text-[10px]">
+                      <strong>Voorbeeld:</strong> vacature noemt "Wmo-consulent"; een bullet "Beoordelen van aanvragen volgens de Wet maatschappelijke ondersteuning" wordt hertaald naar "Beoordelen van Wmo-aanvragen". Dezelfde betekenis, vacature-terminologie.
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -565,7 +700,7 @@ const App: React.FC = () => {
                     {finalGradeMode ? '✓ Final-grade upload-modus' : 'Final-grade upload-modus'}
                   </button>
                   <p className="text-[10px] text-neutral-400 leading-snug flex-1">
-                    Aan = al-geformatteerd CV opnieuw uploaden (alleen kleine edits + extends, geen volledige rewrite). Detectie is ook automatisch op basis van bestandsnaam/inhoud.
+                    Aan = al-geformatteerd CV opnieuw uploaden (alleen kleine edits + extends, geen volledige rewrite). Deze instelling blijft aan over sessies heen, dus zet 'm UIT als je weer een ruwe CV gaat verwerken. Detectie is ook automatisch op basis van bestandsnaam/inhoud.
                   </p>
                 </div>
               </div>

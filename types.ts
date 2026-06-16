@@ -64,6 +64,7 @@ export interface ParsedCV {
     employer: string;
     role: string;
     bullets: string[];
+    originalBullets?: string[]; // Punt 12 — snapshot at first conversion. Used by regenerateJob to avoid semantic drift across multiple rewrites.
     pageBreakBefore?: boolean;
     pinned?: boolean;
   }>;
@@ -71,6 +72,7 @@ export interface ParsedCV {
   analysis?: CVAnalysis;
   motivationLetter?: string; // Punt 1 — cover letter (downloaded as separate PDF)
   manualOrder?: boolean;     // Punt 5 — when true, experience array is rendered in array order (not date-sorted)
+  wasFinalGradeProcessed?: boolean; // Punt 13 — set true when final-grade mode was applied during conversion
 }
 
 export enum AppState {

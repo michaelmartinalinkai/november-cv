@@ -216,11 +216,12 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
                             const h = data.personalInfo.hours!;
                             parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
                           }
-                          if (isValid(data.personalInfo.placeOfResidence)) {
-                            parts.push(data.personalInfo.placeOfResidence!);
-                          }
+                          // Punt 2 — Maria June 9: gender BEFORE woonplaats, woonplaats gets a "Woonplaats:" label
                           if (isValid(data.personalInfo.gender)) {
                             parts.push(data.personalInfo.gender!);
+                          }
+                          if (isValid(data.personalInfo.placeOfResidence)) {
+                            parts.push(`Woonplaats: ${data.personalInfo.placeOfResidence!}`);
                           }
                           if (isValid(data.personalInfo.holidaySchedule)) {
                             parts.push(`Vakantieschema: ${data.personalInfo.holidaySchedule}`);
@@ -439,14 +440,17 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
       ]
     }),
 
-    ...(data.manualOrder
-      ? [...(data.experience || [])]
-      : [...(data.experience || [])].sort((a, b) => {
-          if (a.pinned && !b.pinned) return -1;
-          if (!a.pinned && b.pinned) return 1;
-          return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-        })
-    ).flatMap(exp => [
+    ...((() => {
+      // Punt 5 + Maria June 9 — pinned items ALWAYS come first.
+      // Within pinned/unpinned: manualOrder respects array order, else date-sort.
+      const all = data.experience || [];
+      const pinned = all.filter(e => e.pinned);
+      const unpinned = all.filter(e => !e.pinned);
+      if (data.manualOrder) return [...pinned, ...unpinned];
+      const byDate = (a: typeof all[number], b: typeof all[number]) =>
+        parsePeriodStart(b.period) - parsePeriodStart(a.period);
+      return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+    })()).flatMap(exp => [
       // Period
       new Paragraph({
         spacing: { before: 240 },

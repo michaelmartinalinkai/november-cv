@@ -1,6 +1,7 @@
 import React from 'react';
 import { Document, Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { ParsedCV } from '../types';
+import { CoverLetterPage } from './CoverLetterPdfDocument';
 
 // ─── FONT REGISTRATION ───────────────────────────────────────────────────────
 // IMPORTANT: Use .ttf (not .woff) to avoid character-drop bugs in @react-pdf
@@ -126,11 +127,12 @@ const buildHeaderSubtitle = (data: ParsedCV): string[] => {
     const h = data.personalInfo!.hours!;
     parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
   }
-  if (isValid(data.personalInfo?.placeOfResidence)) {
-    parts.push(data.personalInfo!.placeOfResidence!);
-  }
+  // Punt 2 — Maria June 9: gender BEFORE woonplaats, woonplaats gets a "Woonplaats:" label
   if (isValid(data.personalInfo?.gender)) {
     parts.push(data.personalInfo!.gender!);
+  }
+  if (isValid(data.personalInfo?.placeOfResidence)) {
+    parts.push(`Woonplaats: ${data.personalInfo!.placeOfResidence!}`);
   }
   if (isValid(data.personalInfo?.holidaySchedule)) {
     parts.push(`Vakantieschema: ${data.personalInfo!.holidaySchedule}`);
@@ -393,9 +395,13 @@ const styles = StyleSheet.create({
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
-interface Props { data: ParsedCV; }
+interface Props {
+  data: ParsedCV;
+  /** When provided + non-empty, appends a Motivatiebrief page after the CV. Punt 1 — Maria June 9. */
+  letterText?: string;
+}
 
-export const CVPdfDocument: React.FC<Props> = ({ data }) => {
+export const CVPdfDocument: React.FC<Props> = ({ data, letterText }) => {
   const subtitleParts = buildHeaderSubtitle(data);
   const tags = (data.analysis?.tags || []).slice(0, 5);
   const tagsRow1 = tags.slice(0, 3);
@@ -405,14 +411,19 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
   const sortedEducation = [...(data.education || [])].sort(
     (a, b) => parsePeriodEnd(b.period) - parsePeriodEnd(a.period)
   );
-  // Punt 5 — if manualOrder is set (drag-and-drop was used), respect array order
-  const sortedExperience = data.manualOrder
-    ? [...(data.experience || [])]
-    : [...(data.experience || [])].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-      });
+  // Punt 5 + Maria June 9 — pinned items ALWAYS come first.
+  // Within pinned/unpinned: manualOrder respects array order, else date-sort.
+  const sortedExperience = (() => {
+    const all = data.experience || [];
+    const pinned = all.filter(e => e.pinned);
+    const unpinned = all.filter(e => !e.pinned);
+    if (data.manualOrder) {
+      return [...pinned, ...unpinned];
+    }
+    const byDate = (a: typeof all[number], b: typeof all[number]) =>
+      parsePeriodStart(b.period) - parsePeriodStart(a.period);
+    return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+  })();
 
   const hideSep = data.hideSeparators || [];
 
@@ -599,6 +610,11 @@ export const CVPdfDocument: React.FC<Props> = ({ data }) => {
           <View style={styles.footerLimeBarRight} />
         </View>
       </Page>
+
+      {/* Punt 1 — Maria June 9 — merge cover letter into the same PDF as the CV */}
+      {letterText && letterText.trim() && (
+        <CoverLetterPage data={data} letterText={letterText} />
+      )}
     </Document>
   );
 };

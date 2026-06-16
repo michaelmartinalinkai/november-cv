@@ -319,11 +319,18 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
     const job = data.experience[expIdx];
     setRegeneratingIndices(prev => new Set(prev).add(expIdx));
     try {
+      // Punt 12 fix — always rewrite FROM the original bullets (snapshot at first conversion),
+      // not from the current (possibly already-paraphrased) bullets. Prevents semantic drift
+      // across multiple "rewrite" clicks. Fall back to current bullets if no snapshot exists
+      // (e.g. for old CVs from before this feature).
+      const inputBullets = (job.originalBullets && job.originalBullets.length > 0)
+        ? job.originalBullets
+        : job.bullets;
       const result = await geminiService.regenerateJob({
         period: job.period,
         employer: job.employer,
         role: job.role,
-        bullets: job.bullets,
+        bullets: inputBullets,
       });
       if (result.bullets.length > 0) {
         // Use ref to get LATEST data (user might have made edits during regenerate)
@@ -369,6 +376,33 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
       current = current[path[i]];
     }
     current[path[path.length - 1]] = value;
+
+    // Punt 12 — when a bullet is manually edited, sync the originalBullets snapshot.
+    // This way the next "rewrite bullets" call uses the user's manual edit as the baseline
+    // (instead of discarding it by reverting to the pre-edit original).
+    // Path shape: ['experience', expIdx, 'bullets', bulletIdx]
+    if (
+      path.length === 4 &&
+      path[0] === 'experience' &&
+      typeof path[1] === 'number' &&
+      path[2] === 'bullets' &&
+      typeof path[3] === 'number'
+    ) {
+      const expIdx = path[1] as number;
+      const bulletIdx = path[3] as number;
+      const exp = newData.experience?.[expIdx];
+      if (exp) {
+        if (!Array.isArray(exp.originalBullets)) {
+          exp.originalBullets = Array.isArray(exp.bullets) ? [...exp.bullets] : [];
+        }
+        // Ensure the array has enough slots (in case user added new bullets beyond original count)
+        while (exp.originalBullets.length <= bulletIdx) {
+          exp.originalBullets.push('');
+        }
+        exp.originalBullets[bulletIdx] = value;
+      }
+    }
+
     onChange(newData);
   };
 
@@ -391,8 +425,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             <div className="flex flex-col gap-1 items-start mt-2">
               <div className="flex items-center gap-2"><span className="opacity-50">Beschikbaarheid:</span> <EditableText value={data.personalInfo?.availability || ''} onChange={(v) => handleEdit(['personalInfo', 'availability'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Uren:</span> <EditableText value={data.personalInfo?.hours || ''} onChange={(v) => handleEdit(['personalInfo', 'hours'], v)} isEditing={true} /></div>
-              <div className="flex items-center gap-2"><span className="opacity-50">Woonplaats:</span> <EditableText value={data.personalInfo?.placeOfResidence || ''} onChange={(v) => handleEdit(['personalInfo', 'placeOfResidence'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Geslacht:</span> <EditableText value={data.personalInfo?.gender || ''} onChange={(v) => handleEdit(['personalInfo', 'gender'], v)} isEditing={true} /></div>
+              <div className="flex items-center gap-2"><span className="opacity-50">Woonplaats:</span> <EditableText value={data.personalInfo?.placeOfResidence || ''} onChange={(v) => handleEdit(['personalInfo', 'placeOfResidence'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">Vakantieschema:</span> <EditableText value={data.personalInfo?.holidaySchedule || ''} onChange={(v) => handleEdit(['personalInfo', 'holidaySchedule'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Nummer:</span> <EditableText value={data.personalInfo?.skj || ''} onChange={(v) => handleEdit(['personalInfo', 'skj'], v)} isEditing={true} /></div>
               <div className="flex items-center gap-2"><span className="opacity-50">SKJ Afgegeven:</span> <EditableText value={data.personalInfo?.skjDate || ''} onChange={(v) => handleEdit(['personalInfo', 'skjDate'], v)} isEditing={true} /></div>
@@ -416,11 +450,12 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 const h = data.personalInfo!.hours!;
                 parts.push(`${h}${h.includes('uur per week') ? '' : ' uur per week'}`);
               }
-              if (isValid(data.personalInfo?.placeOfResidence)) {
-                parts.push(data.personalInfo!.placeOfResidence!);
-              }
+              // Punt 2 — Maria June 9: gender comes BEFORE woonplaats, and woonplaats gets a "Woonplaats:" label
               if (isValid(data.personalInfo?.gender)) {
                 parts.push(data.personalInfo!.gender!);
+              }
+              if (isValid(data.personalInfo?.placeOfResidence)) {
+                parts.push(`Woonplaats: ${data.personalInfo!.placeOfResidence!}`);
               }
               if (isValid(data.personalInfo?.holidaySchedule)) {
                 parts.push(`Vakantieschema: ${data.personalInfo!.holidaySchedule}`);
@@ -558,6 +593,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                       >▼</button>
                     </span>
                   )}
+                  {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Periode</div>}
                   {isEditing ? (
                     <EditableText value={formatDateToNumbers(fixedEdu.period) || ''} onChange={(v) => handleEdit(['education', origIdx, 'period'], v)} isEditing={true} />
                   ) : (
@@ -575,14 +611,19 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                 </div>
                 <div className="leading-snug flex items-start justify-between gap-2">
                   <div>
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Opleiding</div>}
                     <span className="text-black inline">
                       <EditableText value={fixedEdu.degree || ''} onChange={(v) => handleEdit(['education', origIdx, 'degree'], v)} isEditing={!!isEditing} multiline />
                     </span>
-                    {edu.school && (
-                      <span className="font-normal opacity-70">, <EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
+                    {(edu.school || isEditing) && (
+                      <>
+                        {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Onderwijsinstelling</div>}
+                        <span className="font-normal opacity-70">{!isEditing && ', '}<EditableText value={edu.school || ''} onChange={(v) => handleEdit(['education', origIdx, 'school'], v)} isEditing={!!isEditing} /></span>
+                      </>
                     )}
+                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Status (diploma behaald / in afronding / niet afgerond)</div>}
                     <span className="font-normal opacity-70 whitespace-nowrap">
-                      {fixedEdu.status ? <>{' '}- <EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <>{' '}- <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /></> : null)}
+                      {fixedEdu.status ? <>{!isEditing && ' - '}<EditableText value={fixedEdu.status} onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={!!isEditing} /></> : (isEditing ? <EditableText value='' onChange={(v) => handleEdit(['education', origIdx, 'status'], v)} isEditing={true} /> : null)}
                     </span>
                   </div>
                   {isEditing && (
@@ -639,24 +680,59 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             <h3 className="uppercase text-black" style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'Agrandir, sans-serif' }}>CURSUSSEN</h3>
           </div>
           {isEditing ? (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {(data.courses || []).map((c, ci) => (
-                <div key={ci} className="print:hidden flex items-center gap-2 group/course pl-1">
-                  <span className="text-gray-300 text-[10px] shrink-0">•</span>
-                  <span className="flex-1 text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
-                    <EditableText
-                      value={stripCoursePrefix(c.title)}
-                      onChange={(v) => {
-                        if (!onChange) return;
-                        const newData = JSON.parse(JSON.stringify(data));
-                        newData.courses[ci].title = v;
-                        onChange(newData);
-                      }}
-                      isEditing={true}
-                    />
-                  </span>
+                <div key={ci} className="print:hidden flex items-start gap-2 group/course pl-1 py-1.5 border-l-2 border-neutral-100 pl-2">
+                  <span className="text-gray-300 text-[10px] shrink-0 mt-2">•</span>
+                  <div className="flex-1 grid grid-cols-12 gap-x-2">
+                    <div className="col-span-3">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Jaar</div>
+                      <span className="text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={c.period || ''}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].period = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                    <div className="col-span-5">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Cursus / certificaat</div>
+                      <span className="text-[10.66px]" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={stripCoursePrefix(c.title)}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].title = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                    <div className="col-span-4">
+                      <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Instituut (optioneel)</div>
+                      <span className="text-[10.66px] opacity-70" style={{ fontFamily: 'Garet, sans-serif' }}>
+                        <EditableText
+                          value={c.institute || ''}
+                          onChange={(v) => {
+                            if (!onChange) return;
+                            const newData = JSON.parse(JSON.stringify(data));
+                            newData.courses[ci].institute = v;
+                            onChange(newData);
+                          }}
+                          isEditing={true}
+                        />
+                      </span>
+                    </div>
+                  </div>
                   <button
-                    className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    className="text-[9px] text-blue-400 hover:text-blue-600 whitespace-nowrap opacity-0 group-hover/course:opacity-100 transition-opacity mt-3"
                     title="Verplaats naar opleidingen"
                     onClick={() => {
                       if (!onChange) return;
@@ -674,7 +750,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     }}
                   >→ opleiding</button>
                   <button
-                    className="text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/course:opacity-100 transition-opacity"
+                    className="text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/course:opacity-100 transition-opacity mt-3"
                     title="Verwijder cursus"
                     onClick={() => {
                       if (!onChange) return;
@@ -691,7 +767,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   if (!onChange) return;
                   const newData = JSON.parse(JSON.stringify(data));
                   if (!newData.courses) newData.courses = [];
-                  newData.courses.push({ period: '', title: '' });
+                  newData.courses.push({ period: '', title: '', institute: '' });
                   onChange(newData);
                 }}
               >+ cursus toevoegen</button>
@@ -725,18 +801,22 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             // Tag each item with its original index BEFORE sorting to avoid findIndex collisions.
             // In edit mode: keep array order so reorder arrows/drag-and-drop visually work.
             // In view/print mode:
-            //   - If manualOrder flag is set (drag-and-drop was used), respect array order
-            //   - Otherwise: pinned items first, then sort by most-recent date
+            //   - Pinned items ALWAYS come first (Maria June 9: pin must override even after drag-drop)
+            //   - Within pinned/unpinned groups: respect manualOrder if set, else date-sort
             const tagged = (data.experience || []).map((exp, idx) => ({ ...exp, __origIdx: idx }));
-            const sorted = (isEditing || data.manualOrder)
+            const sorted = isEditing
               ? tagged
-              : [...tagged].sort((a, b) => {
-                  // Pinned items always come first
-                  if (a.pinned && !b.pinned) return -1;
-                  if (!a.pinned && b.pinned) return 1;
-                  // Within same pin status, sort by start date (most recent first)
-                  return parsePeriodStart(b.period) - parsePeriodStart(a.period);
-                });
+              : (() => {
+                  const pinned = tagged.filter(e => e.pinned);
+                  const unpinned = tagged.filter(e => !e.pinned);
+                  if (data.manualOrder) {
+                    // Both halves keep their existing array order
+                    return [...pinned, ...unpinned];
+                  }
+                  const byDate = (a: typeof tagged[number], b: typeof tagged[number]) =>
+                    parsePeriodStart(b.period) - parsePeriodStart(a.period);
+                  return [...[...pinned].sort(byDate), ...[...unpinned].sort(byDate)];
+                })();
             const expIds = sorted.map(e => `exp-${e.__origIdx}`);
             return (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExpDragEnd}>
@@ -746,15 +826,23 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
               return (
                 <SortableExpItem id={`exp-${originalIdx}`} key={`exp-${originalIdx}`} isEditing={!!isEditing}>{(dragHandle) => (
                 <div key={`exp-${originalIdx}`} className={`relative group/exp ${isEditing ? 'pl-9' : ''}`} style={{ fontFamily: 'Garet, sans-serif' }}>
-                  {/* Drag handle (Punt 5) — only in edit mode */}
+                  {/* Drag handle (Punt 5) — only in edit mode. Made more visible per Maria June 9 Punt 4. */}
                   {isEditing && (
                     <button
                       {...dragHandle}
-                      className="print:hidden absolute -left-1 top-0 cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-600 transition-colors p-1 select-none touch-none"
+                      className="print:hidden absolute -left-2 top-0 cursor-grab active:cursor-grabbing text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded transition-colors p-1.5 select-none touch-none"
                       title="Sleep om te verplaatsen"
+                      aria-label="Verplaats deze functie"
                       style={{ touchAction: 'none' }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="3" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="10" cy="11" r="1.2"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+                        <circle cx="4" cy="3" r="1.5"/>
+                        <circle cx="4" cy="7" r="1.5"/>
+                        <circle cx="4" cy="11" r="1.5"/>
+                        <circle cx="10" cy="3" r="1.5"/>
+                        <circle cx="10" cy="7" r="1.5"/>
+                        <circle cx="10" cy="11" r="1.5"/>
+                      </svg>
                     </button>
                   )}
                   {/* Page break ruler (edit mode only) */}
@@ -768,38 +856,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                   )}
                   {exp.pageBreakBefore && <PrintPageBreak />}
 
-                  {/* Reorder arrows */}
-                  {isEditing && (
-                    <div className="print:hidden absolute left-0 top-0 flex flex-col">
-                      <button
-                        disabled={si === 0}
-                        onClick={() => {
-                          if (!onChange) return;
-                          const newData = JSON.parse(JSON.stringify(data));
-                          // Use pre-tagged __origIdx from sorted array for safe swapping
-                          const aIdx = sorted[si].__origIdx;
-                          const bIdx = sorted[si - 1].__origIdx;
-                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
-                          onChange(newData);
-                        }}
-                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
-                        title="Omhoog"
-                      >▲</button>
-                      <button
-                        disabled={si === sorted.length - 1}
-                        onClick={() => {
-                          if (!onChange) return;
-                          const newData = JSON.parse(JSON.stringify(data));
-                          const aIdx = sorted[si].__origIdx;
-                          const bIdx = sorted[si + 1].__origIdx;
-                          [newData.experience[aIdx], newData.experience[bIdx]] = [newData.experience[bIdx], newData.experience[aIdx]];
-                          onChange(newData);
-                        }}
-                        className="text-[9px] leading-none text-gray-400 hover:text-gray-700 disabled:opacity-20 disabled:cursor-not-allowed"
-                        title="Omlaag"
-                      >▼</button>
-                    </div>
-                  )}
+                  {/* Reorder arrows removed per Maria June 9 Punt 4 — drag-and-drop replaces them */}
 
                   <div className="mb-2" style={{ breakInside: 'avoid', pageBreakInside: 'avoid', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
                     {exp.pinned && (
@@ -811,23 +868,43 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                     <span className="block opacity-80" style={{ fontSize: '10.66px' }}>
                       <EditableText value={formatDateToNumbers(exp.period) || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'period'], v)} isEditing={!!isEditing} />
                     </span>
-                    {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Werkgever | Functie</div>}
-                    <div style={{ fontSize: '10.66px' }}>
-                      <span className="text-black">
-                        <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={!!isEditing} multiline />
-                      </span>
-                      <span className="text-black/80 mx-1">|</span>
-                      <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
-                        <EditableText
-                          value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                    {isEditing ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-x-3 print:hidden">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Werkgever</div>
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5 mt-1.5">Functie</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-3" style={{ fontSize: '10.66px' }}>
+                          <div>
+                            <span className="text-black">
+                              <EditableText value={exp.employer || ''} onChange={(v) => handleEdit(['experience', originalIdx, 'employer'], v)} isEditing={true} multiline />
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
+                              <EditableText
+                                value={exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
+                                  ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
+                                  : exp.role}
+                                onChange={(v) => handleEdit(['experience', originalIdx, 'role'], v)}
+                                isEditing={true}
+                                multiline
+                              />
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: '10.66px' }}>
+                        <span className="text-black">{exp.employer || ''}</span>
+                        <span className="text-black/80 mx-1">|</span>
+                        <span className="text-black font-bold uppercase" style={{ fontSize: '11px', fontFamily: 'Garet, sans-serif' }}>
+                          {exp.role.toUpperCase().startsWith((exp.employer || '').toUpperCase())
                             ? exp.role.replace(new RegExp(`^${(exp.employer || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|?\\s*`, 'i'), '').trim()
                             : exp.role}
-                          onChange={(v) => handleEdit(['experience', originalIdx, 'role'], v)}
-                          isEditing={!!isEditing}
-                          multiline
-                        />
-                      </span>
-                    </div>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {isEditing && <div className="print:hidden text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Taken / Verantwoordelijkheden</div>}
@@ -843,6 +920,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 const bullets = newData.experience[originalIdx].bullets;
                                 [bullets[bi - 1], bullets[bi]] = [bullets[bi], bullets[bi - 1]];
+                                // Punt 12 — keep originalBullets reordered alongside so rewrite input stays aligned
+                                const orig = newData.experience[originalIdx].originalBullets;
+                                if (Array.isArray(orig) && orig.length > bi) {
+                                  [orig[bi - 1], orig[bi]] = [orig[bi], orig[bi - 1]];
+                                }
                                 onChange(newData);
                               }}
                               className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
@@ -854,6 +936,11 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 const bullets = newData.experience[originalIdx].bullets;
                                 [bullets[bi], bullets[bi + 1]] = [bullets[bi + 1], bullets[bi]];
+                                // Punt 12 — keep originalBullets reordered alongside so rewrite input stays aligned
+                                const orig = newData.experience[originalIdx].originalBullets;
+                                if (Array.isArray(orig) && orig.length > bi + 1) {
+                                  [orig[bi], orig[bi + 1]] = [orig[bi + 1], orig[bi]];
+                                }
                                 onChange(newData);
                               }}
                               className="text-[7px] leading-none text-gray-300 hover:text-gray-600 disabled:opacity-10 disabled:cursor-not-allowed"
@@ -872,6 +959,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                                 const newData = JSON.parse(JSON.stringify(data));
                                 // Replace current bullet with the first line, then insert remaining lines after
                                 newData.experience[originalIdx].bullets.splice(bi, 1, ...lines);
+                                // Punt 12 — keep originalBullets aligned so future rewrites match the new layout
+                                if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                                  newData.experience[originalIdx].originalBullets.splice(bi, 1, ...lines);
+                                }
                                 onChange(newData);
                               } else if (lines.length === 1) {
                                 // Single line — use the cleaned line (strips trailing newlines/whitespace)
@@ -893,6 +984,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                               if (!onChange) return;
                               const newData = JSON.parse(JSON.stringify(data));
                               newData.experience[originalIdx].bullets.splice(bi, 1);
+                              // Punt 12 — keep originalBullets in sync so future rewrites don't resurrect the deleted bullet
+                              if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                                newData.experience[originalIdx].originalBullets.splice(bi, 1);
+                              }
                               onChange(newData);
                             }}
                             title="Verwijder bullet"
@@ -910,6 +1005,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                           const newData = JSON.parse(JSON.stringify(data));
                           if (!newData.experience[originalIdx].bullets) newData.experience[originalIdx].bullets = [];
                           newData.experience[originalIdx].bullets.push('');
+                          // Punt 12 — keep originalBullets aligned with bullets when a new one is added
+                          if (Array.isArray(newData.experience[originalIdx].originalBullets)) {
+                            newData.experience[originalIdx].originalBullets.push('');
+                          }
                           onChange(newData);
                         }}
                         className="text-[10px] text-green-600 hover:text-green-800 font-medium"
@@ -1093,17 +1192,46 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
 
             {!data.referencesOnRequest && (
               <div className="space-y-4 pl-1" style={{ fontSize: '10.66px', fontFamily: 'Garet, sans-serif' }}>
+                {/* Punt 6 — Maria June 9 — referentie-format header explicit for editors */}
+                {isEditing && (data.references || []).length > 0 && (
+                  <div className="print:hidden text-[9px] text-neutral-500 italic">
+                    Format per referentie: <strong>Naam</strong> | <strong>Organisatie / Functie</strong> | <strong>e-mail of telefoon</strong>
+                  </div>
+                )}
                 {(data.references || []).map((ref, ri) => (
                   <div key={ri} className="relative group/ref">
-                    <div>
-                      <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={!!isEditing} />
-                      {(ref.contact || isEditing) && <span className="opacity-70"> | <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={!!isEditing} /></span>}
-                    </div>
-                    {(ref.role || ref.company || isEditing) && (
-                      <div className="opacity-70">
-                        <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={!!isEditing} />
-                        {(ref.company || isEditing) && <span> | <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={!!isEditing} /></span>}
+                    {isEditing ? (
+                      <div className="grid grid-cols-12 gap-x-2 gap-y-1 pr-7">
+                        <div className="col-span-5">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Naam</div>
+                          <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-7">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">E-mail of telefoon</div>
+                          <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-5">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Functie</div>
+                          <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={true} />
+                        </div>
+                        <div className="col-span-7">
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Organisatie</div>
+                          <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={true} />
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <div>
+                          <span>{ref.name || ''}</span>
+                          {ref.contact && <span className="opacity-70"> | {ref.contact}</span>}
+                        </div>
+                        {(ref.role || ref.company) && (
+                          <div className="opacity-70">
+                            <span>{ref.role || ''}</span>
+                            {ref.company && <span> | {ref.company}</span>}
+                          </div>
+                        )}
+                      </>
                     )}
                     {isEditing && (
                       <button className="print:hidden absolute right-0 top-0 text-[10px] text-red-400 hover:text-red-600 opacity-0 group-hover/ref:opacity-100 transition-opacity"

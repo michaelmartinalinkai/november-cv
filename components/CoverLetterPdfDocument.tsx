@@ -143,36 +143,47 @@ interface Props {
   letterText: string;
 }
 
-export const CoverLetterPdfDocument: React.FC<Props> = ({ data, letterText }) => {
+/**
+ * Reusable cover letter page — can be embedded inside another `<Document>`
+ * (e.g. appended after CV pages in CVPdfDocument). Returns just the `<Page>`,
+ * no surrounding Document.
+ */
+export const CoverLetterPage: React.FC<Props> = ({ data, letterText }) => {
   const paragraphs = splitParagraphs(letterText);
 
   return (
+    <Page size="A4" style={styles.page}>
+      {/* HEADER (same style as CV) */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerName}>{toTitleCase(data.personalInfo?.name || 'Kandidaat Naam')}</Text>
+          <Text style={styles.headerSubtitle}>Motivatiebrief</Text>
+        </View>
+        <Image src={LOGO_PNG} style={styles.headerLogo} />
+      </View>
+
+      <View style={styles.body}>
+        <View style={styles.titleBar}>
+          <Text style={styles.title}>MOTIVATIEBRIEF</Text>
+        </View>
+        {paragraphs.map((p, i) => (
+          <Text key={i} style={styles.paragraph}>{p}</Text>
+        ))}
+      </View>
+
+      <View style={styles.footer} fixed>
+        <View style={styles.footerLimeBarLeft} />
+        <Image src={ARROW_PNG} style={styles.footerArrow} />
+        <View style={styles.footerLimeBarRight} />
+      </View>
+    </Page>
+  );
+};
+
+export const CoverLetterPdfDocument: React.FC<Props> = ({ data, letterText }) => {
+  return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {/* HEADER (same style as CV) */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerName}>{toTitleCase(data.personalInfo?.name || 'Kandidaat Naam')}</Text>
-            <Text style={styles.headerSubtitle}>Motivatiebrief</Text>
-          </View>
-          <Image src={LOGO_PNG} style={styles.headerLogo} />
-        </View>
-
-        <View style={styles.body}>
-          <View style={styles.titleBar}>
-            <Text style={styles.title}>MOTIVATIEBRIEF</Text>
-          </View>
-          {paragraphs.map((p, i) => (
-            <Text key={i} style={styles.paragraph}>{p}</Text>
-          ))}
-        </View>
-
-        <View style={styles.footer} fixed>
-          <View style={styles.footerLimeBarLeft} />
-          <Image src={ARROW_PNG} style={styles.footerArrow} />
-          <View style={styles.footerLimeBarRight} />
-        </View>
-      </Page>
+      <CoverLetterPage data={data} letterText={letterText} />
     </Document>
   );
 };
