@@ -519,14 +519,14 @@ const createNewStyleDocument = (data: ParsedCV, logoBuffer: ArrayBuffer | null, 
           spacing: { before: 200 },
           children: [
             new TextRun({ text: ref.name, size: 16, font: FONT_BRAND }),
-            ...(ref.contact ? [new TextRun({ text: ` | ${ref.contact}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
+            ...(ref.company ? [new TextRun({ text: ` | ${ref.company}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
           ]
         }),
-        ...((ref.role || ref.company) ? [new Paragraph({
+        ...((ref.role || ref.contact) ? [new Paragraph({
           spacing: { before: 20 },
           children: [
             ...(ref.role ? [new TextRun({ text: ref.role, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
-            ...(ref.company ? [new TextRun({ text: ` | ${ref.company}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
+            ...(ref.contact ? [new TextRun({ text: ` | ${ref.contact}`, size: 16, font: FONT_BRAND, color: COLOR_GREY })] : []),
           ]
         })] : []),
       ])),

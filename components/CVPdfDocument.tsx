@@ -588,11 +588,11 @@ export const CVPdfDocument: React.FC<Props> = ({ data, letterText }) => {
                     <View key={ri} style={styles.refBlock} wrap={false}>
                       <Text style={styles.refMain}>
                         {ref.name}
-                        {ref.contact ? <Text style={styles.refSecondary}> | {ref.contact}</Text> : null}
+                        {ref.company ? <Text style={styles.refSecondary}> | {ref.company}</Text> : null}
                       </Text>
-                      {(ref.role || ref.company) && (
+                      {(ref.role || ref.contact) && (
                         <Text style={styles.refSecondary}>
-                          {ref.role}{ref.role && ref.company ? ' | ' : ''}{ref.company}
+                          {ref.role}{ref.role && ref.contact ? ' | ' : ''}{ref.contact}
                         </Text>
                       )}
                     </View>

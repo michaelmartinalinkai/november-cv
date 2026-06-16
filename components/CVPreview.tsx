@@ -1207,28 +1207,28 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
                           <EditableText value={ref.name || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].name = v; onChange(d); }} isEditing={true} />
                         </div>
                         <div className="col-span-7">
-                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">E-mail of telefoon</div>
-                          <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={true} />
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Organisatie</div>
+                          <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={true} />
                         </div>
                         <div className="col-span-5">
                           <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Functie</div>
                           <EditableText value={ref.role || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].role = v; onChange(d); }} isEditing={true} />
                         </div>
                         <div className="col-span-7">
-                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Organisatie</div>
-                          <EditableText value={ref.company || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].company = v; onChange(d); }} isEditing={true} />
+                          <div className="text-[8px] text-gray-400 uppercase tracking-wider font-semibold mb-0.5">E-mail of telefoon</div>
+                          <EditableText value={ref.contact || ''} onChange={(v) => { if (!onChange) return; const d = JSON.parse(JSON.stringify(data)); d.references[ri].contact = v; onChange(d); }} isEditing={true} />
                         </div>
                       </div>
                     ) : (
                       <>
                         <div>
                           <span>{ref.name || ''}</span>
-                          {ref.contact && <span className="opacity-70"> | {ref.contact}</span>}
+                          {ref.company && <span className="opacity-70"> | {ref.company}</span>}
                         </div>
-                        {(ref.role || ref.company) && (
+                        {(ref.role || ref.contact) && (
                           <div className="opacity-70">
                             <span>{ref.role || ''}</span>
-                            {ref.company && <span> | {ref.company}</span>}
+                            {ref.contact && <span> | {ref.contact}</span>}
                           </div>
                         )}
                       </>
