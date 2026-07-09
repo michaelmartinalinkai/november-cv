@@ -122,6 +122,7 @@ const App: React.FC = () => {
   };
 
   // Extract candidate name from filename like "CV_van_Alice_Mahfouz_NOVEMBER_2026.pdf"
+  // or "CV van John Smith NOVÉMBER.pdf" (Maria juni 18 naming).
   const extractNameFromFilename = (filename: string): string | null => {
     // Remove extension
     const base = filename.replace(/\.[^.]+$/, '');
@@ -129,7 +130,10 @@ const App: React.FC = () => {
     const match = base.match(/CV[_\s-]*(?:van[_\s]+)?([A-Z][a-zÀ-ÿ]+(?:[_\s]+[A-Z][a-zÀ-ÿ]+)+)/i);
     if (!match) return null;
     // Replace underscores with spaces, title case
-    return match[1].replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase()).trim();
+    let name = match[1].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
+    // Maria juni 18: strip "NOVEMBER"/"NOVÉMBER"/"NOVÊMBER" suffix (new filename format)
+    name = name.replace(/\s+Nov[eêé]mber\s*$/i, '').trim();
+    return name || null;
   };
 
   const addToQueue = async (files: File[]) => {
@@ -193,9 +197,11 @@ const App: React.FC = () => {
       const looksFinalGrade = (() => {
         if (finalGradeMode) return true; // expliciete toggle wint altijd
         const fn = (item.file.name || '').toLowerCase();
-        if (/november|nov[eê]mber/.test(fn)) return true;
+        // Maria juni 18: nieuwe filenames bevatten "NOVÉMBER" (met é), oude bestanden
+        // gebruiken "NOVÉMBER"/"NOVÊMBER"/"NOVEMBER" — regex accepteert alle drie.
+        if (/november|nov[eêé]mber/.test(fn)) return true;
         const txt = (item.textContext || '').toLowerCase();
-        if (/nov[eê]mber\./.test(txt)) return true;
+        if (/nov[eêé]mber\./.test(txt)) return true;
         // signaal: alle bullets eindigen al op ; of . (Novémber-stijl)
         try {
           const exp = (result as any)?.experience || [];

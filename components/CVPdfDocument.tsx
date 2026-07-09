@@ -151,12 +151,13 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 0, // Maria July 9: green header must touch top edge on page 1 (no white strip)
+    paddingTop: 30, // Restored: gives page 2+ breathing room. Header uses negative marginTop to bleed through this on page 1.
     paddingBottom: 90, // Reserve space for fixed footer (56) + safety gap
   },
 
   // HEADER (touches edges on page 1)
   header: {
+    marginTop: -30, // Maria July 9: bleed above page paddingTop so header touches top edge on page 1
     backgroundColor: COLOR_DARK_GREEN,
     color: COLOR_WHITE,
     paddingHorizontal: 40,

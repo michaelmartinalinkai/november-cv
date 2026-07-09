@@ -45,10 +45,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 0, // Maria July 9: green header must touch top edge (matches CV page)
+    paddingTop: 30, // Restored: page 2+ breathing room. Header uses negative marginTop.
     paddingBottom: 90,
   },
   header: {
+    marginTop: -30, // Maria July 9: bleed above page paddingTop so header touches top edge
     backgroundColor: COLOR_DARK_GREEN,
     color: COLOR_WHITE,
     paddingHorizontal: 40,
