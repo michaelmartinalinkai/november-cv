@@ -368,9 +368,10 @@ const App: React.FC = () => {
   const handleDownload = async (format: 'docx' | 'pdf', data: ParsedCV, sourceId?: string) => {
     setIsDownloadMenuOpen(false);
     try {
-      // Sanitize: keep letters, digits, dashes, underscores; replace everything else with _
-      const sanitize = (s: string) => s.replace(/[^\w\-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      const fileNameBase = `CV_${sanitize(data.personalInfo?.name || "Kandidaat")}_NOVEMBER`;
+      // Maria juni 18: bestandsnaam "CV van Voornaam Achternaam NOVÉMBER." — spaties + accent behouden,
+      // alleen filesystem-illegale tekens strippen (niet de spaties/accenten).
+      const safeName = (data.personalInfo?.name || "Kandidaat").replace(/[\/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
+      const fileNameBase = `CV van ${safeName} NOVÉMBER`;
 
       const effectiveSourceId = sourceId || crypto.randomUUID();
       const contentHash = await usageService.generateHash(JSON.stringify(data));
