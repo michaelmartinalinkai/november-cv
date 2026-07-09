@@ -157,7 +157,7 @@ export const CoverLetterPage: React.FC<Props> = ({ data, letterText }) => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.headerName}>{toTitleCase(data.personalInfo?.name || 'Kandidaat Naam')}</Text>
-          <Text style={styles.headerSubtitle}>Motivatiebrief</Text>
+          {/* Maria juni 18: 'Motivatiebrief' in de header weg — staat al als kop (titleBar) in het document zelf, dubbel. */}
         </View>
         <Image src={LOGO_PNG} style={styles.headerLogo} />
       </View>
