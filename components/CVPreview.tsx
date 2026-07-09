@@ -516,8 +516,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             {displaySkills.slice(0, 3).map((skill, i) => (
               <div
                 key={i}
-                className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
-                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
+                className="bg-[#f27f61] text-white px-4 py-2 rounded-full text-center flex items-center justify-center shrink-0"
+                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase', width: '200px' }}
               >
                 <EditableText
                   value={skill}
@@ -532,8 +532,8 @@ export const CVPreview: React.FC<CVPreviewProps> = ({ data, isEditing, onChange 
             {displaySkills.slice(3, 5).map((skill, i) => (
               <div
                 key={i}
-                className="bg-[#f27f61] text-white px-6 py-2 rounded-full text-center flex items-center justify-center min-w-[140px]"
-                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase' }}
+                className="bg-[#f27f61] text-white px-4 py-2 rounded-full text-center flex items-center justify-center shrink-0"
+                style={{ fontSize: '12px', fontFamily: 'Garet, sans-serif', fontWeight: 700, textTransform: 'uppercase', width: '200px' }}
               >
                 <EditableText
                   value={skill}

@@ -225,11 +225,11 @@ const styles = StyleSheet.create({
   },
   tag: {
     backgroundColor: COLOR_TAG_ORANGE,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 6, // less bottom because @react-pdf baseline sits low; more top pushes text into visual center
     borderRadius: 999,
-    minWidth: 130,
+    width: 175, // Maria July 9: fixed width for all 5 pills — was minWidth 130 which made short/long tags inconsistent
     alignItems: 'center',
     justifyContent: 'center',
   },
