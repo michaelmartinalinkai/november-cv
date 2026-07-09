@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 30,
+    paddingTop: 0, // Maria July 9: green header must touch top edge (matches CV page)
     paddingBottom: 90,
   },
   header: {

@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color: COLOR_BLACK,
     backgroundColor: COLOR_WHITE,
-    paddingTop: 30, // Breathing room on every page (including page 1 above header)
+    paddingTop: 0, // Maria July 9: green header must touch top edge on page 1 (no white strip)
     paddingBottom: 90, // Reserve space for fixed footer (56) + safety gap
   },
 
