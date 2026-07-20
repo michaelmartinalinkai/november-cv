@@ -129,8 +129,22 @@ const App: React.FC = () => {
     // Pattern: CV_van_Firstname_Lastname or CV_Firstname_Lastname
     const match = base.match(/CV[_\s-]*(?:van[_\s]+)?([A-Z][a-zÀ-ÿ]+(?:[_\s]+[A-Z][a-zÀ-ÿ]+)+)/i);
     if (!match) return null;
-    // Replace underscores with spaces, title case
-    let name = match[1].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
+    // Replace underscores with spaces, then title-case per word.
+    // Note: \b\w mis-capitalizes accented names (José -> JosÉ) because JS \b
+    // treats accented chars as boundaries. Split on whitespace and uppercase
+    // only the first char of each word instead. Dutch particles (de/van/der)
+    // are left lowercase.
+    const particles = new Set(['de', 'van', 'der', 'den', 'het', 'ten', 'ter', 'te', 'op', 'in']);
+    let name = match[1]
+      .replace(/_/g, ' ')
+      .split(/\s+/)
+      .map((w, i) => {
+        const lower = w.toLowerCase();
+        if (i > 0 && particles.has(lower)) return lower; // keep particles lowercase (not first word)
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      })
+      .join(' ')
+      .trim();
     // Maria juni 18: strip "NOVEMBER"/"NOVÉMBER"/"NOVÊMBER" suffix (new filename format)
     name = name.replace(/\s+Nov[eêé]mber\s*$/i, '').trim();
     return name || null;
